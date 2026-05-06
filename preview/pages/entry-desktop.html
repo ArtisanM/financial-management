@@ -239,6 +239,22 @@
                 <button class="text-[11px] font-mono tracking-[0.08em] uppercase border-2 border-brass bg-brass-soft px-3 py-2 text-left col-span-2">📈 投资收益(默认 · 不分类)</button>
               </div>
               <p class="text-xs text-ink-subtle mt-3 leading-relaxed">跳过分类则归"投资收益"。证券账户合理。</p>
+
+              <!-- ★ FR-10 智能转账推断提示(本期 $700 未达阈值 ¥3,000,实例化展示) -->
+              <div class="mt-3 pt-3 border-t border-rule-soft">
+                <div class="font-mono text-[10px] tracking-[0.16em] text-ink-subtle uppercase mb-1">FR-10 智能提示(若 ≥ ¥3,000 阈值)</div>
+                <p class="text-xs leading-relaxed bg-brass-soft/30 border-l-2 border-brass px-3 py-2 italic">
+                  💡 看起来像账户间转账?余额变化方向异常,通常意味着从其他账户转出/转入。
+                </p>
+              </div>
+
+              <!-- ★ FR-7 CASH/LOAN 类型黄色警告示例 -->
+              <div class="mt-3 pt-3 border-t border-rule-soft">
+                <div class="font-mono text-[10px] tracking-[0.16em] text-ink-subtle uppercase mb-1">FR-7 类型黄色警告(本行 STOCK 不触发)</div>
+                <p class="text-xs leading-relaxed bg-rust-soft/30 border-l-2 border-rust px-3 py-2">
+                  ⚠ 若本行是 <span class="pill" style="font-size:9px;padding:1px 6px">CASH</span> 或 <span class="pill" style="font-size:9px;padding:1px 6px;background:var(--rust-soft);color:var(--rust);border-color:var(--rust)">LOAN</span> 类型且跳过分类,系统会黄色警告:<i>"该类型账户出现意外变化通常意味着漏登记了收入/支出/还款"</i>。
+                </p>
+              </div>
             </div>
           </div>
         </div>

@@ -71,7 +71,7 @@
       <div class="border border-rust bg-rust/[0.04] px-5 py-3 flex items-center justify-between gap-4 flex-wrap">
         <div class="flex items-center gap-4">
           <span class="pill pill-rust">未结账</span>
-          <p class="text-sm">本期还有 <span class="font-mono text-rust">2 个账户</span>未填报 · 张伟:1/4 · 李静:1/3</p>
+          <p class="text-sm">本期还有 <span class="font-mono text-rust">2 个账户</span>未填:富途证券 · 招行理财 <span class="font-mono text-ink-subtle">·</span> 已完成 张伟 3/4 · 李静 2/3</p>
         </div>
         <a href="entry-desktop.html" class="btn-paper text-[10px]">前往填报 →</a>
       </div>
@@ -102,6 +102,9 @@
           </div>
         </div>
       </div>
+      <p class="text-[10px] font-mono text-ink-subtle mt-2 tracking-wider">
+        💱 若切到 USD:净资产显示 <span class="text-ink">$377,256</span> · 总资产 <span class="text-ink">$543,685</span>(月末汇率 7.211 折算)。比例类指标(储蓄率/负债率)不变。
+      </p>
 
       <!-- 展开面板(预览态:展示选项)-->
       <div class="paper-card border-t-0 px-5 py-5 bg-card-soft">
@@ -255,17 +258,17 @@
       <div class="kpi-card">
         <span class="kpi-eyebrow">净资产 · NET WORTH</span>
         <div class="kpi-value tnum">
-          <span class="kpi-currency">¥</span>2,847,200
+          <span class="kpi-currency">¥</span>2,719,972
         </div>
-        <div class="kpi-delta num-pos">▲ +¥48,200 · +1.72% MoM</div>
+        <div class="kpi-delta num-pos">▲ +¥48,200 · +1.81% MoM</div>
       </div>
 
       <div class="kpi-card">
         <span class="kpi-eyebrow">总资产 · ASSETS</span>
         <div class="kpi-value tnum">
-          <span class="kpi-currency">¥</span>4,047,200
+          <span class="kpi-currency">¥</span>3,919,972
         </div>
-        <div class="kpi-delta num-pos">▲ +¥51,400 · +1.29%</div>
+        <div class="kpi-delta num-pos">▲ +¥43,400 · +1.12%</div>
       </div>
 
       <div class="kpi-card">
@@ -412,6 +415,7 @@
               <th class="num">较上月</th>
               <th>近 12 月</th>
               <th class="num">XIRR</th>
+              <th class="num">↔</th>
             </tr>
           </thead>
           <tbody>
@@ -419,10 +423,21 @@
               <td><span class="font-display">招行储蓄卡</span><span class="text-ink-subtle text-xs ml-2">· 工资</span></td>
               <td><span class="pill">CASH</span></td>
               <td class="text-ink-soft">张伟</td>
-              <td class="num">¥58,200</td>
-              <td class="num num-pos">+¥13,200</td>
+              <td class="num">¥73,200</td>
+              <td class="num num-pos">+¥28,200</td>
               <td><svg class="sparkline-pos" width="80" height="22" viewBox="0 0 80 22"><polyline fill="none" stroke="currentColor" stroke-width="1.5" points="0,16 8,15 16,14 24,15 32,12 40,11 48,13 56,10 64,9 72,8 80,4"/></svg></td>
               <td class="num text-ink-subtle">—</td>
+              <td class="num"><button class="font-mono text-base text-ink-soft hover:text-brass-deep px-2" title="从此账户发起转账">↔</button></td>
+            </tr>
+            <tr>
+              <td><span class="font-display">工商银行</span><span class="text-ink-subtle text-xs ml-2">· 备用金</span></td>
+              <td><span class="pill">CASH</span></td>
+              <td class="text-ink-soft">张伟</td>
+              <td class="num">¥186,400</td>
+              <td class="num num-pos">+¥0</td>
+              <td><svg width="80" height="22" viewBox="0 0 80 22" style="color:var(--ink-soft)"><polyline fill="none" stroke="currentColor" stroke-width="1.5" points="0,11 80,11"/></svg></td>
+              <td class="num text-ink-subtle">—</td>
+              <td class="num"><button class="font-mono text-base text-ink-soft hover:text-brass-deep px-2" title="从此账户发起转账">↔</button></td>
             </tr>
             <tr>
               <td><span class="font-display">华泰证券</span><span class="text-ink-subtle text-xs ml-2">· A 股</span></td>
@@ -432,6 +447,7 @@
               <td class="num num-pos">+¥22,400</td>
               <td><svg class="sparkline-pos" width="80" height="22" viewBox="0 0 80 22"><polyline fill="none" stroke="currentColor" stroke-width="1.5" points="0,18 8,15 16,17 24,12 32,14 40,9 48,11 56,7 64,9 72,5 80,3"/></svg></td>
               <td class="num num-pos">+12.4%</td>
+              <td class="num"><button class="font-mono text-base text-ink-soft hover:text-brass-deep px-2" title="从此账户发起转账">↔</button></td>
             </tr>
             <tr>
               <td><span class="font-display">富途证券</span><span class="text-ink-subtle text-xs ml-2">· 港美股 · USD</span></td>
@@ -441,6 +457,7 @@
               <td class="num num-pos">+¥4,800</td>
               <td><svg class="sparkline-pos" width="80" height="22" viewBox="0 0 80 22"><polyline fill="none" stroke="currentColor" stroke-width="1.5" points="0,12 8,14 16,11 24,15 32,10 40,12 48,8 56,11 64,7 72,6 80,4"/></svg></td>
               <td class="num num-pos">+8.7%</td>
+              <td class="num"><button class="font-mono text-base text-ink-soft hover:text-brass-deep px-2" title="从此账户发起转账">↔</button></td>
             </tr>
             <tr>
               <td><span class="font-display">支付宝</span><span class="text-ink-subtle text-xs ml-2">· 余额宝</span></td>
@@ -450,6 +467,17 @@
               <td class="num num-pos">+¥1,800</td>
               <td><svg class="sparkline-pos" width="80" height="22" viewBox="0 0 80 22"><polyline fill="none" stroke="currentColor" stroke-width="1.5" points="0,14 8,14 16,13 24,12 32,12 40,11 48,11 56,10 64,9 72,9 80,8"/></svg></td>
               <td class="num num-pos">+2.1%</td>
+              <td class="num"><button class="font-mono text-base text-ink-soft hover:text-brass-deep px-2" title="从此账户发起转账">↔</button></td>
+            </tr>
+            <tr>
+              <td><span class="font-display">微信</span><span class="text-ink-subtle text-xs ml-2">· 零钱通</span></td>
+              <td><span class="pill">CASH</span></td>
+              <td class="text-ink-soft">李静</td>
+              <td class="num">¥9,200</td>
+              <td class="num num-pos">+¥800</td>
+              <td><svg class="sparkline-pos" width="80" height="22" viewBox="0 0 80 22"><polyline fill="none" stroke="currentColor" stroke-width="1.5" points="0,14 8,13 16,14 24,12 32,13 40,11 48,12 56,10 64,11 72,9 80,8"/></svg></td>
+              <td class="num num-pos">+2.0%</td>
+              <td class="num"><button class="font-mono text-base text-ink-soft hover:text-brass-deep px-2" title="从此账户发起转账">↔</button></td>
             </tr>
             <tr>
               <td><span class="font-display">蚂蚁财富</span><span class="text-ink-subtle text-xs ml-2">· 基金</span></td>
@@ -459,6 +487,17 @@
               <td class="num num-pos">+¥3,800</td>
               <td><svg class="sparkline-pos" width="80" height="22" viewBox="0 0 80 22"><polyline fill="none" stroke="currentColor" stroke-width="1.5" points="0,16 8,14 16,16 24,12 32,14 40,10 48,12 56,8 64,10 72,7 80,6"/></svg></td>
               <td class="num num-pos">+5.8%</td>
+              <td class="num"><button class="font-mono text-base text-ink-soft hover:text-brass-deep px-2" title="从此账户发起转账">↔</button></td>
+            </tr>
+            <tr>
+              <td><span class="font-display">招行理财</span><span class="text-ink-subtle text-xs ml-2">· 稳健</span></td>
+              <td><span class="pill" style="background:var(--forest-soft);color:var(--forest);border-color:var(--forest)">WEALTH</span></td>
+              <td class="text-ink-soft">李静</td>
+              <td class="num text-ink-subtle">— 待填</td>
+              <td class="num text-ink-subtle">—</td>
+              <td><svg class="sparkline-pos" width="80" height="22" viewBox="0 0 80 22"><polyline fill="none" stroke="currentColor" stroke-width="1.5" points="0,14 8,13 16,14 24,12 32,13 40,11 48,12 56,10 64,11 72,9 80,8"/></svg></td>
+              <td class="num num-pos">+2.8%</td>
+              <td class="num"><button class="font-mono text-base text-ink-soft hover:text-brass-deep px-2" title="从此账户发起转账">↔</button></td>
             </tr>
             <tr>
               <td><span class="font-display">招行信用卡</span></td>
@@ -468,6 +507,7 @@
               <td class="num num-neg">−¥1,200</td>
               <td><svg class="sparkline-neg" width="80" height="22" viewBox="0 0 80 22"><polyline fill="none" stroke="currentColor" stroke-width="1.5" points="0,10 8,12 16,11 24,13 32,10 40,12 48,11 56,13 64,12 72,14 80,15"/></svg></td>
               <td class="num text-ink-subtle">—</td>
+              <td class="num"><button class="font-mono text-base text-ink-soft hover:text-brass-deep px-2" title="从此账户发起转账">↔</button></td>
             </tr>
             <tr>
               <td><span class="font-display">房贷</span><span class="text-ink-subtle text-xs ml-2">· 招行 · 海淀</span></td>
@@ -477,6 +517,7 @@
               <td class="num num-pos">+¥4,820</td>
               <td><svg class="sparkline-pos" width="80" height="22" viewBox="0 0 80 22"><polyline fill="none" stroke="currentColor" stroke-width="1.5" points="0,4 8,5 16,6 24,7 32,8 40,9 48,10 56,11 64,12 72,13 80,14"/></svg></td>
               <td class="num text-ink-subtle">—</td>
+              <td class="num"><button class="font-mono text-base text-ink-soft hover:text-brass-deep px-2" title="从此账户发起转账">↔</button></td>
             </tr>
             <tr>
               <td><span class="font-display">住宅</span><span class="text-ink-subtle text-xs ml-2">· 海淀</span></td>
@@ -485,6 +526,7 @@
               <td class="num">¥1,800,000</td>
               <td class="num text-ink-subtle">—</td>
               <td><svg width="80" height="22" viewBox="0 0 80 22" style="color:var(--ink-soft)"><polyline fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="2 3" points="0,11 80,11"/></svg></td>
+              <td class="num text-ink-subtle">—</td>
               <td class="num text-ink-subtle">—</td>
             </tr>
           </tbody>

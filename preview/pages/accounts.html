@@ -46,27 +46,27 @@
       <div>
         <div class="eyebrow mb-2">账 · 户 · 全 · 览</div>
         <h1 class="font-display text-5xl font-medium tracking-tight">账户簿</h1>
-        <p class="text-ink-soft text-sm mt-3 max-w-xl">一家共 9 个活跃账户、3 个负债账户。此处可增删归档、调整主理人与显示顺序;实际填报在<a href="entry-desktop.html" class="brass-link">填报页</a>。</p>
+        <p class="text-ink-soft text-sm mt-3 max-w-xl">一家共 11 个活跃账户(其中 9 个资产 + 2 个 LOAN 负债)。此处可增删归档、调整主理人与显示顺序;实际填报在<a href="entry-desktop.html" class="brass-link">填报页</a>。</p>
       </div>
       <button class="btn-ink">+ 添加账户(开向导)</button>
     </section>
 
-    <!-- 分组小结 -->
+    <!-- 分组小结(总资产 ¥4.05M · 总负债 ¥1.20M · 净资产 ¥2.85M)-->
     <section class="grid grid-cols-2 md:grid-cols-6 gap-px bg-rule mb-8">
       <div class="bg-card p-4">
         <div class="font-mono text-[10px] tracking-wider text-ink-subtle">CASH</div>
-        <div class="font-display text-xl tnum mt-1">5</div>
-        <div class="font-mono text-xs text-ink-soft mt-1">¥920k</div>
+        <div class="font-display text-xl tnum mt-1">4</div>
+        <div class="font-mono text-xs text-ink-soft mt-1">¥304k</div>
       </div>
       <div class="bg-card p-4">
         <div class="font-mono text-[10px] tracking-wider text-ink-subtle">STOCK</div>
         <div class="font-display text-xl tnum mt-1">2</div>
-        <div class="font-mono text-xs text-ink-soft mt-1">¥1.55M</div>
+        <div class="font-mono text-xs text-ink-soft mt-1">¥1.47M</div>
       </div>
       <div class="bg-card p-4">
         <div class="font-mono text-[10px] tracking-wider text-ink-subtle">WEALTH</div>
         <div class="font-display text-xl tnum mt-1">2</div>
-        <div class="font-mono text-xs text-ink-soft mt-1">¥570k</div>
+        <div class="font-mono text-xs text-ink-soft mt-1">¥343k</div>
       </div>
       <div class="bg-card p-4">
         <div class="font-mono text-[10px] tracking-wider text-ink-subtle">PROPERTY</div>
@@ -79,9 +79,9 @@
         <div class="font-mono text-xs text-ink-soft mt-1">−¥1.20M</div>
       </div>
       <div class="bg-card p-4">
-        <div class="font-mono text-[10px] tracking-wider text-ink-subtle">已归档</div>
-        <div class="font-display text-xl tnum mt-1 text-ink-subtle">1</div>
-        <div class="font-mono text-xs text-ink-soft mt-1">不计入</div>
+        <div class="font-mono text-[10px] tracking-wider text-ink-subtle">合计</div>
+        <div class="font-display text-xl tnum mt-1">11</div>
+        <div class="font-mono text-xs text-ink-soft mt-1">活跃 · 0 已归档</div>
       </div>
     </section>
 
@@ -122,7 +122,7 @@
             <td class="text-ink-soft">张伟</td>
             <td class="text-ink-subtle">—</td>
             <td class="num">¥73,200</td>
-            <td class="text-right"><button class="btn-ghost">编辑</button></td>
+            <td class="text-right whitespace-nowrap"><button class="font-mono text-base text-ink-soft hover:text-brass-deep px-1 align-middle" title="从此账户发起转账">↔</button> <button class="btn-ghost">编辑</button></td>
           </tr>
           <tr>
             <td class="font-mono text-ink-subtle text-xs">002 ·☰</td>
@@ -132,7 +132,7 @@
             <td class="text-ink-soft">张伟</td>
             <td class="text-ink-subtle">—</td>
             <td class="num">¥186,400</td>
-            <td class="text-right"><button class="btn-ghost">编辑</button></td>
+            <td class="text-right whitespace-nowrap"><button class="font-mono text-base text-ink-soft hover:text-brass-deep px-1 align-middle" title="从此账户发起转账">↔</button> <button class="btn-ghost">编辑</button></td>
           </tr>
           <tr>
             <td class="font-mono text-ink-subtle text-xs">003 ·☰</td>
@@ -142,7 +142,7 @@
             <td class="text-ink-soft">张伟</td>
             <td class="text-ink-subtle">—</td>
             <td class="num">¥1,124,800</td>
-            <td class="text-right"><button class="btn-ghost">编辑</button></td>
+            <td class="text-right whitespace-nowrap"><button class="font-mono text-base text-ink-soft hover:text-brass-deep px-1 align-middle" title="从此账户发起转账">↔</button> <button class="btn-ghost">编辑</button></td>
           </tr>
           <tr>
             <td class="font-mono text-ink-subtle text-xs">004 ·☰</td>
@@ -152,7 +152,7 @@
             <td class="text-ink-soft">张伟</td>
             <td class="text-ink-subtle">—</td>
             <td class="num">$48,200</td>
-            <td class="text-right"><button class="btn-ghost">编辑</button></td>
+            <td class="text-right whitespace-nowrap"><button class="font-mono text-base text-ink-soft hover:text-brass-deep px-1 align-middle" title="从此账户发起转账">↔</button> <button class="btn-ghost">编辑</button></td>
           </tr>
           <tr>
             <td class="font-mono text-ink-subtle text-xs">005 ·☰</td>
@@ -162,7 +162,7 @@
             <td class="text-ink-soft">张伟</td>
             <td class="text-xs text-ink-soft">招行储蓄卡 · 工资</td>
             <td class="num num-neg">−¥4,820</td>
-            <td class="text-right"><button class="btn-ghost">编辑</button></td>
+            <td class="text-right whitespace-nowrap"><button class="font-mono text-base text-ink-soft hover:text-brass-deep px-1 align-middle" title="从此账户发起转账">↔</button> <button class="btn-ghost">编辑</button></td>
           </tr>
           <tr>
             <td class="font-mono text-ink-subtle text-xs">006 ·☰</td>
@@ -172,7 +172,7 @@
             <td class="text-ink-soft">李静</td>
             <td class="text-ink-subtle">—</td>
             <td class="num">¥35,400</td>
-            <td class="text-right"><button class="btn-ghost">编辑</button></td>
+            <td class="text-right whitespace-nowrap"><button class="font-mono text-base text-ink-soft hover:text-brass-deep px-1 align-middle" title="从此账户发起转账">↔</button> <button class="btn-ghost">编辑</button></td>
           </tr>
           <tr>
             <td class="font-mono text-ink-subtle text-xs">007 ·☰</td>
@@ -182,7 +182,7 @@
             <td class="text-ink-soft">李静</td>
             <td class="text-ink-subtle">—</td>
             <td class="num">¥9,200</td>
-            <td class="text-right"><button class="btn-ghost">编辑</button></td>
+            <td class="text-right whitespace-nowrap"><button class="font-mono text-base text-ink-soft hover:text-brass-deep px-1 align-middle" title="从此账户发起转账">↔</button> <button class="btn-ghost">编辑</button></td>
           </tr>
           <tr>
             <td class="font-mono text-ink-subtle text-xs">008 ·☰</td>
@@ -192,7 +192,7 @@
             <td class="text-ink-soft">李静</td>
             <td class="text-ink-subtle">—</td>
             <td class="num">¥218,400</td>
-            <td class="text-right"><button class="btn-ghost">编辑</button></td>
+            <td class="text-right whitespace-nowrap"><button class="font-mono text-base text-ink-soft hover:text-brass-deep px-1 align-middle" title="从此账户发起转账">↔</button> <button class="btn-ghost">编辑</button></td>
           </tr>
           <tr>
             <td class="font-mono text-ink-subtle text-xs">009 ·☰</td>
@@ -202,7 +202,7 @@
             <td class="text-ink-soft">李静</td>
             <td class="text-ink-subtle">—</td>
             <td class="num text-ink-subtle">— 待填</td>
-            <td class="text-right"><button class="btn-ghost">编辑</button></td>
+            <td class="text-right whitespace-nowrap"><button class="font-mono text-base text-ink-soft hover:text-brass-deep px-1 align-middle" title="从此账户发起转账">↔</button> <button class="btn-ghost">编辑</button></td>
           </tr>
           <tr>
             <td class="font-mono text-ink-subtle text-xs">010 ·☰</td>
@@ -212,7 +212,7 @@
             <td class="text-ink-soft">共同</td>
             <td class="text-ink-subtle">—</td>
             <td class="num">¥1,800,000</td>
-            <td class="text-right"><button class="btn-ghost">编辑</button></td>
+            <td class="text-right whitespace-nowrap"><button class="font-mono text-base text-ink-soft hover:text-brass-deep px-1 align-middle" title="从此账户发起转账">↔</button> <button class="btn-ghost">编辑</button></td>
           </tr>
           <tr>
             <td class="font-mono text-ink-subtle text-xs">011 ·☰</td>
@@ -222,7 +222,7 @@
             <td class="text-ink-soft">共同</td>
             <td class="text-xs">招行储蓄卡 · 工资 ↗</td>
             <td class="num num-neg">−¥1,195,180</td>
-            <td class="text-right"><button class="btn-ghost">编辑</button></td>
+            <td class="text-right whitespace-nowrap"><button class="font-mono text-base text-ink-soft hover:text-brass-deep px-1 align-middle" title="从此账户发起转账">↔</button> <button class="btn-ghost">编辑</button></td>
           </tr>
         </tbody>
       </table>
