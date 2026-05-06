@@ -63,6 +63,31 @@
       </div>
     </section>
 
+    <!-- ★ 账户筛选器 + 显示币种切换 ★ -->
+    <section class="mb-8">
+      <div class="paper-card px-5 py-3 flex items-center justify-between flex-wrap gap-4">
+        <div class="flex items-center gap-3 flex-wrap">
+          <span class="font-mono text-[10px] tracking-[0.18em] uppercase text-ink-soft">账户范围</span>
+          <button class="flex items-center gap-2 font-mono text-[12px] hover:text-brass-deep">
+            <span class="w-2 h-2 rounded-full" style="background:var(--brass)"></span>
+            <span class="font-display text-base">11 中已选 9 个</span>
+            <span class="text-ink-subtle">▼</span>
+          </button>
+          <span class="pill" style="font-size:9px;padding:2px 8px">仅资产视角</span>
+          <button class="font-mono text-[10px] tracking-wider text-ink-soft hover:text-brass-deep">↺ 重置</button>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="font-mono text-[10px] tracking-[0.18em] uppercase text-ink-soft">显示</span>
+          <div class="flex border border-rule">
+            <button class="font-mono text-[11px] px-3 py-1.5 bg-ink text-paper tracking-wider">¥ CNY</button>
+            <button class="font-mono text-[11px] px-3 py-1.5 text-ink-soft hover:bg-card-soft border-l border-rule tracking-wider">$ USD</button>
+            <button class="font-mono text-[11px] px-3 py-1.5 text-ink-soft hover:bg-card-soft border-l border-rule tracking-wider">HK$ HKD</button>
+          </div>
+        </div>
+      </div>
+      <p class="text-xs text-ink-subtle mt-2 font-mono tracking-wider">已排除 LOAN 类型(招行信用卡 · 房贷)— 净资产 KPI 显示"—",负债类报表全部隐藏</p>
+    </section>
+
     <!-- 家庭收益率(双口径)-->
     <section class="grid grid-cols-2 md:grid-cols-4 gap-px bg-rule mb-12">
       <div class="kpi-card">

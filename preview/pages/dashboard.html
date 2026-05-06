@@ -77,6 +77,178 @@
       </div>
     </section>
 
+    <!-- ★ 账户筛选器 + 显示币种切换 ★ -->
+    <section class="mb-8">
+      <!-- 折叠条(sticky 默认态) -->
+      <div class="paper-card px-5 py-3 flex items-center justify-between flex-wrap gap-4">
+        <div class="flex items-center gap-3 flex-wrap">
+          <span class="font-mono text-[10px] tracking-[0.18em] uppercase text-ink-soft">账户范围</span>
+          <button class="flex items-center gap-2 font-mono text-[12px] hover:text-brass-deep">
+            <span class="w-2 h-2 rounded-full bg-forest"></span>
+            <span class="font-display text-base">全部 11 个</span>
+            <span class="text-ink-subtle">▼</span>
+          </button>
+          <span class="font-mono text-[10px] text-ink-subtle">·</span>
+          <span class="text-xs text-ink-subtle">含家庭下所有成员账户</span>
+        </div>
+        <div class="flex items-center gap-3 flex-wrap">
+          <div class="flex items-center gap-2">
+            <span class="font-mono text-[10px] tracking-[0.18em] uppercase text-ink-soft">显示</span>
+            <div class="flex border border-rule">
+              <button class="font-mono text-[11px] px-3 py-1.5 bg-ink text-paper tracking-wider">¥ CNY</button>
+              <button class="font-mono text-[11px] px-3 py-1.5 text-ink-soft hover:bg-card-soft border-l border-rule tracking-wider">$ USD</button>
+              <button class="font-mono text-[11px] px-3 py-1.5 text-ink-soft hover:bg-card-soft border-l border-rule tracking-wider">HK$ HKD</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 展开面板(预览态:展示选项)-->
+      <div class="paper-card border-t-0 px-5 py-5 bg-card-soft">
+        <div class="text-xs text-ink-subtle mb-3 font-mono tracking-wider uppercase">点击账户范围展开后呈现 ↓</div>
+
+        <!-- 快速预设 -->
+        <div class="mb-4">
+          <div class="eyebrow-ink mb-2">快速预设 · 成员视角</div>
+          <div class="flex flex-wrap gap-2">
+            <button class="pill pill-ink">全部 · 11</button>
+            <button class="pill">仅我 · 4</button>
+            <button class="pill">张伟主理 · 4</button>
+            <button class="pill">李静主理 · 3</button>
+            <button class="pill">共同 · 2</button>
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <div class="eyebrow-ink mb-2">资产 / 负债</div>
+          <div class="flex flex-wrap gap-2">
+            <button class="pill">仅资产 · 9</button>
+            <button class="pill">仅负债 · 2</button>
+          </div>
+        </div>
+
+        <div class="mb-5">
+          <div class="eyebrow-ink mb-2">类型</div>
+          <div class="flex flex-wrap gap-2">
+            <button class="pill" style="background:var(--brass-soft);color:var(--brass-deep);border-color:var(--brass)">STOCK · 2</button>
+            <button class="pill">CASH · 5</button>
+            <button class="pill" style="background:var(--forest-soft);color:var(--forest);border-color:var(--forest)">WEALTH · 2</button>
+            <button class="pill" style="background:var(--paper-deep);color:var(--ink-soft);border-color:var(--rule)">PROPERTY · 1</button>
+            <button class="pill" style="background:var(--rust-soft);color:var(--rust);border-color:var(--rust)">LOAN · 2</button>
+          </div>
+        </div>
+
+        <!-- 搜索 -->
+        <div class="mb-4">
+          <input type="text" placeholder="搜索账户名…" class="w-full border border-rule px-3 py-2 text-sm bg-card font-serif focus:outline-none focus:border-brass">
+        </div>
+
+        <!-- 账户复选框列表 -->
+        <div class="border-t border-rule pt-3 grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1 mb-4">
+          <label class="flex items-center gap-3 py-1.5 cursor-pointer hover:bg-paper px-2 -mx-2">
+            <input type="checkbox" class="w-4 h-4 accent-[var(--ink)]" checked>
+            <div class="flex-1 min-w-0">
+              <span class="font-display text-sm">招行储蓄卡 · 工资</span>
+              <span class="ml-2 font-mono text-[10px] text-ink-subtle">CASH · 张伟</span>
+            </div>
+            <span class="font-mono text-xs tnum text-ink-soft">¥73,200</span>
+          </label>
+          <label class="flex items-center gap-3 py-1.5 cursor-pointer hover:bg-paper px-2 -mx-2">
+            <input type="checkbox" class="w-4 h-4 accent-[var(--ink)]" checked>
+            <div class="flex-1 min-w-0">
+              <span class="font-display text-sm">工商银行 · 备用金</span>
+              <span class="ml-2 font-mono text-[10px] text-ink-subtle">CASH · 张伟</span>
+            </div>
+            <span class="font-mono text-xs tnum text-ink-soft">¥186,400</span>
+          </label>
+          <label class="flex items-center gap-3 py-1.5 cursor-pointer hover:bg-paper px-2 -mx-2">
+            <input type="checkbox" class="w-4 h-4 accent-[var(--ink)]" checked>
+            <div class="flex-1 min-w-0">
+              <span class="font-display text-sm">华泰证券 · A 股</span>
+              <span class="ml-2 font-mono text-[10px] text-ink-subtle">STOCK · 张伟</span>
+            </div>
+            <span class="font-mono text-xs tnum text-ink-soft">¥1,124,800</span>
+          </label>
+          <label class="flex items-center gap-3 py-1.5 cursor-pointer hover:bg-paper px-2 -mx-2">
+            <input type="checkbox" class="w-4 h-4 accent-[var(--ink)]" checked>
+            <div class="flex-1 min-w-0">
+              <span class="font-display text-sm">富途证券 · 港美股</span>
+              <span class="ml-2 font-mono text-[10px] text-ink-subtle">STOCK · 张伟 · USD</span>
+            </div>
+            <span class="font-mono text-xs tnum text-ink-soft">$48,200</span>
+          </label>
+          <label class="flex items-center gap-3 py-1.5 cursor-pointer hover:bg-paper px-2 -mx-2">
+            <input type="checkbox" class="w-4 h-4 accent-[var(--ink)]" checked>
+            <div class="flex-1 min-w-0">
+              <span class="font-display text-sm">招行信用卡</span>
+              <span class="ml-2 font-mono text-[10px] text-ink-subtle">LOAN · 张伟</span>
+            </div>
+            <span class="font-mono text-xs tnum num-neg">−¥4,820</span>
+          </label>
+          <label class="flex items-center gap-3 py-1.5 cursor-pointer hover:bg-paper px-2 -mx-2">
+            <input type="checkbox" class="w-4 h-4 accent-[var(--ink)]" checked>
+            <div class="flex-1 min-w-0">
+              <span class="font-display text-sm">支付宝 · 余额宝</span>
+              <span class="ml-2 font-mono text-[10px] text-ink-subtle">CASH · 李静</span>
+            </div>
+            <span class="font-mono text-xs tnum text-ink-soft">¥35,400</span>
+          </label>
+          <label class="flex items-center gap-3 py-1.5 cursor-pointer hover:bg-paper px-2 -mx-2">
+            <input type="checkbox" class="w-4 h-4 accent-[var(--ink)]" checked>
+            <div class="flex-1 min-w-0">
+              <span class="font-display text-sm">微信 · 零钱通</span>
+              <span class="ml-2 font-mono text-[10px] text-ink-subtle">CASH · 李静</span>
+            </div>
+            <span class="font-mono text-xs tnum text-ink-soft">¥9,200</span>
+          </label>
+          <label class="flex items-center gap-3 py-1.5 cursor-pointer hover:bg-paper px-2 -mx-2">
+            <input type="checkbox" class="w-4 h-4 accent-[var(--ink)]" checked>
+            <div class="flex-1 min-w-0">
+              <span class="font-display text-sm">蚂蚁财富 · 基金</span>
+              <span class="ml-2 font-mono text-[10px] text-ink-subtle">WEALTH · 李静</span>
+            </div>
+            <span class="font-mono text-xs tnum text-ink-soft">¥218,400</span>
+          </label>
+          <label class="flex items-center gap-3 py-1.5 cursor-pointer hover:bg-paper px-2 -mx-2">
+            <input type="checkbox" class="w-4 h-4 accent-[var(--ink)]" checked>
+            <div class="flex-1 min-w-0">
+              <span class="font-display text-sm">招行理财 · 稳健</span>
+              <span class="ml-2 font-mono text-[10px] text-ink-subtle">WEALTH · 李静</span>
+            </div>
+            <span class="font-mono text-xs tnum text-ink-soft">¥125,000</span>
+          </label>
+          <label class="flex items-center gap-3 py-1.5 cursor-pointer hover:bg-paper px-2 -mx-2">
+            <input type="checkbox" class="w-4 h-4 accent-[var(--ink)]" checked>
+            <div class="flex-1 min-w-0">
+              <span class="font-display text-sm">住宅 · 海淀</span>
+              <span class="ml-2 font-mono text-[10px] text-ink-subtle">PROPERTY · 共同</span>
+            </div>
+            <span class="font-mono text-xs tnum text-ink-soft">¥1,800,000</span>
+          </label>
+          <label class="flex items-center gap-3 py-1.5 cursor-pointer hover:bg-paper px-2 -mx-2">
+            <input type="checkbox" class="w-4 h-4 accent-[var(--ink)]" checked>
+            <div class="flex-1 min-w-0">
+              <span class="font-display text-sm">房贷 · 招行</span>
+              <span class="ml-2 font-mono text-[10px] text-ink-subtle">LOAN · 共同</span>
+            </div>
+            <span class="font-mono text-xs tnum num-neg">−¥1,195,180</span>
+          </label>
+        </div>
+
+        <!-- 底部按钮 -->
+        <div class="border-t border-rule pt-4 flex items-center justify-between flex-wrap gap-3">
+          <div class="flex items-center gap-2">
+            <button class="btn-ghost">全选</button>
+            <button class="btn-ghost">全清</button>
+          </div>
+          <div class="flex items-center gap-3">
+            <span class="font-mono text-[10px] text-ink-subtle tracking-wider">已选 11 / 11</span>
+            <button class="btn-ink">应用 11 个</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- KPI 卡区 -->
     <section class="grid grid-cols-2 md:grid-cols-5 gap-px bg-rule mb-10 fade-in-delay-1">
 

@@ -138,6 +138,7 @@
           <div class="font-mono tnum text-lg">¥73,200</div>
           <div class="font-mono text-xs num-pos">+¥28,200</div>
         </div>
+        <button class="btn-ghost" title="快速转账" style="padding: 8px 10px; border: 1px solid var(--rule);">↔</button>
         <button class="btn-ghost">编辑</button>
       </div>
 
@@ -155,6 +156,7 @@
           <div class="font-mono tnum text-lg">¥1,124,800</div>
           <div class="font-mono text-xs num-pos">+¥22,400</div>
         </div>
+        <button class="btn-ghost" title="快速转账" style="padding: 8px 10px; border: 1px solid var(--rule);">↔</button>
         <button class="btn-ghost">编辑</button>
       </div>
 
@@ -328,6 +330,7 @@
           <div class="font-mono tnum text-lg">¥35,400</div>
           <div class="font-mono text-xs num-pos">+¥1,800</div>
         </div>
+        <button class="btn-ghost" title="快速转账" style="padding: 8px 10px; border: 1px solid var(--rule);">↔</button>
         <button class="btn-ghost">编辑</button>
       </div>
 
@@ -344,6 +347,7 @@
           <div class="font-mono tnum text-lg">¥218,400</div>
           <div class="font-mono text-xs num-pos">+¥3,800</div>
         </div>
+        <button class="btn-ghost" title="快速转账" style="padding: 8px 10px; border: 1px solid var(--rule);">↔</button>
         <button class="btn-ghost">编辑</button>
       </div>
 
@@ -359,6 +363,7 @@
         <div class="text-right">
           <div class="font-mono tnum text-lg text-ink-subtle">— —</div>
         </div>
+        <button class="btn-ghost" title="快速转账" style="padding: 8px 10px; border: 1px solid var(--rule);">↔</button>
         <button class="btn-ghost">展开 ↓</button>
       </div>
     </section>
@@ -383,6 +388,7 @@
           <div class="font-mono tnum text-lg">¥1,800,000</div>
           <div class="font-mono text-xs text-ink-subtle">—</div>
         </div>
+        <button class="btn-ghost" title="快速转账" style="padding: 8px 10px; border: 1px solid var(--rule);">↔</button>
         <button class="btn-ghost">编辑</button>
       </div>
     </section>
@@ -403,6 +409,71 @@
     </section>
 
   </main>
+
+  <!-- ★ 快速转账弹层(预览态)★ -->
+  <section class="max-w-[1400px] mx-auto px-6 lg:px-10 mt-12 mb-16">
+    <div class="text-xs font-mono tracking-wider text-ink-subtle uppercase mb-4">点击任意账户行的 ↔ 触发 ↓</div>
+
+    <div class="envelope-modal max-w-[560px] p-6 mx-auto">
+      <div class="flex items-baseline justify-between mb-1">
+        <div class="eyebrow">↔ · 快 · 速 · 转 · 账 · MODAL</div>
+        <button class="font-mono text-xs text-ink-subtle hover:text-ink">关闭 ×</button>
+      </div>
+      <h3 class="font-display text-2xl mb-2">登记一笔转账</h3>
+      <p class="text-sm text-ink-soft mb-5">源账户已自动预填为本行;选目标账户、金额、备注即可。提交后两边轧差自动剔除。</p>
+
+      <div class="space-y-5">
+        <div>
+          <label class="field-label">源账户 · FROM</label>
+          <div class="flex items-center gap-2 border-b border-rule py-2">
+            <span class="pill" style="background:var(--brass-soft);color:var(--brass-deep);border-color:var(--brass)">STOCK · USD</span>
+            <span class="font-display text-base">富途证券 · 港美股</span>
+            <span class="ml-auto font-mono text-xs text-ink-subtle">本行预填</span>
+          </div>
+        </div>
+
+        <div>
+          <label class="field-label">目标账户 · TO</label>
+          <select class="field-input bg-transparent">
+            <option>招行储蓄卡 · 工资 · CASH · CNY</option>
+            <option>工商银行 · 备用金 · CASH · CNY</option>
+            <option>支付宝 · 余额宝 · CASH · CNY</option>
+            <option>华泰证券 · A 股 · STOCK · CNY</option>
+          </select>
+        </div>
+
+        <div class="grid grid-cols-2 gap-5">
+          <div>
+            <label class="field-label">金额 · 源币种</label>
+            <div class="relative">
+              <span class="absolute left-0 top-3 font-display text-lg text-ink-subtle">$</span>
+              <input class="field-input field-input-num pl-5" value="10,000.00">
+            </div>
+            <div class="font-mono text-[10px] text-ink-subtle mt-1 tracking-wider">≈ ¥72,110(月末汇率折算)</div>
+          </div>
+          <div>
+            <label class="field-label">所属周期</label>
+            <input class="field-input" value="2026-04(本期)" readonly style="opacity:0.7">
+          </div>
+        </div>
+
+        <div>
+          <label class="field-label">备注 · 可选</label>
+          <input class="field-input" placeholder="如:季度调仓提现 · 换汇" value="季度调仓提现">
+        </div>
+      </div>
+
+      <div class="rule-double mt-5 mb-4"></div>
+
+      <div class="flex items-center justify-between">
+        <span class="font-mono text-[10px] text-ink-subtle tracking-wider">登记后两边账户的轧差差额会自动归零</span>
+        <div class="flex gap-2">
+          <button class="btn-paper">取消</button>
+          <button class="btn-ink">登记转账</button>
+        </div>
+      </div>
+    </div>
+  </section>
 
   <footer class="border-t border-rule mt-16 py-6 px-8 text-center relative z-10">
     <div class="font-mono text-[10px] tracking-[0.18em] text-ink-subtle">

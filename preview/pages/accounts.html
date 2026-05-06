@@ -98,8 +98,8 @@
       <button class="btn-ghost">显示已归档</button>
     </section>
 
-    <!-- 表格 -->
-    <section class="paper-card overflow-hidden mb-10">
+    <!-- 表格 · 桌面 -->
+    <section class="paper-card overflow-hidden mb-10 hidden md:block">
       <table class="ledger-table">
         <thead>
           <tr>
@@ -226,6 +226,144 @@
           </tr>
         </tbody>
       </table>
+    </section>
+
+    <!-- 移动端卡片列表 -->
+    <section class="md:hidden space-y-3 mb-10">
+
+      <div class="text-xs text-ink-subtle font-mono tracking-wider uppercase mb-3 flex items-center justify-between">
+        <span>11 个账户 · 卡片视图</span>
+        <span>↑↓ 拖动调序</span>
+      </div>
+
+      <!-- Card 1 -->
+      <div class="paper-card p-4">
+        <div class="flex items-baseline justify-between gap-2 mb-2">
+          <div class="flex-1 min-w-0">
+            <div class="font-display text-base">招行储蓄卡 · 工资</div>
+            <div class="font-mono text-[10px] text-ink-subtle mt-0.5 tracking-wider">001 · 张伟</div>
+          </div>
+          <span class="pill">CASH</span>
+        </div>
+        <div class="flex items-baseline justify-between mt-3 pt-3 border-t border-rule-soft">
+          <span class="text-xs text-ink-soft">本期末</span>
+          <span class="font-mono text-base tnum">¥73,200</span>
+        </div>
+        <div class="flex gap-2 mt-3">
+          <button class="btn-paper text-[10px] flex-1 justify-center">编辑</button>
+          <button class="btn-ghost text-[10px]">↔</button>
+          <button class="btn-ghost text-[10px]">归档</button>
+        </div>
+      </div>
+
+      <!-- Card 2 -->
+      <div class="paper-card p-4">
+        <div class="flex items-baseline justify-between gap-2 mb-2">
+          <div class="flex-1 min-w-0">
+            <div class="font-display text-base">华泰证券 · A 股</div>
+            <div class="font-mono text-[10px] text-ink-subtle mt-0.5 tracking-wider">003 · 张伟</div>
+          </div>
+          <span class="pill" style="background:var(--brass-soft);color:var(--brass-deep);border-color:var(--brass)">STOCK</span>
+        </div>
+        <div class="flex items-baseline justify-between mt-3 pt-3 border-t border-rule-soft">
+          <span class="text-xs text-ink-soft">本期末</span>
+          <span class="font-mono text-base tnum">¥1,124,800</span>
+        </div>
+        <div class="flex gap-2 mt-3">
+          <button class="btn-paper text-[10px] flex-1 justify-center">编辑</button>
+          <button class="btn-ghost text-[10px]">↔</button>
+          <button class="btn-ghost text-[10px]">归档</button>
+        </div>
+      </div>
+
+      <!-- Card 3 — 含外币 -->
+      <div class="paper-card p-4">
+        <div class="flex items-baseline justify-between gap-2 mb-2">
+          <div class="flex-1 min-w-0">
+            <div class="font-display text-base">富途证券 · 港美股</div>
+            <div class="font-mono text-[10px] text-ink-subtle mt-0.5 tracking-wider">004 · 张伟 · USD</div>
+          </div>
+          <span class="pill" style="background:var(--brass-soft);color:var(--brass-deep);border-color:var(--brass)">STOCK</span>
+        </div>
+        <div class="flex items-baseline justify-between mt-3 pt-3 border-t border-rule-soft">
+          <span class="text-xs text-ink-soft">本期末</span>
+          <div class="text-right">
+            <div class="font-mono text-base tnum">$48,200</div>
+            <div class="font-mono text-[10px] text-ink-subtle">≈ ¥347,572</div>
+          </div>
+        </div>
+        <div class="flex gap-2 mt-3">
+          <button class="btn-paper text-[10px] flex-1 justify-center">编辑</button>
+          <button class="btn-ghost text-[10px]">↔</button>
+          <button class="btn-ghost text-[10px]">归档</button>
+        </div>
+      </div>
+
+      <!-- Card 4 — LOAN -->
+      <div class="paper-card p-4" style="border-color: var(--rust-soft);">
+        <div class="flex items-baseline justify-between gap-2 mb-2">
+          <div class="flex-1 min-w-0">
+            <div class="font-display text-base">招行信用卡</div>
+            <div class="font-mono text-[10px] text-ink-subtle mt-0.5 tracking-wider">005 · 张伟</div>
+          </div>
+          <span class="pill" style="background:var(--rust-soft);color:var(--rust);border-color:var(--rust)">LOAN</span>
+        </div>
+        <div class="flex items-baseline justify-between mt-3 pt-3 border-t border-rule-soft">
+          <span class="text-xs text-ink-soft">本期欠款</span>
+          <span class="font-mono text-base tnum num-neg">¥4,820</span>
+        </div>
+        <div class="flex gap-2 mt-3">
+          <button class="btn-paper text-[10px] flex-1 justify-center">编辑</button>
+          <button class="btn-ghost text-[10px]">↔</button>
+          <button class="btn-ghost text-[10px]">归档</button>
+        </div>
+      </div>
+
+      <!-- Card 5 -->
+      <div class="paper-card p-4">
+        <div class="flex items-baseline justify-between gap-2 mb-2">
+          <div class="flex-1 min-w-0">
+            <div class="font-display text-base">支付宝 · 余额宝</div>
+            <div class="font-mono text-[10px] text-ink-subtle mt-0.5 tracking-wider">006 · 李静</div>
+          </div>
+          <span class="pill">CASH</span>
+        </div>
+        <div class="flex items-baseline justify-between mt-3 pt-3 border-t border-rule-soft">
+          <span class="text-xs text-ink-soft">本期末</span>
+          <span class="font-mono text-base tnum">¥35,400</span>
+        </div>
+        <div class="flex gap-2 mt-3">
+          <button class="btn-paper text-[10px] flex-1 justify-center">编辑</button>
+          <button class="btn-ghost text-[10px]">↔</button>
+          <button class="btn-ghost text-[10px]">归档</button>
+        </div>
+      </div>
+
+      <!-- Card 6 — LOAN 房贷,显示默认还款 -->
+      <div class="paper-card p-4" style="border-color: var(--rust-soft);">
+        <div class="flex items-baseline justify-between gap-2 mb-2">
+          <div class="flex-1 min-w-0">
+            <div class="font-display text-base">房贷 · 招行 · 海淀</div>
+            <div class="font-mono text-[10px] text-ink-subtle mt-0.5 tracking-wider">011 · 共同 · ↗ 招行储蓄卡</div>
+          </div>
+          <span class="pill" style="background:var(--rust-soft);color:var(--rust);border-color:var(--rust)">LOAN</span>
+        </div>
+        <div class="flex items-baseline justify-between mt-3 pt-3 border-t border-rule-soft">
+          <span class="text-xs text-ink-soft">本期欠款</span>
+          <span class="font-mono text-base tnum num-neg">¥1,195,180</span>
+        </div>
+        <div class="flex gap-2 mt-3">
+          <button class="btn-paper text-[10px] flex-1 justify-center">编辑</button>
+          <button class="btn-ghost text-[10px]">↔</button>
+          <button class="btn-ghost text-[10px]">归档</button>
+        </div>
+      </div>
+
+      <!-- 省略其他卡 — 实际渲染会有 11 张 -->
+      <div class="text-center py-4 font-mono text-[10px] text-ink-subtle tracking-wider uppercase">
+        — 还有 5 个账户(住宅 / 工行 / 微信 / 蚂蚁财富 / 招行理财)—
+      </div>
+
     </section>
 
     <!-- ★ 模板向导 modal(展示态)★ -->
