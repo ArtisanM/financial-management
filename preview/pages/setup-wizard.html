@@ -22,31 +22,179 @@
 
     <!-- 进度 -->
     <section class="mb-10">
-      <div class="font-mono text-[10px] tracking-[0.22em] text-brass-deep mb-3">家 · 庭 · 起 · 手 · 向 · 导 — 第 三 步</div>
+      <div class="font-mono text-[10px] tracking-[0.22em] text-brass-deep mb-3">家 · 庭 · 起 · 手 · 向 · 导 — 全四步预览</div>
       <div class="flex items-center gap-4 mb-6">
-        <h1 class="font-display text-4xl font-medium">添加你们的账户</h1>
+        <h1 class="font-display text-4xl md:text-5xl font-medium">从零到首页</h1>
+      </div>
+      <p class="text-ink-soft text-sm max-w-2xl mb-6">家庭首次部署后,任一成员首次登录即触发此向导。本预览把四步全部展开,实际产品按顺序流转。</p>
+
+      <!-- 步骤条(导航式) -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-px bg-rule">
+        <a href="#step-1" class="bg-card-soft px-5 py-4 no-underline hover:bg-card transition">
+          <div class="font-mono text-[10px] tracking-wider text-ink-subtle">01</div>
+          <div class="font-display text-base mt-1">家庭基础</div>
+        </a>
+        <a href="#step-2" class="bg-card-soft px-5 py-4 no-underline hover:bg-card transition">
+          <div class="font-mono text-[10px] tracking-wider text-ink-subtle">02</div>
+          <div class="font-display text-base mt-1">成员确认</div>
+        </a>
+        <a href="#step-3" class="bg-ink text-paper px-5 py-4 no-underline">
+          <div class="font-mono text-[10px] tracking-wider text-brass-soft">03 · 主</div>
+          <div class="font-display text-base mt-1">添加账户</div>
+        </a>
+        <a href="#step-4" class="bg-card-soft px-5 py-4 no-underline hover:bg-card transition">
+          <div class="font-mono text-[10px] tracking-wider text-ink-subtle">04</div>
+          <div class="font-display text-base mt-1">落地完成</div>
+        </a>
+      </div>
+    </section>
+
+    <!-- ════════ Step 1 · 家庭基础设置 ════════ -->
+    <section id="step-1" class="mb-12 scroll-mt-24">
+      <div class="flex items-baseline justify-between mb-4 rule-x pt-4">
+        <div>
+          <div class="eyebrow mb-1">第 一 步 · CONFIRM FAMILY</div>
+          <h2 class="font-display text-2xl font-medium">家庭基础信息</h2>
+        </div>
+        <span class="font-mono text-[10px] tracking-wider text-ink-subtle uppercase">所有字段日后可在 /admin/family 改</span>
       </div>
 
-      <!-- 步骤条 -->
-      <div class="grid grid-cols-4 gap-px bg-rule">
-        <div class="bg-card-soft px-5 py-4">
-          <div class="font-mono text-[10px] tracking-wider text-ink-subtle">01 · 已完成</div>
-          <div class="font-display text-base mt-1 text-ink-soft line-through">家庭名 · 币种 · 周期</div>
+      <div class="bracket-card max-w-3xl">
+        <p class="text-sm text-ink-soft mb-5">系统已为你创建一个家庭,确认或修改基础信息:</p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div>
+            <label class="field-label">家庭名 · 必填</label>
+            <input class="field-input" value="张家">
+            <p class="font-mono text-[10px] text-ink-subtle mt-1 tracking-wider">导出文件名 · 邮件称呼</p>
+          </div>
+          <div>
+            <label class="field-label">本位币 · BASE CURRENCY</label>
+            <select class="field-input bg-transparent">
+              <option>CNY · 人民币</option>
+              <option>USD</option>
+              <option>HKD</option>
+              <option>EUR</option>
+            </select>
+            <p class="font-mono text-[10px] text-ink-subtle mt-1 tracking-wider">所有图表以此为分母折算</p>
+          </div>
         </div>
-        <div class="bg-card-soft px-5 py-4">
-          <div class="font-mono text-[10px] tracking-wider text-ink-subtle">02 · 已完成</div>
-          <div class="font-display text-base mt-1 text-ink-soft line-through">成员 · 张伟 + 李静</div>
+
+        <div class="mb-6">
+          <label class="field-label">周期类型 · PERIOD TYPE</label>
+          <div class="grid grid-cols-2 gap-px bg-rule mt-2">
+            <label class="bg-ink text-paper px-5 py-3 cursor-pointer flex items-center gap-3">
+              <input type="radio" name="period" checked class="accent-[var(--brass)]">
+              <div>
+                <div class="font-display text-base">月度</div>
+                <div class="font-mono text-[10px] tracking-wider text-brass-soft">每月 1 次填报 · 推荐</div>
+              </div>
+            </label>
+            <label class="bg-card-soft px-5 py-3 cursor-pointer flex items-center gap-3">
+              <input type="radio" name="period" class="accent-[var(--brass)]">
+              <div>
+                <div class="font-display text-base">周度</div>
+                <div class="font-mono text-[10px] tracking-wider text-ink-subtle">每周 1 次 · 高频家庭</div>
+              </div>
+            </label>
+          </div>
+          <p class="font-mono text-[10px] text-ink-subtle mt-2 tracking-wider">日后切换需先关闭所有 OPEN 周期</p>
         </div>
-        <div class="bg-ink text-paper px-5 py-4">
-          <div class="font-mono text-[10px] tracking-wider text-brass-soft">03 · 进行中</div>
-          <div class="font-display text-base mt-1">添加账户</div>
-        </div>
-        <div class="bg-paper px-5 py-4">
-          <div class="font-mono text-[10px] tracking-wider text-ink-subtle">04 · 落地</div>
-          <div class="font-display text-base mt-1 text-ink-subtle">完成 · 进首页</div>
+
+        <div class="rule-double pt-1 mb-4"></div>
+        <div class="flex justify-end">
+          <button class="btn-ink">下一步 · 成员 →</button>
         </div>
       </div>
     </section>
+
+    <!-- ════════ Step 2 · 成员确认 ════════ -->
+    <section id="step-2" class="mb-12 scroll-mt-24">
+      <div class="flex items-baseline justify-between mb-4 rule-x pt-4">
+        <div>
+          <div class="eyebrow mb-1">第 二 步 · CONFIRM MEMBERS</div>
+          <h2 class="font-display text-2xl font-medium">成员名单</h2>
+        </div>
+        <span class="font-mono text-[10px] tracking-wider text-ink-subtle uppercase">系统已种子 2 人 · 仅可改名,不可删/加</span>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl">
+
+        <!-- 成员 1 -->
+        <div class="paper-card p-6">
+          <div class="flex items-center gap-4 mb-5">
+            <div class="w-16 h-16 rounded-full bg-ink text-paper flex items-center justify-center font-display text-2xl">伟</div>
+            <div>
+              <div class="eyebrow-ink">第 1 位</div>
+              <span class="pill pill-brass mt-1">主用 · 当前登录</span>
+            </div>
+          </div>
+          <div class="space-y-4">
+            <div>
+              <label class="field-label">登录名 · 不可改</label>
+              <p class="font-mono text-base text-ink-soft mt-1">zhang.wei</p>
+            </div>
+            <div>
+              <label class="field-label">显示名 · 必填</label>
+              <input class="field-input" value="张伟">
+            </div>
+            <div>
+              <label class="field-label">角色标签 · 可空</label>
+              <input class="field-input" value="丈夫" placeholder="自由文本">
+              <p class="font-mono text-[10px] text-ink-subtle mt-1 tracking-wider">仅作 UI 标签,无系统逻辑</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 成员 2 -->
+        <div class="paper-card p-6">
+          <div class="flex items-center gap-4 mb-5">
+            <div class="w-16 h-16 rounded-full bg-ink text-paper flex items-center justify-center font-display text-2xl">静</div>
+            <div>
+              <div class="eyebrow-ink">第 2 位</div>
+              <span class="pill mt-1">尚未首登</span>
+            </div>
+          </div>
+          <div class="space-y-4">
+            <div>
+              <label class="field-label">登录名 · 不可改</label>
+              <p class="font-mono text-base text-ink-soft mt-1">li.jing</p>
+              <p class="font-mono text-[10px] text-ink-subtle mt-1 tracking-wider">临时密码下方查看</p>
+            </div>
+            <div>
+              <label class="field-label">显示名 · 必填</label>
+              <input class="field-input" value="李静">
+            </div>
+            <div>
+              <label class="field-label">角色标签 · 可空</label>
+              <input class="field-input" value="妻子" placeholder="自由文本">
+            </div>
+          </div>
+          <div class="mt-4 pt-4 border-t border-rule-soft bg-card-soft -mx-6 -mb-6 px-6 py-3">
+            <div class="font-mono text-[10px] tracking-wider text-ink-subtle uppercase mb-1">临时密码 · 转给 ta</div>
+            <div class="font-mono tnum text-base tracking-widest">7Y9k-3B2m-Q4nX</div>
+            <p class="font-mono text-[10px] text-ink-subtle mt-1 tracking-wider">首次登录后强制改密</p>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="rule-double pt-1 mt-6 max-w-4xl mb-4"></div>
+      <div class="flex justify-between max-w-4xl">
+        <a href="#step-1" class="font-mono text-[10px] tracking-wider text-ink-soft hover:text-ink no-underline">← 上一步</a>
+        <button class="btn-ink">下一步 · 添加账户 →</button>
+      </div>
+    </section>
+
+    <!-- ════════ Step 3 · 账户模板(原内容)════════ -->
+    <section id="step-3" class="mb-12 scroll-mt-24">
+      <div class="flex items-baseline justify-between mb-4 rule-x pt-4">
+        <div>
+          <div class="eyebrow mb-1">第 三 步 · MAIN STEP · ADD ACCOUNTS</div>
+          <h2 class="font-display text-2xl font-medium">挑模板,定家底</h2>
+        </div>
+        <span class="font-mono text-[10px] tracking-wider text-ink-subtle uppercase">向导耗时最长一步 · 通常 5-8 分钟</span>
+      </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
@@ -290,6 +438,72 @@
         </div>
       </section>
     </div>
+
+    </section>
+    <!-- ↑ Step 3 结束 -->
+
+    <!-- ════════ Step 4 · 落地完成 ════════ -->
+    <section id="step-4" class="mb-12 scroll-mt-24">
+      <div class="flex items-baseline justify-between mb-4 rule-x pt-4">
+        <div>
+          <div class="eyebrow mb-1">第 四 步 · WELCOME · DONE</div>
+          <h2 class="font-display text-2xl font-medium">落地家中</h2>
+        </div>
+      </div>
+
+      <!-- 庆祝卡 -->
+      <div class="envelope p-10 max-w-3xl text-center" style="border-color: var(--brass);">
+        <div class="folio mx-auto mb-2" style="font-size: 96px; line-height: 1; color: var(--brass);">✓</div>
+        <h3 class="font-display text-4xl mb-3">恭喜,账册已开</h3>
+        <p class="font-serif text-lg text-ink-soft max-w-xl mx-auto leading-relaxed mb-6">
+          你和李静都已加入"张家"。<br/>
+          已添加 9 个账户(其中 2 个负债)。<br/>
+          首个数据周期 <span class="font-mono">2026-04</span> 已开,等你们填报。
+        </p>
+
+        <div class="rule-double max-w-md mx-auto mb-6"></div>
+
+        <!-- 引导提示 -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-px bg-rule max-w-2xl mx-auto mb-6">
+          <div class="bg-card p-4 text-left">
+            <div class="font-mono text-[10px] tracking-wider text-brass-deep mb-1">下次去这里</div>
+            <div class="font-display text-base">/entry</div>
+            <div class="text-xs text-ink-soft mt-1">每月 1 日填本月余额</div>
+          </div>
+          <div class="bg-card p-4 text-left">
+            <div class="font-mono text-[10px] tracking-wider text-brass-deep mb-1">看趋势</div>
+            <div class="font-display text-base">/dashboard</div>
+            <div class="text-xs text-ink-soft mt-1">第二期起有数据</div>
+          </div>
+          <div class="bg-card p-4 text-left">
+            <div class="font-mono text-[10px] tracking-wider text-brass-deep mb-1">按月报表</div>
+            <div class="font-display text-base">/reports</div>
+            <div class="text-xs text-ink-soft mt-1">XIRR / 瀑布图 / 桑基图</div>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-center gap-3 flex-wrap">
+          <a href="dashboard.html" class="btn-ink">进入仪表盘 →</a>
+          <a href="entry-desktop.html" class="btn-paper">直接去填本月 →</a>
+        </div>
+
+        <p class="font-mono text-[10px] text-ink-subtle mt-6 tracking-wider">此向导只走一次。再次访问 /admin/family 可以编辑所有设置。</p>
+      </div>
+
+      <!-- 检查清单 -->
+      <div class="bracket-card max-w-3xl mt-8">
+        <div class="eyebrow mb-3">系 · 统 · 已 · 完 · 成</div>
+        <ul class="space-y-2 text-sm">
+          <li class="flex items-center gap-3"><span class="tick-done" style="width:14px;height:14px;font-size:9px;">✓</span> 创建家庭"张家",本位币 CNY,周期月度</li>
+          <li class="flex items-center gap-3"><span class="tick-done" style="width:14px;height:14px;font-size:9px;">✓</span> 种子成员 2 人:张伟(管理员)+ 李静(临时密码已生成)</li>
+          <li class="flex items-center gap-3"><span class="tick-done" style="width:14px;height:14px;font-size:9px;">✓</span> 添加 9 个账户(招行/工行/华泰/富途/支付宝/微信/蚂蚁/住宅/房贷)</li>
+          <li class="flex items-center gap-3"><span class="tick-done" style="width:14px;height:14px;font-size:9px;">✓</span> 拉取 2026-04 期初汇率(USD 7.2110, HKD 0.9241)</li>
+          <li class="flex items-center gap-3"><span class="tick-done" style="width:14px;height:14px;font-size:9px;">✓</span> 为每位成员生成 9 条快照待办</li>
+          <li class="flex items-center gap-3"><span class="tick-done" style="width:14px;height:14px;font-size:9px;">✓</span> 启动首次备份(本地)</li>
+          <li class="flex items-center gap-3 text-ink-subtle"><span class="tick-pending" style="width:14px;height:14px;font-size:9px;">·</span> 等你们各自填本期数据</li>
+        </ul>
+      </div>
+    </section>
 
     <!-- 底部说明 -->
     <p class="text-center text-xs text-ink-subtle mt-12 max-w-2xl mx-auto leading-relaxed">

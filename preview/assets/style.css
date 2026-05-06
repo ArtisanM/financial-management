@@ -483,3 +483,8 @@ a.brass-link:hover { text-decoration-color: var(--brass); }
 ::-webkit-scrollbar-track { background: var(--paper); }
 ::-webkit-scrollbar-thumb { background: var(--rule); border: 3px solid var(--paper); }
 ::-webkit-scrollbar-thumb:hover { background: var(--ink-subtle); }
+
+/* — Hamburger summary — 隐藏默认箭头 */
+summary { list-style: none; }
+summary::-webkit-details-marker { display: none; }
+summary::marker { content: ''; }
