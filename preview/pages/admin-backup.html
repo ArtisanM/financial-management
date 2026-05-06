@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>备份与恢复 · 家庭账房</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,ital,wght@9..144,0,300..700;9..144,1,300..600&family=JetBrains+Mono:wght@300;400;500&family=Noto+Serif+SC:wght@300;400;500;600&family=Source+Serif+4:opsz,wght@8..60,300;8..60,400;8..60,500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/style.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = { theme: { extend: { colors: { paper: 'var(--paper)', 'paper-soft': 'var(--paper-soft)', 'paper-deep': 'var(--paper-deep)', card: 'var(--card)', 'card-soft': 'var(--card-soft)', ink: { DEFAULT: 'var(--ink)', soft: 'var(--ink-soft)', subtle: 'var(--ink-subtle)' }, rule: { DEFAULT: 'var(--rule)', soft: 'var(--rule-soft)' }, brass: { DEFAULT: 'var(--brass)', deep: 'var(--brass-deep)', soft: 'var(--brass-soft)' }, forest: 'var(--forest)', rust: 'var(--rust)' }, fontFamily: { display: ['Fraunces', 'Noto Serif SC', 'serif'], serif: ['"Source Serif 4"', 'Noto Serif SC', 'serif'], mono: ['JetBrains Mono', 'monospace'] } } } }</script>
+</head>
+<body class="min-h-screen relative">
+  <div class="fixed top-0 left-0 right-0 h-1 bg-ink z-40"></div>
+  <header class="sticky top-1 bg-paper/95 backdrop-blur border-b border-rule z-30">
+    <div class="max-w-[1400px] mx-auto px-6 lg:px-10 flex items-center justify-between h-16">
+      <div class="flex items-center gap-12">
+        <a href="../index.html" class="flex items-baseline gap-2 no-underline"><span class="font-display text-xl font-medium">账房</span><span class="font-mono text-[10px] tracking-[0.2em] text-ink-subtle">№ 张</span></a>
+        <nav class="hidden md:flex items-center gap-7 font-mono text-[11px] tracking-[0.14em] uppercase">
+          <a href="dashboard.html" class="text-ink-soft hover:text-ink no-underline">仪表盘</a>
+          <a href="entry-desktop.html" class="text-ink-soft hover:text-ink no-underline">填报</a>
+          <a href="my-todos.html" class="text-ink-soft hover:text-ink no-underline">待办</a>
+          <a href="accounts.html" class="text-ink-soft hover:text-ink no-underline">账户</a>
+          <a href="reports.html" class="text-ink-soft hover:text-ink no-underline">报表</a>
+          <a href="admin.html" class="text-ink no-underline border-b-2 border-brass pb-[18px]">管理</a>
+        </nav>
+      </div>
+      <div class="w-8 h-8 rounded-full bg-ink text-paper flex items-center justify-center font-display text-sm">伟</div>
+    </div>
+  </header>
+
+  <main class="max-w-[1400px] mx-auto px-6 lg:px-10 py-10 relative z-10 grid grid-cols-12 gap-8">
+    <aside class="col-span-12 md:col-span-3">
+      <div class="sticky top-24">
+        <div class="eyebrow mb-4">/ADMIN · 12 项</div>
+        <nav class="flex flex-col text-sm">
+          <a href="admin.html" class="py-2 px-3 border-l border-rule hover:border-ink hover:bg-card-soft text-ink-soft no-underline">总览</a>
+          <a href="admin-family.html" class="py-2 px-3 border-l border-rule hover:border-ink hover:bg-card-soft text-ink-soft no-underline">家庭设置</a>
+          <a href="admin-members.html" class="py-2 px-3 border-l border-rule hover:border-ink hover:bg-card-soft text-ink-soft no-underline">成员</a>
+          <a href="accounts.html" class="py-2 px-3 border-l border-rule hover:border-ink hover:bg-card-soft text-ink-soft no-underline">账户</a>
+          <a href="#" class="py-2 px-3 border-l border-rule hover:border-ink hover:bg-card-soft text-ink-subtle no-underline">账户模板 <span class="text-rust text-[10px]">·只读</span></a>
+          <a href="#" class="py-2 px-3 border-l border-rule hover:border-ink hover:bg-card-soft text-ink-subtle no-underline">现金流类别 <span class="text-rust text-[10px]">·只读</span></a>
+          <a href="admin-periods.html" class="py-2 px-3 border-l border-rule hover:border-ink hover:bg-card-soft text-ink-soft no-underline">周期</a>
+          <a href="#" class="py-2 px-3 border-l border-rule hover:border-ink hover:bg-card-soft text-ink-soft no-underline">提醒</a>
+          <a href="#" class="py-2 px-3 border-l border-rule hover:border-ink hover:bg-card-soft text-ink-soft no-underline">SMTP</a>
+          <a href="admin-fx.html" class="py-2 px-3 border-l border-rule hover:border-ink hover:bg-card-soft text-ink-soft no-underline">汇率</a>
+          <a href="admin-backup.html" class="py-2 px-3 border-l-2 border-brass bg-card-soft text-ink no-underline font-display">备份</a>
+          <a href="admin-audit.html" class="py-2 px-3 border-l border-rule hover:border-ink hover:bg-card-soft text-ink-soft no-underline">审计</a>
+          <a href="#" class="py-2 px-3 border-l border-rule hover:border-ink hover:bg-card-soft text-ink-soft no-underline">数值阈值</a>
+        </nav>
+      </div>
+    </aside>
+
+    <section class="col-span-12 md:col-span-9">
+      <div class="mb-8 flex items-end justify-between">
+        <div>
+          <div class="eyebrow mb-2">备 · 份 · 与 · 恢 · 复</div>
+          <h1 class="font-display text-4xl font-medium">数据安守</h1>
+          <p class="text-ink-soft text-sm mt-2">每周日凌晨 3:00 通过 mysqldump 自动备份。保留 8 周,失败邮件告警。</p>
+        </div>
+        <div class="flex gap-3">
+          <button class="btn-paper">↓ 立即下载备份</button>
+          <button class="btn-ink">↻ 立即备份</button>
+        </div>
+      </div>
+
+      <!-- 状态 -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-px bg-rule mb-8">
+        <div class="kpi-card">
+          <span class="kpi-eyebrow">最近备份</span>
+          <div class="font-display text-2xl mt-1 num-pos">5 月 4 日 03:00</div>
+          <div class="font-mono text-xs num-pos mt-1">✓ 成功 · 2.4 MB</div>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-eyebrow">保留周数</span>
+          <div class="font-display text-2xl mt-1 tnum">8 周</div>
+          <div class="font-mono text-xs text-ink-soft mt-1">滚动删除最旧</div>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-eyebrow">异地存储</span>
+          <div class="font-display text-2xl mt-1">已启用</div>
+          <div class="font-mono text-xs text-ink-soft mt-1">阿里云 OSS</div>
+        </div>
+      </div>
+
+      <!-- 历次备份表 -->
+      <div class="paper-card overflow-hidden mb-10">
+        <div class="px-6 py-4 border-b border-rule flex items-baseline justify-between">
+          <h3 class="font-display text-lg">最近 8 次备份</h3>
+          <span class="font-mono text-[10px] tracking-wider text-ink-subtle uppercase">8 / 8</span>
+        </div>
+        <table class="ledger-table">
+          <thead>
+            <tr>
+              <th>序</th>
+              <th>时间</th>
+              <th>状态</th>
+              <th>本地</th>
+              <th>异地</th>
+              <th class="num">大小</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td class="font-mono text-xs">001</td><td class="font-mono">2026-05-04 03:00</td><td><span class="pill" style="background:var(--forest-soft);color:var(--forest);border-color:var(--forest)">SUCCESS</span></td><td class="text-xs">/var/backup/...</td><td class="text-xs">oss://family-finance</td><td class="num">2.41 MB</td><td><button class="btn-ghost">↓ 下载</button></td></tr>
+            <tr><td class="font-mono text-xs">002</td><td class="font-mono">2026-04-27 03:00</td><td><span class="pill" style="background:var(--forest-soft);color:var(--forest);border-color:var(--forest)">SUCCESS</span></td><td class="text-xs">/var/backup/...</td><td class="text-xs">oss://family-finance</td><td class="num">2.39 MB</td><td><button class="btn-ghost">↓ 下载</button></td></tr>
+            <tr><td class="font-mono text-xs">003</td><td class="font-mono">2026-04-20 03:00</td><td><span class="pill" style="background:var(--forest-soft);color:var(--forest);border-color:var(--forest)">SUCCESS</span></td><td class="text-xs">/var/backup/...</td><td class="text-xs">oss://family-finance</td><td class="num">2.36 MB</td><td><button class="btn-ghost">↓ 下载</button></td></tr>
+            <tr style="background: var(--rust-soft); opacity: 0.85;"><td class="font-mono text-xs">004</td><td class="font-mono">2026-04-13 03:00</td><td><span class="pill" style="background:var(--rust-soft);color:var(--rust);border-color:var(--rust)">FAILED</span></td><td class="text-xs">/var/backup/...</td><td class="text-xs text-rust">⚠ 网络超时</td><td class="num text-ink-subtle">—</td><td><button class="btn-ghost">查看日志</button></td></tr>
+            <tr><td class="font-mono text-xs">005</td><td class="font-mono">2026-04-06 03:00</td><td><span class="pill" style="background:var(--forest-soft);color:var(--forest);border-color:var(--forest)">SUCCESS</span></td><td class="text-xs">/var/backup/...</td><td class="text-xs">oss://family-finance</td><td class="num">2.31 MB</td><td><button class="btn-ghost">↓ 下载</button></td></tr>
+            <tr><td class="font-mono text-xs">006</td><td class="font-mono">2026-03-30 03:00</td><td><span class="pill" style="background:var(--forest-soft);color:var(--forest);border-color:var(--forest)">SUCCESS</span></td><td class="text-xs">/var/backup/...</td><td class="text-xs">oss://family-finance</td><td class="num">2.29 MB</td><td><button class="btn-ghost">↓ 下载</button></td></tr>
+            <tr><td class="font-mono text-xs">007</td><td class="font-mono">2026-03-23 03:00</td><td><span class="pill" style="background:var(--forest-soft);color:var(--forest);border-color:var(--forest)">SUCCESS</span></td><td class="text-xs">/var/backup/...</td><td class="text-xs">oss://family-finance</td><td class="num">2.27 MB</td><td><button class="btn-ghost">↓ 下载</button></td></tr>
+            <tr><td class="font-mono text-xs">008</td><td class="font-mono">2026-03-16 03:00</td><td><span class="pill" style="background:var(--forest-soft);color:var(--forest);border-color:var(--forest)">SUCCESS</span></td><td class="text-xs">/var/backup/...</td><td class="text-xs">oss://family-finance</td><td class="num">2.24 MB</td><td><button class="btn-ghost">↓ 下载</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 配置 -->
+      <div class="bracket-card max-w-2xl">
+        <div class="eyebrow mb-2">配 · 置</div>
+        <h3 class="font-display text-xl mb-5">备份策略</h3>
+
+        <div class="space-y-6">
+          <div class="grid grid-cols-2 gap-5">
+            <div>
+              <label class="field-label">cron 表达式</label>
+              <input class="field-input font-mono text-sm" value="0 3 * * 0">
+              <p class="font-mono text-[10px] text-ink-subtle mt-1 tracking-wider">每周日 03:00</p>
+            </div>
+            <div>
+              <label class="field-label">保留份数 · 周</label>
+              <input class="field-input field-input-num" value="8">
+            </div>
+          </div>
+
+          <div>
+            <label class="field-label">本地路径</label>
+            <input class="field-input font-mono text-sm" value="/var/backup/family-finance/">
+          </div>
+
+          <div class="rule-double pt-1"></div>
+
+          <label class="flex items-center gap-3 cursor-pointer">
+            <input type="checkbox" class="w-4 h-4 accent-[var(--brass)]" checked>
+            <span class="font-mono text-[11px] tracking-[0.14em] uppercase text-ink-soft">启用异地存储 · OFF-SITE</span>
+          </label>
+
+          <div>
+            <label class="field-label">异地 URL</label>
+            <input class="field-input font-mono text-sm" value="oss://family-finance/backup/">
+          </div>
+
+          <label class="flex items-center gap-3 cursor-pointer opacity-60">
+            <input type="checkbox" class="w-4 h-4 accent-[var(--brass)]" disabled>
+            <span class="font-mono text-[11px] tracking-[0.14em] uppercase text-ink-soft">GPG 加密 · v0.2 即将开放</span>
+          </label>
+
+          <div class="rule-x pt-3 flex justify-end gap-2">
+            <button class="btn-paper">测试 OSS 凭证</button>
+            <button class="btn-ink">保存</button>
+          </div>
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <footer class="border-t border-rule mt-12 py-6 px-8 text-center relative z-10">
+    <div class="font-mono text-[10px] tracking-[0.18em] text-ink-subtle">家庭账房 · /admin/backup</div>
+  </footer>
+</body>
+</html>

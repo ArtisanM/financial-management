@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>家庭起手向导 · 家庭账房</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,ital,wght@9..144,0,300..700;9..144,1,300..600&family=JetBrains+Mono:wght@300;400;500&family=Noto+Serif+SC:wght@300;400;500;600&family=Source+Serif+4:opsz,wght@8..60,300;8..60,400;8..60,500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/style.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { theme: { extend: { colors: { paper: 'var(--paper)', 'paper-soft': 'var(--paper-soft)', 'paper-deep': 'var(--paper-deep)', card: 'var(--card)', 'card-soft': 'var(--card-soft)', ink: { DEFAULT: 'var(--ink)', soft: 'var(--ink-soft)', subtle: 'var(--ink-subtle)' }, rule: { DEFAULT: 'var(--rule)', soft: 'var(--rule-soft)' }, brass: { DEFAULT: 'var(--brass)', deep: 'var(--brass-deep)', soft: 'var(--brass-soft)' }, forest: 'var(--forest)', rust: 'var(--rust)' }, fontFamily: { display: ['Fraunces', 'Noto Serif SC', 'serif'], serif: ['"Source Serif 4"', 'Noto Serif SC', 'serif'], mono: ['JetBrains Mono', 'monospace'] } } } }
+  </script>
+</head>
+<body class="min-h-screen relative">
+
+  <div class="fixed top-0 left-0 right-0 h-1 bg-ink z-40"></div>
+  <a href="../index.html" class="fixed top-6 left-6 font-mono text-[10px] tracking-[0.18em] text-ink-soft hover:text-brass-deep z-30">← INDEX</a>
+
+  <main class="max-w-[1100px] mx-auto px-6 lg:px-12 py-16 relative z-10">
+
+    <!-- 进度 -->
+    <section class="mb-10">
+      <div class="font-mono text-[10px] tracking-[0.22em] text-brass-deep mb-3">家 · 庭 · 起 · 手 · 向 · 导 — 第 三 步</div>
+      <div class="flex items-center gap-4 mb-6">
+        <h1 class="font-display text-4xl font-medium">添加你们的账户</h1>
+      </div>
+
+      <!-- 步骤条 -->
+      <div class="grid grid-cols-4 gap-px bg-rule">
+        <div class="bg-card-soft px-5 py-4">
+          <div class="font-mono text-[10px] tracking-wider text-ink-subtle">01 · 已完成</div>
+          <div class="font-display text-base mt-1 text-ink-soft line-through">家庭名 · 币种 · 周期</div>
+        </div>
+        <div class="bg-card-soft px-5 py-4">
+          <div class="font-mono text-[10px] tracking-wider text-ink-subtle">02 · 已完成</div>
+          <div class="font-display text-base mt-1 text-ink-soft line-through">成员 · 张伟 + 李静</div>
+        </div>
+        <div class="bg-ink text-paper px-5 py-4">
+          <div class="font-mono text-[10px] tracking-wider text-brass-soft">03 · 进行中</div>
+          <div class="font-display text-base mt-1">添加账户</div>
+        </div>
+        <div class="bg-paper px-5 py-4">
+          <div class="font-mono text-[10px] tracking-wider text-ink-subtle">04 · 落地</div>
+          <div class="font-display text-base mt-1 text-ink-subtle">完成 · 进首页</div>
+        </div>
+      </div>
+    </section>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+      <!-- 左:模板挑选 -->
+      <section class="lg:col-span-7">
+        <div class="bracket-card">
+          <div class="flex items-baseline justify-between mb-4">
+            <div>
+              <div class="eyebrow mb-1">13 个内置模板 · 80% 场景覆盖</div>
+              <h2 class="font-display text-xl">挑一个 / 多个模板</h2>
+            </div>
+            <input type="text" placeholder="搜索…" class="border border-rule px-3 py-1 text-sm bg-card font-serif w-40 focus:outline-none focus:border-brass">
+          </div>
+
+          <div class="rule-x pt-3 mb-4"></div>
+
+          <!-- 类型筛选 -->
+          <div class="flex flex-wrap gap-2 mb-5">
+            <button class="pill pill-ink">全部</button>
+            <button class="pill">银行 · 5</button>
+            <button class="pill">支付 · 2</button>
+            <button class="pill">券商 · 1</button>
+            <button class="pill">理财 · 2</button>
+            <button class="pill">房产 · 1</button>
+            <button class="pill">负债 · 2</button>
+            <button class="pill">自定义</button>
+          </div>
+
+          <!-- 模板网格 -->
+          <div class="grid grid-cols-2 gap-3">
+            <div class="border border-ink bg-card-soft p-4 cursor-pointer">
+              <div class="flex items-baseline justify-between mb-1">
+                <span class="font-display text-base">招商银行</span>
+                <span class="text-brass">✓</span>
+              </div>
+              <span class="pill text-[9px]">CASH · CNY</span>
+            </div>
+            <div class="border border-ink bg-card-soft p-4 cursor-pointer">
+              <div class="flex items-baseline justify-between mb-1">
+                <span class="font-display text-base">工商银行</span>
+                <span class="text-brass">✓</span>
+              </div>
+              <span class="pill text-[9px]">CASH · CNY</span>
+            </div>
+            <div class="border border-rule p-4 cursor-pointer hover:border-ink">
+              <div class="flex items-baseline justify-between mb-1">
+                <span class="font-display text-base">建设银行</span>
+              </div>
+              <span class="pill text-[9px]">CASH · CNY</span>
+            </div>
+            <div class="border border-rule p-4 cursor-pointer hover:border-ink">
+              <div class="flex items-baseline justify-between mb-1">
+                <span class="font-display text-base">中国银行</span>
+              </div>
+              <span class="pill text-[9px]">CASH · CNY</span>
+            </div>
+            <div class="border border-ink bg-card-soft p-4 cursor-pointer">
+              <div class="flex items-baseline justify-between mb-1">
+                <span class="font-display text-base">信用卡(通用)</span>
+                <span class="text-brass">✓</span>
+              </div>
+              <span class="pill text-[9px]" style="background:var(--rust-soft);color:var(--rust);border-color:var(--rust)">LOAN · CNY</span>
+            </div>
+            <div class="border border-ink bg-card-soft p-4 cursor-pointer">
+              <div class="flex items-baseline justify-between mb-1">
+                <span class="font-display text-base">支付宝(余额+余额宝)</span>
+                <span class="text-brass">✓</span>
+              </div>
+              <span class="pill text-[9px]">CASH · CNY</span>
+            </div>
+            <div class="border border-ink bg-card-soft p-4 cursor-pointer">
+              <div class="flex items-baseline justify-between mb-1">
+                <span class="font-display text-base">微信(零钱+零钱通)</span>
+                <span class="text-brass">✓</span>
+              </div>
+              <span class="pill text-[9px]">CASH · CNY</span>
+            </div>
+            <div class="border border-ink bg-card-soft p-4 cursor-pointer">
+              <div class="flex items-baseline justify-between mb-1">
+                <span class="font-display text-base">证券账户(通用)</span>
+                <span class="text-brass">✓</span>
+              </div>
+              <span class="pill text-[9px]" style="background:var(--brass-soft);color:var(--brass-deep);border-color:var(--brass)">STOCK</span>
+            </div>
+            <div class="border border-ink bg-card-soft p-4 cursor-pointer">
+              <div class="flex items-baseline justify-between mb-1">
+                <span class="font-display text-base">蚂蚁财富 · 京东金融</span>
+                <span class="text-brass">✓</span>
+              </div>
+              <span class="pill text-[9px]" style="background:var(--forest-soft);color:var(--forest);border-color:var(--forest)">WEALTH</span>
+            </div>
+            <div class="border border-rule p-4 cursor-pointer hover:border-ink">
+              <div class="font-display text-base">银行理财(R3 以下)</div>
+              <span class="pill text-[9px]" style="background:var(--forest-soft);color:var(--forest);border-color:var(--forest)">WEALTH</span>
+            </div>
+            <div class="border border-ink bg-card-soft p-4 cursor-pointer">
+              <div class="flex items-baseline justify-between mb-1">
+                <span class="font-display text-base">住宅(房产)</span>
+                <span class="text-brass">✓</span>
+              </div>
+              <span class="pill text-[9px]">PROPERTY</span>
+            </div>
+            <div class="border border-ink bg-card-soft p-4 cursor-pointer">
+              <div class="flex items-baseline justify-between mb-1">
+                <span class="font-display text-base">贷款(房贷/车贷)</span>
+                <span class="text-brass">✓</span>
+              </div>
+              <span class="pill text-[9px]" style="background:var(--rust-soft);color:var(--rust);border-color:var(--rust)">LOAN</span>
+            </div>
+            <div class="border border-rule border-dashed p-4 cursor-pointer hover:border-ink col-span-2 text-center">
+              <div class="font-display text-base text-ink-soft">+ 自定义账户(币种、类型自选)</div>
+              <div class="font-mono text-[10px] tracking-wider text-ink-subtle mt-1">用于:加密货币 / 黄金 / 外币 / 借出款 …</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 右:已选账户清单 -->
+      <section class="lg:col-span-5">
+        <div class="paper-card p-6 sticky top-8">
+          <div class="flex items-baseline justify-between mb-1">
+            <div class="eyebrow">已选 9 个</div>
+            <span class="font-mono text-[10px] tracking-wider text-ink-subtle">EDIT · 主理人 · 命名</span>
+          </div>
+          <h3 class="font-display text-lg mb-4">家庭账户清单</h3>
+          <div class="rule-double mb-4"></div>
+
+          <div class="space-y-2 max-h-[480px] overflow-y-auto pr-1">
+
+            <div class="border-l-2 border-brass pl-3 py-2">
+              <div class="flex items-baseline justify-between gap-2">
+                <input class="font-display text-sm bg-transparent outline-none flex-1" value="招行储蓄卡 · 工资">
+                <button class="font-mono text-[10px] text-ink-subtle hover:text-rust">×</button>
+              </div>
+              <div class="flex items-center gap-2 mt-1 font-mono text-[10px] text-ink-soft tracking-wider">
+                <span class="pill" style="font-size:9px;padding:2px 6px;">CASH</span>
+                <select class="bg-transparent text-[10px] tracking-wider"><option>张伟</option><option>李静</option><option>共同</option></select>
+              </div>
+            </div>
+
+            <div class="border-l-2 border-rule pl-3 py-2">
+              <div class="flex items-baseline justify-between">
+                <input class="font-display text-sm bg-transparent outline-none flex-1" value="工商银行 · 备用金">
+                <button class="font-mono text-[10px] text-ink-subtle hover:text-rust">×</button>
+              </div>
+              <div class="flex items-center gap-2 mt-1 font-mono text-[10px] text-ink-soft tracking-wider">
+                <span class="pill" style="font-size:9px;padding:2px 6px;">CASH</span>
+                <select class="bg-transparent text-[10px] tracking-wider"><option>张伟</option></select>
+              </div>
+            </div>
+
+            <div class="border-l-2 border-rule pl-3 py-2">
+              <div class="flex items-baseline justify-between">
+                <input class="font-display text-sm bg-transparent outline-none flex-1" value="招行信用卡">
+                <button class="font-mono text-[10px] text-ink-subtle hover:text-rust">×</button>
+              </div>
+              <div class="flex items-center gap-2 mt-1 font-mono text-[10px] text-ink-soft tracking-wider">
+                <span class="pill" style="font-size:9px;padding:2px 6px;background:var(--rust-soft);color:var(--rust);border-color:var(--rust)">LOAN</span>
+                <select class="bg-transparent text-[10px] tracking-wider"><option>张伟</option></select>
+              </div>
+            </div>
+
+            <div class="border-l-2 border-rule pl-3 py-2">
+              <div class="flex items-baseline justify-between">
+                <input class="font-display text-sm bg-transparent outline-none flex-1" value="支付宝 · 余额宝">
+                <button class="font-mono text-[10px] text-ink-subtle hover:text-rust">×</button>
+              </div>
+              <div class="flex items-center gap-2 mt-1 font-mono text-[10px] text-ink-soft tracking-wider">
+                <span class="pill" style="font-size:9px;padding:2px 6px;">CASH</span>
+                <select class="bg-transparent text-[10px] tracking-wider"><option>李静</option></select>
+              </div>
+            </div>
+
+            <div class="border-l-2 border-rule pl-3 py-2">
+              <div class="flex items-baseline justify-between">
+                <input class="font-display text-sm bg-transparent outline-none flex-1" value="微信 · 零钱通">
+                <button class="font-mono text-[10px] text-ink-subtle hover:text-rust">×</button>
+              </div>
+              <div class="flex items-center gap-2 mt-1 font-mono text-[10px] text-ink-soft tracking-wider">
+                <span class="pill" style="font-size:9px;padding:2px 6px;">CASH</span>
+                <select class="bg-transparent text-[10px] tracking-wider"><option>李静</option></select>
+              </div>
+            </div>
+
+            <div class="border-l-2 border-rule pl-3 py-2">
+              <div class="flex items-baseline justify-between">
+                <input class="font-display text-sm bg-transparent outline-none flex-1" value="华泰证券 · A 股">
+                <button class="font-mono text-[10px] text-ink-subtle hover:text-rust">×</button>
+              </div>
+              <div class="flex items-center gap-2 mt-1 font-mono text-[10px] text-ink-soft tracking-wider">
+                <span class="pill" style="font-size:9px;padding:2px 6px;background:var(--brass-soft);color:var(--brass-deep);border-color:var(--brass)">STOCK</span>
+                <select class="bg-transparent text-[10px] tracking-wider"><option>张伟</option></select>
+              </div>
+            </div>
+
+            <div class="border-l-2 border-rule pl-3 py-2">
+              <div class="flex items-baseline justify-between">
+                <input class="font-display text-sm bg-transparent outline-none flex-1" value="富途证券 · 港美股">
+                <button class="font-mono text-[10px] text-ink-subtle hover:text-rust">×</button>
+              </div>
+              <div class="flex items-center gap-2 mt-1 font-mono text-[10px] text-ink-soft tracking-wider">
+                <span class="pill" style="font-size:9px;padding:2px 6px;background:var(--brass-soft);color:var(--brass-deep);border-color:var(--brass)">STOCK · USD</span>
+                <select class="bg-transparent text-[10px] tracking-wider"><option>张伟</option></select>
+              </div>
+            </div>
+
+            <div class="border-l-2 border-rule pl-3 py-2">
+              <div class="flex items-baseline justify-between">
+                <input class="font-display text-sm bg-transparent outline-none flex-1" value="蚂蚁财富 · 基金">
+                <button class="font-mono text-[10px] text-ink-subtle hover:text-rust">×</button>
+              </div>
+              <div class="flex items-center gap-2 mt-1 font-mono text-[10px] text-ink-soft tracking-wider">
+                <span class="pill" style="font-size:9px;padding:2px 6px;background:var(--forest-soft);color:var(--forest);border-color:var(--forest)">WEALTH</span>
+                <select class="bg-transparent text-[10px] tracking-wider"><option>李静</option></select>
+              </div>
+            </div>
+
+            <div class="border-l-2 border-rule pl-3 py-2">
+              <div class="flex items-baseline justify-between">
+                <input class="font-display text-sm bg-transparent outline-none flex-1" value="房贷 · 招行">
+                <button class="font-mono text-[10px] text-ink-subtle hover:text-rust">×</button>
+              </div>
+              <div class="flex items-center gap-2 mt-1 font-mono text-[10px] text-ink-soft tracking-wider">
+                <span class="pill" style="font-size:9px;padding:2px 6px;background:var(--rust-soft);color:var(--rust);border-color:var(--rust)">LOAN</span>
+                <select class="bg-transparent text-[10px] tracking-wider"><option>共同</option></select>
+              </div>
+              <div class="font-mono text-[10px] text-ink-subtle mt-1">默认还款来源:招行储蓄卡 · 工资 ↗</div>
+            </div>
+
+          </div>
+
+          <div class="rule-double mt-4 mb-4"></div>
+
+          <div class="flex items-center justify-between">
+            <a href="setup-wizard.html" class="font-mono text-[10px] tracking-[0.16em] text-ink-soft hover:text-ink">← 上一步</a>
+            <button class="btn-ink">
+              下一步 · 落地
+              <span class="font-display italic ml-1">→</span>
+            </button>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- 底部说明 -->
+    <p class="text-center text-xs text-ink-subtle mt-12 max-w-2xl mx-auto leading-relaxed">
+      模板预置类型与币种,可挑选后改名(例如把"招商银行"改成"招行储蓄卡 · 工资")。完成向导后,你可在<a href="accounts.html" class="brass-link">/accounts</a> 随时增删账户。所有清单不可删,只能归档。
+    </p>
+
+  </main>
+
+  <footer class="border-t border-rule mt-12 py-6 px-8 text-center relative z-10">
+    <div class="font-mono text-[10px] tracking-[0.18em] text-ink-subtle">家庭账房 · 起手向导 · 第 3 步 / 共 4 步</div>
+  </footer>
+</body>
+</html>

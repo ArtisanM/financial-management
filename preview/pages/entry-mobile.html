@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>本月填报 · 我的</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,ital,wght@9..144,0,300..700;9..144,1,300..600&family=JetBrains+Mono:wght@300;400;500&family=Noto+Serif+SC:wght@300;400;500;600&family=Source+Serif+4:opsz,wght@8..60,300;8..60,400;8..60,500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/style.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { theme: { extend: { colors: { paper: 'var(--paper)', 'paper-soft': 'var(--paper-soft)', 'paper-deep': 'var(--paper-deep)', card: 'var(--card)', 'card-soft': 'var(--card-soft)', ink: { DEFAULT: 'var(--ink)', soft: 'var(--ink-soft)', subtle: 'var(--ink-subtle)' }, rule: { DEFAULT: 'var(--rule)', soft: 'var(--rule-soft)' }, brass: { DEFAULT: 'var(--brass)', deep: 'var(--brass-deep)', soft: 'var(--brass-soft)' }, forest: 'var(--forest)', rust: 'var(--rust)' }, fontFamily: { display: ['Fraunces', 'Noto Serif SC', 'serif'], serif: ['"Source Serif 4"', 'Noto Serif SC', 'serif'], mono: ['JetBrains Mono', 'monospace'] } } } }
+  </script>
+  <style>
+    body { background: var(--paper); }
+    .phone-frame {
+      max-width: 420px;
+      margin: 32px auto;
+      background: var(--paper);
+      border: 1px solid var(--rule);
+      border-radius: 36px;
+      overflow: hidden;
+      box-shadow: 0 30px 80px -30px rgba(26,23,20,0.25);
+    }
+    .phone-status {
+      background: var(--ink);
+      color: var(--paper);
+      padding: 8px 24px;
+      display: flex;
+      justify-content: space-between;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+    }
+  </style>
+</head>
+<body class="min-h-screen">
+
+  <!-- 装饰条:返回索引 -->
+  <a href="../index.html" class="fixed top-6 left-6 font-mono text-[10px] tracking-[0.18em] text-ink-soft hover:text-brass-deep transition z-30">← INDEX</a>
+
+  <!-- 设计说明 -->
+  <div class="max-w-[420px] mx-auto pt-12 px-6">
+    <div class="eyebrow mb-2">/entry?mine=true</div>
+    <h1 class="font-display text-3xl mb-2">手机填报 · 卡片视图</h1>
+    <p class="text-ink-soft text-sm">为非技术成员设计:大字号、单卡片、引导分类、提交后自动滚到下一张。</p>
+  </div>
+
+  <div class="phone-frame">
+    <div class="phone-status">
+      <span>16:42</span>
+      <span>● ● ● 100%</span>
+    </div>
+
+    <!-- 顶部 -->
+    <header class="px-6 py-4 border-b border-rule">
+      <div class="flex justify-between items-center mb-3">
+        <a href="../index.html" class="font-display text-lg no-underline">账房</a>
+        <div class="w-7 h-7 rounded-full bg-ink text-paper flex items-center justify-center font-display text-xs">静</div>
+      </div>
+      <div>
+        <div class="eyebrow mb-1">2026 · 4 月</div>
+        <h2 class="font-display text-2xl font-medium">本月填报</h2>
+        <p class="text-sm text-ink-soft mt-1">3 张账户 · 大约 5 分钟</p>
+      </div>
+      <div class="mt-3 h-1 bg-paper-deep">
+        <div class="h-1 bg-forest" style="width: 33%"></div>
+      </div>
+      <div class="font-mono text-[10px] mt-1 text-ink-soft tracking-wider">已完成 1 / 3</div>
+    </header>
+
+    <!-- 卡片堆 -->
+    <div class="px-6 py-6 space-y-4 bg-paper">
+
+      <!-- 卡片 1 · 已完成 · 折叠 -->
+      <div class="paper-card p-4 flex items-center gap-3">
+        <span class="tick-done">✓</span>
+        <div class="flex-1">
+          <div class="font-display text-base">支付宝 · 余额宝</div>
+          <div class="font-mono text-xs text-ink-subtle mt-0.5">¥35,400 · ▲¥1,800</div>
+        </div>
+        <button class="font-mono text-[10px] text-ink-soft tracking-wider">改</button>
+      </div>
+
+      <!-- 卡片 2 · 当前展开 -->
+      <div class="envelope p-5">
+        <div class="flex items-baseline justify-between mb-1">
+          <span class="font-mono text-[10px] tracking-[0.16em] text-brass-deep">2 / 3</span>
+          <span class="font-mono text-[10px] text-ink-subtle">CASH</span>
+        </div>
+        <h3 class="font-display text-2xl font-medium mb-1">微信 · 零钱通</h3>
+        <p class="text-sm text-ink-soft mb-5">上月末 ¥8,400</p>
+
+        <div class="mb-5">
+          <label class="field-label">本月末余额</label>
+          <div class="relative">
+            <span class="absolute left-0 top-3 font-display text-2xl text-ink-subtle">¥</span>
+            <input class="field-input field-input-num pl-7" value="9,200.00" style="font-size: 26px; border-bottom-color: var(--brass);">
+          </div>
+          <div class="font-mono text-xs num-pos mt-1">较上月 +¥800</div>
+        </div>
+
+        <div class="space-y-4 pt-4 border-t border-rule-soft">
+          <div>
+            <label class="field-label">本月收入(可选)</label>
+            <div class="relative">
+              <span class="absolute left-0 top-3 font-display text-base text-ink-subtle">¥</span>
+              <input class="field-input field-input-num pl-6" placeholder="0" style="font-size: 18px;">
+            </div>
+          </div>
+          <div>
+            <label class="field-label">本月支出(可选)</label>
+            <div class="relative">
+              <span class="absolute left-0 top-3 font-display text-base text-ink-subtle">¥</span>
+              <input class="field-input field-input-num pl-6" placeholder="0" style="font-size: 18px;">
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-6 grid grid-cols-2 gap-2">
+          <button class="btn-paper text-[10px] py-3 justify-center">↔ 转账</button>
+          <button class="btn-ink py-3 justify-center text-[12px]">✓ 提交本卡</button>
+        </div>
+
+        <div class="mt-4 text-xs text-ink-subtle leading-relaxed">
+          没有特别收支?直接提交即可。差额会自动归"投资收益"。
+        </div>
+      </div>
+
+      <!-- 卡片 3 · 折叠待填 -->
+      <div class="paper-card p-4 flex items-center gap-3 opacity-60">
+        <span class="tick-pending">·</span>
+        <div class="flex-1">
+          <div class="font-display text-base">招行理财 · 稳健</div>
+          <div class="font-mono text-xs text-ink-subtle mt-0.5">上月末 ¥125,000 · 待填</div>
+        </div>
+        <button class="font-mono text-[10px] text-ink-soft tracking-wider">填 →</button>
+      </div>
+
+    </div>
+
+    <!-- 底部固定 -->
+    <div class="bg-card border-t border-rule px-6 py-4 sticky bottom-0">
+      <div class="flex items-baseline justify-between mb-3">
+        <div class="font-mono text-[10px] tracking-wider text-ink-soft">本月小结</div>
+        <div class="font-mono text-[10px] tracking-wider text-ink-subtle">PREVIEW</div>
+      </div>
+      <div class="flex justify-between items-baseline">
+        <div>
+          <div class="text-xs text-ink-soft">我管的账户</div>
+          <div class="font-display tnum text-xl">¥378,800</div>
+        </div>
+        <div class="text-right">
+          <div class="text-xs text-ink-soft">较上月</div>
+          <div class="font-display tnum text-xl num-pos">+¥6,400</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 第二屏:全部完成 -->
+  <div class="max-w-[420px] mx-auto pt-12 px-6">
+    <div class="eyebrow mb-2">第二屏 · 全部完成后</div>
+    <h2 class="font-display text-xl mb-3">完成页</h2>
+  </div>
+
+  <div class="phone-frame">
+    <div class="phone-status">
+      <span>16:48</span>
+      <span>● ● ● 100%</span>
+    </div>
+
+    <header class="px-6 py-4 border-b border-rule">
+      <div class="flex justify-between items-center">
+        <a href="../index.html" class="font-display text-lg no-underline">账房</a>
+        <div class="w-7 h-7 rounded-full bg-ink text-paper flex items-center justify-center font-display text-xs">静</div>
+      </div>
+    </header>
+
+    <div class="px-8 py-12 text-center bg-paper">
+      <div class="folio mx-auto mb-4" style="font-size: 96px; line-height: 1;">✓</div>
+      <h2 class="font-display text-3xl font-medium mb-3">本月已落笔</h2>
+      <p class="text-ink-soft leading-relaxed text-sm mb-6">
+        你的 3 张账户都填好了,辛苦。<br/>
+        张伟还差 1 个账户(富途证券),全员完成后系统会自动结算本月。
+      </p>
+
+      <div class="rule-double my-6"></div>
+
+      <div class="text-left bg-card-soft p-4 mb-6 border-l-2 border-brass">
+        <div class="eyebrow mb-2">本月你贡献</div>
+        <div class="grid grid-cols-2 gap-3 text-sm">
+          <div>
+            <div class="text-ink-soft text-xs">余额合计</div>
+            <div class="font-display tnum text-lg">¥387,000</div>
+          </div>
+          <div>
+            <div class="text-ink-soft text-xs">较上月</div>
+            <div class="font-display tnum text-lg num-pos">+¥7,600</div>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-paper w-full justify-center mb-3">回到首页</button>
+      <p class="font-mono text-[10px] tracking-wider text-ink-subtle">本期待全员完成 · CLOSED 后通知</p>
+    </div>
+  </div>
+
+  <div class="text-center py-8">
+    <div class="font-mono text-[10px] tracking-[0.18em] text-ink-subtle">
+      家庭账房 · v0.1 · 移动端响应式
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>账户与模板 · 家庭账房</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,ital,wght@9..144,0,300..700;9..144,1,300..600&family=JetBrains+Mono:wght@300;400;500&family=Noto+Serif+SC:wght@300;400;500;600&family=Source+Serif+4:opsz,wght@8..60,300;8..60,400;8..60,500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/style.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { theme: { extend: { colors: { paper: 'var(--paper)', 'paper-soft': 'var(--paper-soft)', 'paper-deep': 'var(--paper-deep)', card: 'var(--card)', 'card-soft': 'var(--card-soft)', ink: { DEFAULT: 'var(--ink)', soft: 'var(--ink-soft)', subtle: 'var(--ink-subtle)' }, rule: { DEFAULT: 'var(--rule)', soft: 'var(--rule-soft)' }, brass: { DEFAULT: 'var(--brass)', deep: 'var(--brass-deep)', soft: 'var(--brass-soft)' }, forest: 'var(--forest)', rust: 'var(--rust)' }, fontFamily: { display: ['Fraunces', 'Noto Serif SC', 'serif'], serif: ['"Source Serif 4"', 'Noto Serif SC', 'serif'], mono: ['JetBrains Mono', 'monospace'] } } } }
+  </script>
+</head>
+<body class="min-h-screen relative">
+
+  <div class="fixed top-0 left-0 right-0 h-1 bg-ink z-40"></div>
+
+  <header class="sticky top-1 bg-paper/95 backdrop-blur border-b border-rule z-30">
+    <div class="max-w-[1400px] mx-auto px-6 lg:px-10 flex items-center justify-between h-16">
+      <div class="flex items-center gap-12">
+        <a href="../index.html" class="flex items-baseline gap-2 no-underline">
+          <span class="font-display text-xl font-medium">账房</span>
+          <span class="font-mono text-[10px] tracking-[0.2em] text-ink-subtle">№ 张</span>
+        </a>
+        <nav class="hidden md:flex items-center gap-7 font-mono text-[11px] tracking-[0.14em] uppercase">
+          <a href="dashboard.html" class="text-ink-soft hover:text-ink no-underline">仪表盘</a>
+          <a href="entry-desktop.html" class="text-ink-soft hover:text-ink no-underline">填报</a>
+          <a href="my-todos.html" class="text-ink-soft hover:text-ink no-underline">待办</a>
+          <a href="accounts.html" class="text-ink no-underline border-b-2 border-brass pb-[18px]">账户</a>
+          <a href="reports.html" class="text-ink-soft hover:text-ink no-underline">报表</a>
+          <a href="admin.html" class="text-ink-soft hover:text-ink no-underline">管理</a>
+        </nav>
+      </div>
+      <div class="flex items-center gap-4">
+        <span class="pill pill-brass hidden md:inline-flex">2026 · 04 · OPEN</span>
+        <div class="w-8 h-8 rounded-full bg-ink text-paper flex items-center justify-center font-display text-sm">伟</div>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-[1400px] mx-auto px-6 lg:px-10 py-10 relative z-10">
+
+    <section class="mb-8 flex items-end justify-between flex-wrap gap-6">
+      <div>
+        <div class="eyebrow mb-2">账 · 户 · 全 · 览</div>
+        <h1 class="font-display text-5xl font-medium tracking-tight">账户簿</h1>
+        <p class="text-ink-soft text-sm mt-3 max-w-xl">一家共 9 个活跃账户、3 个负债账户。此处可增删归档、调整主理人与显示顺序;实际填报在<a href="entry-desktop.html" class="brass-link">填报页</a>。</p>
+      </div>
+      <button class="btn-ink">+ 添加账户(开向导)</button>
+    </section>
+
+    <!-- 分组小结 -->
+    <section class="grid grid-cols-2 md:grid-cols-6 gap-px bg-rule mb-8">
+      <div class="bg-card p-4">
+        <div class="font-mono text-[10px] tracking-wider text-ink-subtle">CASH</div>
+        <div class="font-display text-xl tnum mt-1">5</div>
+        <div class="font-mono text-xs text-ink-soft mt-1">¥920k</div>
+      </div>
+      <div class="bg-card p-4">
+        <div class="font-mono text-[10px] tracking-wider text-ink-subtle">STOCK</div>
+        <div class="font-display text-xl tnum mt-1">2</div>
+        <div class="font-mono text-xs text-ink-soft mt-1">¥1.55M</div>
+      </div>
+      <div class="bg-card p-4">
+        <div class="font-mono text-[10px] tracking-wider text-ink-subtle">WEALTH</div>
+        <div class="font-display text-xl tnum mt-1">2</div>
+        <div class="font-mono text-xs text-ink-soft mt-1">¥570k</div>
+      </div>
+      <div class="bg-card p-4">
+        <div class="font-mono text-[10px] tracking-wider text-ink-subtle">PROPERTY</div>
+        <div class="font-display text-xl tnum mt-1">1</div>
+        <div class="font-mono text-xs text-ink-soft mt-1">¥1.80M</div>
+      </div>
+      <div class="bg-card p-4">
+        <div class="font-mono text-[10px] tracking-wider text-rust">LOAN</div>
+        <div class="font-display text-xl tnum mt-1 text-rust">2</div>
+        <div class="font-mono text-xs text-ink-soft mt-1">−¥1.20M</div>
+      </div>
+      <div class="bg-card p-4">
+        <div class="font-mono text-[10px] tracking-wider text-ink-subtle">已归档</div>
+        <div class="font-display text-xl tnum mt-1 text-ink-subtle">1</div>
+        <div class="font-mono text-xs text-ink-soft mt-1">不计入</div>
+      </div>
+    </section>
+
+    <!-- 筛选 -->
+    <section class="flex items-center gap-3 mb-6 flex-wrap">
+      <span class="font-mono text-[10px] tracking-[0.16em] text-ink-soft uppercase">筛选 ·</span>
+      <button class="pill pill-ink">全部 9</button>
+      <button class="pill">CASH</button>
+      <button class="pill">STOCK</button>
+      <button class="pill">WEALTH</button>
+      <button class="pill">PROPERTY</button>
+      <button class="pill">LOAN</button>
+      <span class="ml-auto"></span>
+      <button class="btn-ghost">显示已归档</button>
+    </section>
+
+    <!-- 表格 -->
+    <section class="paper-card overflow-hidden mb-10">
+      <table class="ledger-table">
+        <thead>
+          <tr>
+            <th>顺序</th>
+            <th>名称</th>
+            <th>类型</th>
+            <th>币种</th>
+            <th>主理人</th>
+            <th>默认还款来源</th>
+            <th class="num">本期末余额</th>
+            <th class="num">操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="font-mono text-ink-subtle text-xs">001 ·☰</td>
+            <td><span class="font-display">招行储蓄卡 · 工资</span></td>
+            <td><span class="pill">CASH</span></td>
+            <td class="font-mono text-xs">CNY</td>
+            <td class="text-ink-soft">张伟</td>
+            <td class="text-ink-subtle">—</td>
+            <td class="num">¥73,200</td>
+            <td class="text-right"><button class="btn-ghost">编辑</button></td>
+          </tr>
+          <tr>
+            <td class="font-mono text-ink-subtle text-xs">002 ·☰</td>
+            <td><span class="font-display">工商银行 · 备用金</span></td>
+            <td><span class="pill">CASH</span></td>
+            <td class="font-mono text-xs">CNY</td>
+            <td class="text-ink-soft">张伟</td>
+            <td class="text-ink-subtle">—</td>
+            <td class="num">¥186,400</td>
+            <td class="text-right"><button class="btn-ghost">编辑</button></td>
+          </tr>
+          <tr>
+            <td class="font-mono text-ink-subtle text-xs">003 ·☰</td>
+            <td><span class="font-display">华泰证券 · A 股</span></td>
+            <td><span class="pill" style="background:var(--brass-soft);color:var(--brass-deep);border-color:var(--brass)">STOCK</span></td>
+            <td class="font-mono text-xs">CNY</td>
+            <td class="text-ink-soft">张伟</td>
+            <td class="text-ink-subtle">—</td>
+            <td class="num">¥1,124,800</td>
+            <td class="text-right"><button class="btn-ghost">编辑</button></td>
+          </tr>
+          <tr>
+            <td class="font-mono text-ink-subtle text-xs">004 ·☰</td>
+            <td><span class="font-display">富途证券 · 港美股</span></td>
+            <td><span class="pill" style="background:var(--brass-soft);color:var(--brass-deep);border-color:var(--brass)">STOCK</span></td>
+            <td class="font-mono text-xs">USD</td>
+            <td class="text-ink-soft">张伟</td>
+            <td class="text-ink-subtle">—</td>
+            <td class="num">$48,200</td>
+            <td class="text-right"><button class="btn-ghost">编辑</button></td>
+          </tr>
+          <tr>
+            <td class="font-mono text-ink-subtle text-xs">005 ·☰</td>
+            <td><span class="font-display">招行信用卡</span></td>
+            <td><span class="pill" style="background:var(--rust-soft);color:var(--rust);border-color:var(--rust)">LOAN</span></td>
+            <td class="font-mono text-xs">CNY</td>
+            <td class="text-ink-soft">张伟</td>
+            <td class="text-xs text-ink-soft">招行储蓄卡 · 工资</td>
+            <td class="num num-neg">−¥4,820</td>
+            <td class="text-right"><button class="btn-ghost">编辑</button></td>
+          </tr>
+          <tr>
+            <td class="font-mono text-ink-subtle text-xs">006 ·☰</td>
+            <td><span class="font-display">支付宝 · 余额宝</span></td>
+            <td><span class="pill">CASH</span></td>
+            <td class="font-mono text-xs">CNY</td>
+            <td class="text-ink-soft">李静</td>
+            <td class="text-ink-subtle">—</td>
+            <td class="num">¥35,400</td>
+            <td class="text-right"><button class="btn-ghost">编辑</button></td>
+          </tr>
+          <tr>
+            <td class="font-mono text-ink-subtle text-xs">007 ·☰</td>
+            <td><span class="font-display">微信 · 零钱通</span></td>
+            <td><span class="pill">CASH</span></td>
+            <td class="font-mono text-xs">CNY</td>
+            <td class="text-ink-soft">李静</td>
+            <td class="text-ink-subtle">—</td>
+            <td class="num">¥9,200</td>
+            <td class="text-right"><button class="btn-ghost">编辑</button></td>
+          </tr>
+          <tr>
+            <td class="font-mono text-ink-subtle text-xs">008 ·☰</td>
+            <td><span class="font-display">蚂蚁财富 · 基金</span></td>
+            <td><span class="pill" style="background:var(--forest-soft);color:var(--forest);border-color:var(--forest)">WEALTH</span></td>
+            <td class="font-mono text-xs">CNY</td>
+            <td class="text-ink-soft">李静</td>
+            <td class="text-ink-subtle">—</td>
+            <td class="num">¥218,400</td>
+            <td class="text-right"><button class="btn-ghost">编辑</button></td>
+          </tr>
+          <tr>
+            <td class="font-mono text-ink-subtle text-xs">009 ·☰</td>
+            <td><span class="font-display">招行理财 · 稳健</span></td>
+            <td><span class="pill" style="background:var(--forest-soft);color:var(--forest);border-color:var(--forest)">WEALTH</span></td>
+            <td class="font-mono text-xs">CNY</td>
+            <td class="text-ink-soft">李静</td>
+            <td class="text-ink-subtle">—</td>
+            <td class="num text-ink-subtle">— 待填</td>
+            <td class="text-right"><button class="btn-ghost">编辑</button></td>
+          </tr>
+          <tr>
+            <td class="font-mono text-ink-subtle text-xs">010 ·☰</td>
+            <td><span class="font-display">住宅 · 海淀</span></td>
+            <td><span class="pill" style="background:var(--paper-deep);color:var(--ink-soft);border-color:var(--rule)">PROPERTY</span></td>
+            <td class="font-mono text-xs">CNY</td>
+            <td class="text-ink-soft">共同</td>
+            <td class="text-ink-subtle">—</td>
+            <td class="num">¥1,800,000</td>
+            <td class="text-right"><button class="btn-ghost">编辑</button></td>
+          </tr>
+          <tr>
+            <td class="font-mono text-ink-subtle text-xs">011 ·☰</td>
+            <td><span class="font-display">房贷 · 招行 · 海淀</span></td>
+            <td><span class="pill" style="background:var(--rust-soft);color:var(--rust);border-color:var(--rust)">LOAN</span></td>
+            <td class="font-mono text-xs">CNY</td>
+            <td class="text-ink-soft">共同</td>
+            <td class="text-xs">招行储蓄卡 · 工资 ↗</td>
+            <td class="num num-neg">−¥1,195,180</td>
+            <td class="text-right"><button class="btn-ghost">编辑</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ★ 模板向导 modal(展示态)★ -->
+    <div class="scrim" style="position: relative; height: auto; background: rgba(26,23,20,0.04); padding: 40px 24px;">
+      <div class="envelope-modal max-w-[680px] mx-auto p-8">
+        <div class="flex items-baseline justify-between mb-1">
+          <div class="eyebrow">添加账户向导 · MODAL</div>
+          <button class="font-mono text-xs text-ink-subtle hover:text-ink">关闭 ×</button>
+        </div>
+        <h3 class="font-display text-2xl mb-1">挑一个模板,或自定义</h3>
+        <p class="text-sm text-ink-soft mb-5">13 个内置模板覆盖常见场景。具体行名(如"工行 vs 中行"、"华泰 vs 雪球")在自定义名里写就行。</p>
+
+        <div class="rule-double mb-4"></div>
+
+        <div class="grid grid-cols-3 gap-2 mb-5">
+          <button class="border border-rule p-3 text-left hover:border-ink hover:bg-card-soft">
+            <div class="font-display text-sm">招商银行</div>
+            <div class="font-mono text-[9px] tracking-wider text-ink-subtle mt-1">CASH · CNY</div>
+          </button>
+          <button class="border border-rule p-3 text-left hover:border-ink hover:bg-card-soft">
+            <div class="font-display text-sm">工商银行</div>
+            <div class="font-mono text-[9px] tracking-wider text-ink-subtle mt-1">CASH · CNY</div>
+          </button>
+          <button class="border border-rule p-3 text-left hover:border-ink hover:bg-card-soft">
+            <div class="font-display text-sm">建设银行</div>
+            <div class="font-mono text-[9px] tracking-wider text-ink-subtle mt-1">CASH · CNY</div>
+          </button>
+          <button class="border border-rule p-3 text-left hover:border-ink hover:bg-card-soft">
+            <div class="font-display text-sm">中国银行</div>
+            <div class="font-mono text-[9px] tracking-wider text-ink-subtle mt-1">CASH · CNY</div>
+          </button>
+          <button class="border border-rule p-3 text-left hover:border-ink hover:bg-card-soft">
+            <div class="font-display text-sm">信用卡(通用)</div>
+            <div class="font-mono text-[9px] tracking-wider text-rust mt-1">LOAN · CNY</div>
+          </button>
+          <button class="border border-rule p-3 text-left hover:border-ink hover:bg-card-soft">
+            <div class="font-display text-sm">支付宝</div>
+            <div class="font-mono text-[9px] tracking-wider text-ink-subtle mt-1">CASH · CNY</div>
+          </button>
+          <button class="border border-rule p-3 text-left hover:border-ink hover:bg-card-soft">
+            <div class="font-display text-sm">微信 · 零钱通</div>
+            <div class="font-mono text-[9px] tracking-wider text-ink-subtle mt-1">CASH · CNY</div>
+          </button>
+          <button class="border-2 border-ink p-3 text-left bg-card-soft">
+            <div class="font-display text-sm">证券账户(通用)</div>
+            <div class="font-mono text-[9px] tracking-wider text-brass-deep mt-1">STOCK</div>
+          </button>
+          <button class="border border-rule p-3 text-left hover:border-ink hover:bg-card-soft">
+            <div class="font-display text-sm">蚂蚁财富 · 京东金融</div>
+            <div class="font-mono text-[9px] tracking-wider text-forest mt-1">WEALTH · CNY</div>
+          </button>
+          <button class="border border-rule p-3 text-left hover:border-ink hover:bg-card-soft">
+            <div class="font-display text-sm">银行理财(R3 以下)</div>
+            <div class="font-mono text-[9px] tracking-wider text-forest mt-1">WEALTH · CNY</div>
+          </button>
+          <button class="border border-rule p-3 text-left hover:border-ink hover:bg-card-soft">
+            <div class="font-display text-sm">住宅 · 房产</div>
+            <div class="font-mono text-[9px] tracking-wider text-ink-subtle mt-1">PROPERTY · CNY</div>
+          </button>
+          <button class="border border-rule p-3 text-left hover:border-ink hover:bg-card-soft">
+            <div class="font-display text-sm">贷款(房/车贷)</div>
+            <div class="font-mono text-[9px] tracking-wider text-rust mt-1">LOAN · CNY</div>
+          </button>
+          <button class="border border-rule border-dashed p-3 text-left col-span-3 hover:border-ink hover:bg-card-soft">
+            <div class="font-display text-sm">+ 自定义账户</div>
+            <div class="font-mono text-[9px] tracking-wider text-ink-subtle mt-1">类型/币种自选 · 用于 加密货币 / 黄金 / 借出款 / 外币 …</div>
+          </button>
+        </div>
+
+        <!-- 选中后的填补表单 -->
+        <div class="border-t border-rule pt-5">
+          <div class="eyebrow-ink mb-3">已选 · 证券账户(通用)</div>
+          <div class="grid grid-cols-2 gap-5">
+            <div>
+              <label class="field-label">显示名 ·必填</label>
+              <input class="field-input" value="雪球 · A 股">
+            </div>
+            <div>
+              <label class="field-label">币种</label>
+              <select class="field-input bg-transparent">
+                <option>CNY · 人民币</option>
+                <option>USD</option>
+                <option>HKD</option>
+              </select>
+            </div>
+            <div>
+              <label class="field-label">主理人</label>
+              <select class="field-input bg-transparent">
+                <option>李静</option>
+                <option>张伟</option>
+                <option>共同</option>
+              </select>
+            </div>
+            <div>
+              <label class="field-label">显示顺序(末尾)</label>
+              <input class="field-input field-input-num" value="012">
+            </div>
+          </div>
+          <div class="flex justify-end mt-6 gap-3">
+            <button class="btn-paper">取消</button>
+            <button class="btn-ink">+ 添加并继续</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+
+  <footer class="border-t border-rule mt-12 py-6 px-8 text-center relative z-10">
+    <div class="font-mono text-[10px] tracking-[0.18em] text-ink-subtle">
+      家庭账房 · 账户簿 · 不可删除,只可归档
+    </div>
+  </footer>
+
+</body>
+</html>

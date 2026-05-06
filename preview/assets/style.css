@@ -1,0 +1,485 @@
+/* ============================================================
+   家庭账房 · Private Counting House
+   一份起居室里的银行家账册
+   ============================================================ */
+
+:root {
+  /* — Paper & Ink — */
+  --paper:        #F4EFE6;
+  --paper-soft:   #EDE6D7;
+  --paper-deep:   #E5DCC8;
+  --card:         #FFFCF5;
+  --card-soft:    #FAF4E6;
+  --ink:          #1A1714;
+  --ink-soft:     #5C5147;
+  --ink-subtle:   #A09486;
+  --rule:         #C9BDA8;
+  --rule-soft:    #DBD0BC;
+
+  /* — Accents (used sparingly) — */
+  --brass:        #B08642;
+  --brass-deep:   #8C6A33;
+  --brass-soft:   #E8D9B6;
+  --forest:       #4F6B47;
+  --forest-soft:  #C8D5BD;
+  --rust:         #9C4A2A;
+  --rust-soft:    #E8C8B8;
+  --plum:         #5C3A4B;
+  --slate:        #3C4A5A;
+
+  /* — Sizing — */
+  --rule-thin:    0.5px;
+  --rule-thick:   1px;
+
+  /* — Effects — */
+  --shadow-paper: 0 1px 0 rgba(26, 23, 20, 0.04), 0 8px 24px -12px rgba(26, 23, 20, 0.08);
+  --shadow-deep:  0 2px 0 rgba(26, 23, 20, 0.04), 0 24px 60px -32px rgba(26, 23, 20, 0.18);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: "Source Serif 4", "Noto Serif SC", Georgia, serif;
+  font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ——— 纸张纹理 ——— */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background-image:
+    radial-gradient(1px 1px at 10% 20%, rgba(176,134,66,0.05) 50%, transparent 50%),
+    radial-gradient(1px 1px at 80% 60%, rgba(26,23,20,0.04) 50%, transparent 50%),
+    radial-gradient(1px 1px at 30% 80%, rgba(176,134,66,0.04) 50%, transparent 50%),
+    radial-gradient(1px 1px at 70% 30%, rgba(26,23,20,0.03) 50%, transparent 50%);
+  background-size: 80px 80px, 120px 120px, 100px 100px, 90px 90px;
+  background-position: 0 0, 40px 40px, 20px 60px, 60px 20px;
+  opacity: 0.6;
+  mix-blend-mode: multiply;
+}
+
+/* ——— Typography ——— */
+
+.font-display { font-family: "Fraunces", "Noto Serif SC", Georgia, serif; }
+.font-serif   { font-family: "Source Serif 4", "Noto Serif SC", Georgia, serif; }
+.font-mono    { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; font-feature-settings: "tnum" 1, "calt" 1; }
+
+.tnum         { font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1; }
+.swsh         { font-feature-settings: "swsh" 1, "ss01" 1; }   /* Fraunces swash + stylistic */
+
+h1, h2, h3, h4 {
+  font-family: "Fraunces", "Noto Serif SC", Georgia, serif;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+
+.eyebrow {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 10.5px;
+  font-weight: 400;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--brass-deep);
+}
+
+.eyebrow-ink {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.dropcap::first-letter {
+  font-family: "Fraunces", "Noto Serif SC", Georgia, serif;
+  font-weight: 600;
+  font-size: 3em;
+  line-height: 1;
+  float: left;
+  padding: 4px 8px 0 0;
+  color: var(--brass);
+}
+
+/* ——— Components ——— */
+
+.paper-card {
+  background: var(--card);
+  border: var(--rule-thick) solid var(--rule);
+  border-radius: 2px;
+  box-shadow: var(--shadow-paper);
+  position: relative;
+}
+
+.paper-card-soft {
+  background: var(--card-soft);
+  border: var(--rule-thin) solid var(--rule);
+  border-radius: 2px;
+}
+
+.envelope {
+  background: var(--card);
+  border: var(--rule-thick) solid var(--ink);
+  border-radius: 0;
+  box-shadow:
+    4px 4px 0 var(--paper-deep),
+    var(--shadow-deep);
+}
+
+/* Bracket-cornered cards (账册装饰角) */
+.bracket-card {
+  position: relative;
+  background: var(--card);
+  border: 1px solid var(--rule);
+  padding: 28px;
+}
+.bracket-card::before, .bracket-card::after {
+  content: "";
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border: 1.5px solid var(--brass);
+}
+.bracket-card::before { top: -5px; left: -5px; border-right: none; border-bottom: none; }
+.bracket-card::after  { bottom: -5px; right: -5px; border-left: none; border-top: none; }
+
+/* Hairline rules (账册中的细线) */
+.rule         { border-color: var(--rule); }
+.rule-thick   { border-color: var(--ink); }
+.rule-x       { border-top: 1px solid var(--rule); }
+.rule-y       { border-left: 1px solid var(--rule); }
+.rule-double  { border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); padding: 1px 0; }
+.rule-triple-bottom { border-bottom: 3px double var(--rule); padding-bottom: 4px; }
+
+/* Buttons */
+.btn-ink {
+  background: var(--ink);
+  color: var(--paper);
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 12px 20px;
+  border: none;
+  cursor: pointer;
+  transition: all 180ms ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.btn-ink:hover { background: var(--brass-deep); }
+
+.btn-paper {
+  background: transparent;
+  color: var(--ink);
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 11px 19px;
+  border: 1px solid var(--ink);
+  cursor: pointer;
+  transition: all 180ms ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.btn-paper:hover { background: var(--ink); color: var(--paper); }
+
+.btn-brass {
+  background: var(--brass);
+  color: var(--paper);
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 12px 20px;
+  border: none;
+  cursor: pointer;
+  transition: background 180ms ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.btn-brass:hover { background: var(--brass-deep); }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--ink-soft);
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 11.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 8px 14px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+.btn-ghost:hover { color: var(--ink); border-color: var(--rule); }
+
+/* Form */
+.field-input {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--rule);
+  padding: 10px 2px;
+  font-family: "Source Serif 4", "Noto Serif SC", serif;
+  font-size: 16px;
+  color: var(--ink);
+  width: 100%;
+  outline: none;
+  transition: border-color 180ms ease;
+}
+.field-input:focus { border-bottom: 2px solid var(--brass); padding-bottom: 9px; }
+
+.field-input-num {
+  font-family: "JetBrains Mono", monospace;
+  font-variant-numeric: tabular-nums;
+  font-size: 18px;
+  text-align: right;
+  letter-spacing: 0.02em;
+}
+
+.field-label {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  display: block;
+  margin-bottom: 6px;
+}
+
+/* Pills / Chips / Tags */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: 1px solid var(--rule);
+  background: var(--paper-soft);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  border-radius: 1px;
+}
+.pill-brass { background: var(--brass-soft); border-color: var(--brass); color: var(--brass-deep); }
+.pill-forest { background: var(--forest-soft); border-color: var(--forest); color: var(--forest); }
+.pill-rust { background: var(--rust-soft); border-color: var(--rust); color: var(--rust); }
+.pill-ink { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+
+/* Number coloring */
+.num-pos { color: var(--forest); }
+.num-neg { color: var(--rust); }
+
+/* KPI 卡片 */
+.kpi-card {
+  background: var(--card);
+  border: 1px solid var(--rule);
+  padding: 24px;
+  position: relative;
+  transition: border-color 180ms ease;
+}
+.kpi-card:hover { border-color: var(--ink-soft); }
+.kpi-eyebrow {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  display: block;
+  margin-bottom: 14px;
+}
+.kpi-value {
+  font-family: "Fraunces", "Noto Serif SC", serif;
+  font-feature-settings: "tnum" 1;
+  font-size: 30px;
+  font-weight: 500;
+  line-height: 1.1;
+  color: var(--ink);
+  letter-spacing: -0.015em;
+}
+.kpi-currency { font-size: 0.55em; vertical-align: 0.65em; color: var(--ink-soft); margin-right: 4px; }
+.kpi-delta {
+  font-family: "JetBrains Mono", monospace;
+  font-feature-settings: "tnum" 1;
+  font-size: 12px;
+  margin-top: 10px;
+}
+
+/* 表格 — 账册风 */
+.ledger-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-feature-settings: "tnum" 1;
+}
+.ledger-table thead th {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  padding: 10px 14px;
+  text-align: left;
+  border-bottom: 1px solid var(--ink);
+}
+.ledger-table thead th.num { text-align: right; }
+.ledger-table tbody td {
+  padding: 14px;
+  border-bottom: 1px solid var(--rule-soft);
+  vertical-align: middle;
+  font-size: 14.5px;
+}
+.ledger-table tbody td.num {
+  font-family: "JetBrains Mono", monospace;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  letter-spacing: 0.01em;
+}
+.ledger-table tbody tr:hover td { background: var(--card-soft); }
+
+/* 边栏 */
+.side-rule {
+  border-left: 1px solid var(--rule);
+  padding-left: 24px;
+}
+
+/* 序号水印 */
+.folio {
+  font-family: "Fraunces", serif;
+  font-feature-settings: "ss01" 1, "swsh" 1;
+  font-style: italic;
+  font-size: 76px;
+  line-height: 1;
+  color: var(--paper-deep);
+  user-select: none;
+}
+
+/* 对勾 / 状态符号 */
+.tick-done {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px; height: 18px;
+  border: 1.5px solid var(--forest);
+  background: var(--forest);
+  color: var(--paper);
+  font-size: 11px;
+  font-weight: 700;
+}
+.tick-pending {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px; height: 18px;
+  border: 1.5px dashed var(--ink-subtle);
+  color: var(--ink-subtle);
+}
+
+/* 响应处理 */
+@media (max-width: 720px) {
+  body { font-size: 14.5px; }
+  .kpi-value { font-size: 26px; }
+}
+
+/* Print-像-账册的微动效 */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.fade-in        { animation: fade-up 600ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.fade-in-delay-1 { animation: fade-up 600ms cubic-bezier(0.2, 0.8, 0.2, 1) both; animation-delay: 100ms; }
+.fade-in-delay-2 { animation: fade-up 600ms cubic-bezier(0.2, 0.8, 0.2, 1) both; animation-delay: 200ms; }
+.fade-in-delay-3 { animation: fade-up 600ms cubic-bezier(0.2, 0.8, 0.2, 1) both; animation-delay: 300ms; }
+.fade-in-delay-4 { animation: fade-up 600ms cubic-bezier(0.2, 0.8, 0.2, 1) both; animation-delay: 400ms; }
+
+/* 账册装饰 — 翻页角 */
+.dog-ear {
+  position: relative;
+}
+.dog-ear::after {
+  content: "";
+  position: absolute;
+  top: 0; right: 0;
+  width: 24px; height: 24px;
+  background: linear-gradient(225deg, var(--paper-deep) 50%, var(--rule-soft) 50%);
+  border-left: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+}
+
+/* 1px 内边线(账册分栏) */
+.col-rule > * + * { border-left: 1px solid var(--rule); padding-left: 24px; }
+
+/* 移动端遮罩(envelope 风格) */
+.scrim {
+  position: fixed;
+  inset: 0;
+  background: rgba(26, 23, 20, 0.4);
+  backdrop-filter: blur(2px);
+  z-index: 50;
+}
+
+/* 模态弹层(信函式) */
+.envelope-modal {
+  background: var(--card);
+  border: 1px solid var(--ink);
+  box-shadow: 8px 8px 0 var(--paper-deep), var(--shadow-deep);
+  position: relative;
+}
+.envelope-modal::before {
+  content: "";
+  position: absolute;
+  top: -1px; left: 24px; right: 24px;
+  height: 4px;
+  background: var(--brass);
+}
+
+/* 选择 */
+::selection {
+  background: var(--brass);
+  color: var(--paper);
+}
+
+/* 链接 */
+a {
+  color: var(--ink);
+  text-decoration-color: var(--rule);
+  text-underline-offset: 4px;
+  transition: text-decoration-color 200ms ease;
+}
+a:hover { text-decoration-color: var(--brass); }
+
+a.brass-link {
+  color: var(--brass-deep);
+  text-decoration-color: var(--brass-soft);
+}
+a.brass-link:hover { text-decoration-color: var(--brass); }
+
+/* —— Chart palette via CSS vars —— */
+.chart-card {
+  background: var(--card);
+  border: 1px solid var(--rule);
+  padding: 24px;
+}
+
+/* Sparkline 用 */
+.sparkline-pos { color: var(--forest); }
+.sparkline-neg { color: var(--rust); }
+
+/* 滚动条 */
+::-webkit-scrollbar { width: 12px; height: 12px; }
+::-webkit-scrollbar-track { background: var(--paper); }
+::-webkit-scrollbar-thumb { background: var(--rule); border: 3px solid var(--paper); }
+::-webkit-scrollbar-thumb:hover { background: var(--ink-subtle); }
