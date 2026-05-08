@@ -16,7 +16,7 @@
           <span class="font-mono text-base text-ink-subtle ml-3"
                 th:text="${#temporals.format(period.periodStart, 'yyyy.MM.dd')} + ' - ' + ${#temporals.format(period.periodEnd, 'yyyy.MM.dd')}">2026.05.01 - 2026.05.31</span>
         </h1>
-        <p class="text-ink-soft text-sm mt-2">余额驱动填报:保存期末余额后,本行会按现金流与转账实时轧差。</p>
+        <p class="text-ink-soft text-sm mt-2">余额驱动填报:保存期末余额后,系统会按已登记的收入/支出/账户间划转实时轧差。</p>
       </div>
       <div class="flex items-center gap-3">
         <a th:href="@{/entry(mine=${mineOnly})}" class="btn-paper no-underline">本期</a>
@@ -46,7 +46,7 @@
         <div class="flex items-baseline gap-2 mb-3">
           <span class="font-display text-4xl tnum" th:text="${mineOnly ? '仅我' : '全家'}">全家</span>
         </div>
-        <p class="text-xs text-ink-soft mt-2">本页支持行内余额、现金流与转账登记。</p>
+        <p class="text-xs text-ink-soft mt-2">每行可填:本期末余额、收入/支出、账户间划转。</p>
       </div>
       <div>
         <div class="eyebrow-ink mb-2">周期状态</div>
@@ -68,7 +68,7 @@
          th:classappend="${mineOnly ? ' bg-ink text-paper' : ' text-ink-soft hover:bg-card-soft'}">仅我</a>
     </div>
     <div class="flex items-center gap-2">
-      <button class="btn-paper" onclick="document.querySelector('[id^=entry-row-] select[name=toAccountId]')?.focus()">+ 转账</button>
+      <button class="btn-paper" onclick="document.querySelector('[id^=entry-row-] select[name=toAccountId]')?.focus()">+ 账户间划转</button>
       <a th:href="@{/accounts/new}" class="btn-paper no-underline">+ 新账户</a>
     </div>
   </section>

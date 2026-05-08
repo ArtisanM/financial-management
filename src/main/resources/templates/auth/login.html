@@ -22,9 +22,8 @@
         每月一日,系统按时备好账册;您与家人各自登录,异步落笔,十分钟内毕事。
       </p>
     </div>
-    <div class="font-mono text-[10px] tracking-[0.18em] text-ink-subtle">
-      ANNO 2026 · v0.1
-    </div>
+    <div class="font-mono text-[10px] tracking-[0.18em] text-ink-subtle"
+         th:text="'ANNO ' + ${#temporals.format(#temporals.createNow(), 'yyyy')} + ' · 家庭账房'">ANNO 2026 · 家庭账房</div>
   </div>
 
   <!-- 右侧:表单 -->
@@ -79,9 +78,7 @@
       <div class="mt-12 pt-6 border-t border-rule">
         <div class="font-mono text-[10px] tracking-[0.16em] text-ink-subtle mb-3">忘了口令?</div>
         <p class="text-sm text-ink-soft leading-relaxed">
-          v0.1 不开放找回。请联系另一位家庭管理员在
-          <span class="font-mono text-[12px] text-ink">/admin/members</span>
-          重置临时口令。
+          请联系家庭中另一位成员,在「管理 · 成员」里为你重置一次性临时口令,登录后系统会引导你立刻设置新密码。
         </p>
       </div>
 

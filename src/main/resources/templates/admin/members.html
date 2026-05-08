@@ -13,9 +13,9 @@
       <div>
         <div class="eyebrow mb-2">成 · 员 · 管 · 理</div>
         <h1 class="font-display text-4xl font-medium" th:text="|${#lists.size(members)} 位成员|">2 位成员</h1>
-        <p class="text-ink-soft text-sm mt-2">改名、调整角色标签、重置密码。v0.1 不暴露"添加成员"按钮。</p>
+        <p class="text-ink-soft text-sm mt-2">改名、调整角色标签、重置密码。当前家庭暂只支持初始两位成员。</p>
       </div>
-      <button class="btn-paper opacity-50 cursor-not-allowed" disabled>+ 添加成员 <span class="text-[9px] ml-1">v0.3+</span></button>
+      <button class="btn-paper opacity-50 cursor-not-allowed" disabled>+ 添加成员 <span class="text-[9px] ml-1">后续版本</span></button>
     </div>
 
     <div th:if="${flash}" class="mb-4 border border-forest bg-forest/[0.05] px-4 py-2 text-sm" th:text="${flash}">已保存</div>
@@ -26,7 +26,7 @@
       <h3 class="font-display text-xl mb-3">为 <span th:text="${tempPasswordFor}">XX</span> 生成的临时密码</h3>
       <p class="text-sm text-ink-soft mb-4">该密码只显示一次。下次登录后系统强制要求 ta 改成自己的密码。</p>
       <div class="bg-paper-deep p-3 mb-4 font-mono text-base tnum tracking-widest border border-rule" th:text="${tempPassword}">xxxxx</div>
-      <p class="text-xs text-ink-subtle">v0.1 不发邮件 — 请当面 / 微信告诉对方</p>
+      <p class="text-xs text-ink-subtle">系统不会自动发送通知,请当面或通过即时通讯告知对方。</p>
     </div>
 
     <!-- 成员卡片 -->

@@ -26,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -70,6 +71,8 @@ public class EntryService {
                         || a.getPrimaryOwnerMemberId() == null
                         || a.getPrimaryOwnerMemberId() == memberId)
                 .toList();
+        Map<Long, Account> allById = accountMapper.findAllByFamily(familyId).stream()
+                .collect(Collectors.toMap(Account::getId, Function.identity()));
         Map<Long, Member> members = memberMapper.findActiveByFamily(familyId).stream()
                 .collect(Collectors.toMap(Member::getId, Function.identity()));
         Map<Long, PeriodSnapshot> current = snapshotMapper.findByPeriod(period.getId()).stream()
@@ -78,7 +81,7 @@ public class EntryService {
                 .collect(Collectors.toMap(SnapshotTodo::getAccountId, Function.identity()));
 
         return accounts.stream()
-                .map(account -> toRow(account, members, current.get(account.getId()), todos.get(account.getId()), period))
+                .map(account -> toRow(account, members, allById, current.get(account.getId()), todos.get(account.getId()), period))
                 .sorted(Comparator.comparingInt(r -> Optional.ofNullable(r.account().getDisplayOrder()).orElse(0)))
                 .toList();
     }
@@ -90,9 +93,11 @@ public class EntryService {
         Account account = requireAccount(familyId, accountId);
         Map<Long, Member> members = memberMapper.findActiveByFamily(familyId).stream()
                 .collect(Collectors.toMap(Member::getId, Function.identity()));
+        Map<Long, Account> allById = accountMapper.findAllByFamily(familyId).stream()
+                .collect(Collectors.toMap(Account::getId, Function.identity()));
         PeriodSnapshot current = snapshotMapper.findByPeriodAndAccount(periodId, accountId).orElse(null);
         SnapshotTodo todo = snapshotTodoMapper.findByPeriodAndAccount(periodId, accountId).orElse(null);
-        return toRow(account, members, current, todo, period);
+        return toRow(account, members, allById, current, todo, period);
     }
 
     @Transactional
@@ -190,6 +195,7 @@ public class EntryService {
 
     private EntryRow toRow(Account account,
                            Map<Long, Member> members,
+                           Map<Long, Account> allAccountsById,
                            PeriodSnapshot current,
                            SnapshotTodo todo,
                            Period period) {
@@ -224,6 +230,66 @@ public class EntryService {
                 && unexplained.signum() != 0
                 ? "CASH/LOAN 出现未解释变化,建议补收入、支出或转账"
                 : null;
+        // PRD §2.4 / FR-9:本期划转明细(供接收方看到"已收到来自 X 的 200")
+        List<EntryRow.TransferRef> incoming = new ArrayList<>();
+        List<EntryRow.TransferRef> outgoing = new ArrayList<>();
+        // 同时为本期 ledger(本期所有流水合并视图,PRD §7.9 / FR-7~9)收集划转条目
+        List<EntryRow.LedgerEntry> ledger = new ArrayList<>();
+        for (Transfer t : transferMapper.findCommittedByPeriodAndAccount(period.getId(), account.getId())) {
+            if (t.getToAccountId().equals(account.getId())) {
+                Account from = allAccountsById.get(t.getFromAccountId());
+                String name = from == null ? "其他账户" : from.getDisplayName();
+                incoming.add(new EntryRow.TransferRef(name, t.getAmount(),
+                        MoneyFormat.format(account.getCurrency(), t.getAmount())));
+                ledger.add(new EntryRow.LedgerEntry(
+                        EntryRow.LedgerKind.TRANSFER_IN,
+                        t.getSubmittedAt(),
+                        t.getAmount(),
+                        "+" + MoneyFormat.format(account.getCurrency(), t.getAmount()),
+                        name,
+                        t.getNote()));
+            } else if (t.getFromAccountId().equals(account.getId())) {
+                Account to = allAccountsById.get(t.getToAccountId());
+                String name = to == null ? "其他账户" : to.getDisplayName();
+                outgoing.add(new EntryRow.TransferRef(name, t.getAmount(),
+                        MoneyFormat.format(account.getCurrency(), t.getAmount())));
+                ledger.add(new EntryRow.LedgerEntry(
+                        EntryRow.LedgerKind.TRANSFER_OUT,
+                        t.getSubmittedAt(),
+                        t.getAmount(),
+                        "−" + MoneyFormat.format(account.getCurrency(), t.getAmount()),
+                        name,
+                        t.getNote()));
+            }
+        }
+        for (CashFlow cf : cashFlowMapper.findByPeriodAndAccount(period.getId(), account.getId())) {
+            EntryRow.LedgerKind k = cf.getKind() == CashFlowKind.INCOME
+                    ? EntryRow.LedgerKind.INCOME : EntryRow.LedgerKind.EXPENSE;
+            String sign = cf.getKind() == CashFlowKind.INCOME ? "+" : "−";
+            ledger.add(new EntryRow.LedgerEntry(
+                    k,
+                    cf.getSubmittedAt(),
+                    cf.getAmount(),
+                    sign + MoneyFormat.format(account.getCurrency(), cf.getAmount()),
+                    cf.getCategoryCode(),
+                    cf.getNote()));
+        }
+        if (current != null) {
+            ledger.add(new EntryRow.LedgerEntry(
+                    EntryRow.LedgerKind.SNAPSHOT,
+                    current.getSubmittedAt(),
+                    current.getEndBalance(),
+                    "= " + MoneyFormat.format(account.getCurrency(), current.getEndBalance()),
+                    null,
+                    current.getNote()));
+        }
+        ledger.sort((a, b) -> {
+            if (a.occurredAt() == null && b.occurredAt() == null) return 0;
+            if (a.occurredAt() == null) return 1;
+            if (b.occurredAt() == null) return -1;
+            return a.occurredAt().compareTo(b.occurredAt());
+        });
+
         return new EntryRow(
                 account,
                 owner == null ? "共同" : owner.getDisplayName(),
@@ -244,7 +310,10 @@ public class EntryService {
                 done,
                 // PRD FR-10 智能转账推断:|未解释| > ¥3000 阈值
                 unexplained.abs().compareTo(new BigDecimal("3000")) > 0
-                && account.getType() != AccountType.LOAN
+                && account.getType() != AccountType.LOAN,
+                incoming,
+                outgoing,
+                ledger
         );
     }
 

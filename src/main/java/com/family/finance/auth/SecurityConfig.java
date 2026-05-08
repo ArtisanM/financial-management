@@ -90,7 +90,7 @@ public class SecurityConfig {
                                            RememberMeServices rememberMeServices) throws Exception {
         http
             .authorizeHttpRequests(a -> a
-                .requestMatchers("/login", "/login/error", "/static/**", "/css/**", "/vendor/**", "/uploads/**", "/favicon.ico", "/error", "/health", "/actuator/health").permitAll()
+                .requestMatchers("/login", "/login/error", "/static/**", "/css/**", "/vendor/**", "/img/**", "/uploads/**", "/favicon.ico", "/error", "/health", "/actuator/health").permitAll()
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form
@@ -116,7 +116,10 @@ public class SecurityConfig {
                 .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                 .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())  // 非 XOR · 表单 _csrf 与 cookie 一致
             )
-            .headers(h -> h.frameOptions(f -> f.disable()))
+            .headers(h -> h
+                .frameOptions(f -> f.disable())
+                .cacheControl(c -> c.disable())  // 改由 WebMvcConfig+CacheHeaderInterceptor 精细控制
+            )
             .authenticationProvider(authenticationProvider());
 
         return http.build();

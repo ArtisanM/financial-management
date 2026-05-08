@@ -2,7 +2,8 @@
 <html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/layout :: head('仪表盘 · 家庭账房')}"></head>
 <body class="min-h-screen relative">
-<script src="/vendor/chart.umd.min.js"></script>
+<script th:src="@{/vendor/chart.umd.min.js(v=${buildVersion})}"></script>
+<script th:src="@{/vendor/chartjs-plugin-datalabels.min.js(v=${buildVersion})}"></script>
 <div class="fixed top-0 left-0 right-0 h-1 bg-ink z-40"></div>
 <header th:replace="~{fragments/nav :: nav('dashboard', ${me}, ${nav})}"></header>
 

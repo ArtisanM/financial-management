@@ -5,8 +5,8 @@
   <div class="max-w-[1400px] mx-auto px-6 lg:px-10 flex items-center justify-between h-16">
     <div class="flex items-center gap-12">
       <a th:href="@{/}" class="flex items-center gap-2 no-underline">
-        <img th:if="${state.family.logoPath != null}"
-             th:src="@{|/uploads/${state.family.logoPath}|}"
+        <img th:src="${state.family.logoPath != null} ? @{|/uploads/${state.family.logoPath}|} : @{/img/default-logo.svg(v=${buildVersion})}"
+             onerror="this.onerror=null;this.src='/img/default-logo.svg'"
              alt="logo" class="w-7 h-7 object-contain"/>
         <span class="font-display text-xl font-medium" th:text="${state.family.brandText}">账房</span>
         <span class="font-mono text-[10px] tracking-[0.2em] text-ink-subtle"

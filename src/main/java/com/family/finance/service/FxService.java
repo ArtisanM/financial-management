@@ -46,7 +46,7 @@ public class FxService {
         for (String quote : SUPPORTED_QUOTES) {
             try {
                 BigDecimal rate = fetchRate(client, base, quote);
-                fxMapper.upsert(familyId, base, quote, periodId, rate, "exchangerate.host");
+                fxMapper.upsert(familyId, base, quote, periodId, rate, "frankfurter.dev");
                 ok++;
                 log.info("[Fx] fetched {} {}->{} = {}", periodId, base, quote, rate);
             } catch (Exception e) {
@@ -69,8 +69,10 @@ public class FxService {
     }
 
     private BigDecimal fetchRate(RestClient client, String base, String quote) {
+        // frankfurter.dev API: GET /v1/latest?base=CNY&symbols=USD,HKD
+        // 响应:{"amount":1.0,"base":"CNY","date":"...","rates":{"USD":0.147,"HKD":1.151}}
         Map<?, ?> body = client.get()
-                .uri("/latest?base={base}&symbols={quote}", base, quote)
+                .uri("/v1/latest?base={base}&symbols={quote}", base, quote)
                 .retrieve()
                 .body(Map.class);
         if (body == null) throw new IllegalStateException("empty response");

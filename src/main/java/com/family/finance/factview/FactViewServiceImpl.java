@@ -115,7 +115,7 @@ public class FactViewServiceImpl implements FactViewService {
         return byType.entrySet().stream()
                 .map(entry -> new AllocationSlice(
                         entry.getKey().name(),
-                        entry.getKey().name(),
+                        entry.getKey().getLabel() + "\n(" + entry.getKey().name() + ")",
                         entry.getValue().setScale(2, RoundingMode.HALF_EVEN),
                         total.signum() == 0 ? BigDecimal.ZERO : entry.getValue().divide(total, 6, RoundingMode.HALF_EVEN)))
                 .toList();

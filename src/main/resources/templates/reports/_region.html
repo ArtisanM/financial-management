@@ -98,7 +98,7 @@
         <tbody>
         <tr th:each="account : ${accountRows}">
           <td><span class="font-display" th:text="${account.accountName}">账户</span></td>
-          <td><span class="pill" th:text="${account.accountType}">STOCK</span></td>
+          <td><span class="pill" th:text="${account.accountType.label} + ' (' + ${account.accountType.name()} + ')'">股票 (STOCK)</span></td>
           <td class="num" th:text="${account.xirr == null ? '—' : (#numbers.formatDecimal(account.xirr * 100, 1, 2) + '%')}">—</td>
           <td class="num" th:text="${account.currentValue == null ? '—' : account.currentValue}">0</td>
           <td><svg class="sparkline-pos" width="80" height="22" viewBox="0 0 80 22"><polyline fill="none" stroke="currentColor" stroke-width="1.5" points="0,16 10,14 20,16 30,12 40,14 50,10 60,12 70,8 80,6"/></svg></td>
@@ -135,25 +135,118 @@
         decompPnl: [[${decompPnl}]],
         debt: [[${debtValues}]],
         sankeyNodes: [[${sankeyNodes}]],
-        sankeyLinks: [[${sankeyLinks}]]
+        sankeyLinks: [[${sankeyLinks}]],
+        currency: [[${currency}]]
+      };
+      const ccySym = data.currency === 'USD' ? '$' : (data.currency === 'HKD' ? 'HK$' : '¥');
+      const fmtMoney = (v) => {
+        if (v == null) return '—';
+        const n = Number(v);
+        if (Math.abs(n) >= 10000) return ccySym + (n / 10000).toFixed(1) + '万';
+        return ccySym + Math.round(n).toLocaleString();
+      };
+      const fmtMoneyShort = (v) => {
+        if (v == null || v === 0) return '';
+        return fmtMoney(v);
       };
       window.reportCharts = window.reportCharts || {};
       Object.values(window.reportCharts).forEach(chart => chart && chart.destroy && chart.destroy());
+
       if (window.echarts) {
         const waterfall = echarts.init(document.getElementById('waterfallChart'));
-        waterfall.setOption({tooltip:{},xAxis:{type:'category',data:data.labels},yAxis:{type:'value'},series:[{type:'bar',name:'收入',stack:'total',data:data.income,itemStyle:{color:'#2f5d50'}},{type:'bar',name:'支出',stack:'total',data:data.expense.map(v => -Math.abs(v)),itemStyle:{color:'#9f4a3a'}},{type:'bar',name:'损益',stack:'total',data:data.pnl,itemStyle:{color:'#6f7f98'}}]});
+        waterfall.setOption({
+          title: {text: '月度收支瀑布 · ' + data.currency, left: 'center', top: 4, textStyle: {fontSize: 12, color: '#3a302a', fontWeight: 500}},
+          legend: {top: 24},
+          tooltip: {valueFormatter: fmtMoney},
+          grid: {top: 60, left: 60, right: 24, bottom: 30},
+          xAxis: {type: 'category', data: data.labels},
+          yAxis: {type: 'value', axisLabel: {formatter: fmtMoney}},
+          series: [
+            {type: 'bar', name: '收入', stack: 'total', data: data.income, itemStyle: {color: '#2f5d50'},
+             label: {show: true, position: 'top', formatter: p => fmtMoneyShort(p.value), fontSize: 9, color: '#2f5d50'}},
+            {type: 'bar', name: '支出', stack: 'total', data: data.expense.map(v => -Math.abs(v)), itemStyle: {color: '#9f4a3a'},
+             label: {show: true, position: 'bottom', formatter: p => fmtMoneyShort(p.value), fontSize: 9, color: '#9f4a3a'}},
+            {type: 'bar', name: '损益', stack: 'total', data: data.pnl, itemStyle: {color: '#6f7f98'},
+             label: {show: true, position: 'inside', formatter: p => fmtMoneyShort(p.value), fontSize: 9, color: '#fffaf0'}}
+          ]
+        });
         waterfall.on('click', p => { const id = data.periodIds[p.dataIndex]; if (id) htmx.ajax('GET', '/reports/period/' + id, '#modal'); });
         window.reportCharts.waterfall = waterfall;
+
         const sankey = echarts.init(document.getElementById('sankeyChart'));
-        sankey.setOption({tooltip:{},series:[{type:'sankey',data:data.sankeyNodes,links:data.sankeyLinks,lineStyle:{color:'gradient'}}]});
+        sankey.setOption({
+          title: {text: '收入流向 · ' + data.currency, left: 'center', top: 4, textStyle: {fontSize: 12, color: '#3a302a', fontWeight: 500}},
+          tooltip: {trigger: 'item', formatter: p => p.data && p.data.value !== undefined ? p.data.source + ' → ' + p.data.target + ': ' + fmtMoney(p.data.value) : p.name},
+          series: [{
+            type: 'sankey', top: 40,
+            data: data.sankeyNodes, links: data.sankeyLinks,
+            lineStyle: {color: 'gradient'},
+            label: {fontSize: 11, color: '#3a302a',
+                    formatter: p => {
+                      const total = (data.sankeyLinks || []).filter(l => l.source === p.name || l.target === p.name).reduce((s, l) => s + Number(l.value || 0), 0);
+                      return total > 0 ? p.name + ' (' + fmtMoney(total) + ')' : p.name;
+                    }}
+          }]
+        });
         window.reportCharts.sankey = sankey;
       }
+
       const decompose = document.getElementById('decomposeChart');
-      if (decompose) window.reportCharts.decompose = new Chart(decompose,{type:'bar',data:{labels:data.labels.slice(1),datasets:[{label:'本金',data:data.principal,backgroundColor:'#a77b35'},{label:'收益',data:data.decompPnl,backgroundColor:'#2f5d50'}]},options:{maintainAspectRatio:false,scales:{x:{stacked:true},y:{stacked:true}}}});
+      if (decompose) window.reportCharts.decompose = new Chart(decompose, {
+        type: 'bar',
+        data: {labels: data.labels.slice(1), datasets: [
+          {label: '本金净流入', data: data.principal, backgroundColor: '#a77b35'},
+          {label: '投资损益', data: data.decompPnl, backgroundColor: '#2f5d50'}
+        ]},
+        options: {
+          maintainAspectRatio: false,
+          layout: {padding: {top: 24}},
+          plugins: {
+            title: {display: true, text: '本金 vs 投资损益分解 · ' + data.currency, padding: {bottom: 8}, font: {size: 12, weight: '500'}, color: '#3a302a'},
+            tooltip: {callbacks: {label: (ctx) => ctx.dataset.label + ': ' + fmtMoney(ctx.parsed.y)}},
+            datalabels: {display: (ctx) => Math.abs(Number(ctx.dataset.data[ctx.dataIndex] || 0)) > 0, color: '#fffaf0', font: {size: 9, weight: '600'}, formatter: fmtMoneyShort, anchor: 'center', align: 'center'}
+          },
+          scales: {x: {stacked: true}, y: {stacked: true, ticks: {callback: fmtMoney}}}
+        },
+        plugins: [ChartDataLabels]
+      });
+
       const income = document.getElementById('incomeBarChart');
-      if (income) window.reportCharts.income = new Chart(income,{type:'bar',data:{labels:data.labels,datasets:[{label:'收入',data:data.income,backgroundColor:'#2f5d50'},{label:'支出',data:data.expense,backgroundColor:'#9f4a3a'}]},options:{maintainAspectRatio:false}});
+      if (income) window.reportCharts.income = new Chart(income, {
+        type: 'bar',
+        data: {labels: data.labels, datasets: [
+          {label: '收入', data: data.income, backgroundColor: '#2f5d50'},
+          {label: '支出', data: data.expense, backgroundColor: '#9f4a3a'}
+        ]},
+        options: {
+          maintainAspectRatio: false,
+          layout: {padding: {top: 24}},
+          plugins: {
+            title: {display: true, text: '月度收支对比 · ' + data.currency, padding: {bottom: 8}, font: {size: 12, weight: '500'}, color: '#3a302a'},
+            tooltip: {callbacks: {label: (ctx) => ctx.dataset.label + ': ' + fmtMoney(ctx.parsed.y)}},
+            datalabels: {anchor: 'end', align: 'end', offset: 2, font: {size: 9, weight: '500'}, color: '#3a302a', formatter: fmtMoneyShort}
+          },
+          scales: {y: {ticks: {callback: fmtMoney}}}
+        },
+        plugins: [ChartDataLabels]
+      });
+
       const debt = document.getElementById('debtChart');
-      if (debt) window.reportCharts.debt = new Chart(debt,{type:'line',data:{labels:data.labels,datasets:[{label:'负债',data:data.debt,borderColor:'#9f4a3a',tension:.35}]},options:{maintainAspectRatio:false}});
+      if (debt) window.reportCharts.debt = new Chart(debt, {
+        type: 'line',
+        data: {labels: data.labels, datasets: [{label: '负债', data: data.debt, borderColor: '#9f4a3a', backgroundColor: 'rgba(159,74,58,.08)', fill: true, tension: .35, pointRadius: 4, pointBackgroundColor: '#9f4a3a'}]},
+        options: {
+          maintainAspectRatio: false,
+          layout: {padding: {top: 28, right: 16}},
+          plugins: {
+            title: {display: true, text: '负债下降曲线 · ' + data.currency, padding: {bottom: 8}, font: {size: 12, weight: '500'}, color: '#3a302a'},
+            tooltip: {callbacks: {label: (ctx) => fmtMoney(ctx.parsed.y)}},
+            datalabels: {anchor: 'end', align: 'top', offset: 6, color: '#3a302a', font: {size: 10, weight: '500'}, formatter: fmtMoney}
+          },
+          scales: {y: {ticks: {callback: fmtMoney}}}
+        },
+        plugins: [ChartDataLabels]
+      });
     })();
   </script>
 </div>

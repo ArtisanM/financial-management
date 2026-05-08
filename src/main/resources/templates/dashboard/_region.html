@@ -65,7 +65,7 @@
            class="flex items-center justify-between gap-3 py-1.5 hover:bg-paper px-2 -mx-2 no-underline">
           <span>
             <span class="font-display text-sm" th:text="${account.displayName}">账户</span>
-            <span class="ml-2 font-mono text-[10px] text-ink-subtle" th:text="${account.type}">CASH</span>
+            <span class="ml-2 font-mono text-[10px] text-ink-subtle" th:text="${account.type.label} + ' (' + ${account.type.name()} + ')'">现金 (CASH)</span>
           </span>
           <span class="font-mono text-[10px] text-ink-subtle">只看</span>
         </a>
@@ -108,7 +108,7 @@
         <tbody>
         <tr th:each="account : ${accountRows}">
           <td><span class="font-display" th:text="${account.accountName}">账户</span></td>
-          <td><span class="pill" th:text="${account.accountType}">CASH</span></td>
+          <td><span class="pill" th:text="${account.accountType.label} + ' (' + ${account.accountType.name()} + ')'">现金 (CASH)</span></td>
           <td class="num" th:text="${account.currentValue == null ? '—' : account.currentValue}">0</td>
           <td class="num" th:text="${account.xirr == null ? '—' : (#numbers.formatDecimal(account.xirr * 100, 1, 2) + '%')}">—</td>
           <td><svg class="sparkline-pos" width="80" height="22" viewBox="0 0 80 22"><polyline fill="none" stroke="currentColor" stroke-width="1.5" points="0,18 10,15 20,16 30,11 40,13 50,8 60,10 70,6 80,4"/></svg></td>
@@ -127,16 +127,107 @@
         expense: [[${expenseValues}]],
         savings: [[${savingsValues}]],
         allocationLabels: [[${allocationLabels}]],
-        allocationValues: [[${allocationValues}]]
+        allocationValues: [[${allocationValues}]],
+        currency: [[${currency}]]
       };
+      const ccySym = data.currency === 'USD' ? '$' : (data.currency === 'HKD' ? 'HK$' : '¥');
+      const fmtMoney = (v) => {
+        if (v == null) return '—';
+        const n = Number(v);
+        if (Math.abs(n) >= 10000) return ccySym + (n / 10000).toFixed(1) + '万';
+        return ccySym + Math.round(n).toLocaleString();
+      };
+      const fmtPct = (v) => v == null ? '—' : Number(v).toFixed(1) + '%';
+
       window.financeCharts = window.financeCharts || {};
       Object.values(window.financeCharts).forEach(chart => chart && chart.destroy && chart.destroy());
+
       const line = document.getElementById('netWorthChart');
-      if (line) window.financeCharts.netWorth = new Chart(line, {type:'line',data:{labels:data.labels,datasets:[{label:'净资产',data:data.netWorth,borderColor:'#2f5d50',backgroundColor:'rgba(47,93,80,.08)',tension:.35,fill:true}]},options:{maintainAspectRatio:false}});
+      if (line) window.financeCharts.netWorth = new Chart(line, {
+        type: 'line',
+        data: {labels: data.labels, datasets: [{label: '净资产', data: data.netWorth, borderColor: '#2f5d50', backgroundColor: 'rgba(47,93,80,.08)', tension: .35, fill: true, pointRadius: 4, pointBackgroundColor: '#2f5d50'}]},
+        options: {
+          maintainAspectRatio: false,
+          layout: {padding: {top: 28, right: 16}},
+          plugins: {
+            title: {display: true, text: '净资产趋势 · ' + data.currency, padding: {bottom: 12}, font: {size: 13, weight: '500'}, color: '#3a302a'},
+            tooltip: {callbacks: {label: (ctx) => fmtMoney(ctx.parsed.y)}},
+            datalabels: {
+              align: 'top', anchor: 'end', offset: 6,
+              color: '#3a302a', font: {size: 10, weight: '500'},
+              formatter: fmtMoney
+            }
+          },
+          scales: {y: {ticks: {callback: (v) => fmtMoney(v)}}}
+        },
+        plugins: [ChartDataLabels]
+      });
+
       const mixed = document.getElementById('incomeExpenseChart');
-      if (mixed) window.financeCharts.incomeExpense = new Chart(mixed, {data:{labels:data.labels,datasets:[{type:'bar',label:'收入',data:data.income,backgroundColor:'#2f5d50'},{type:'bar',label:'支出',data:data.expense,backgroundColor:'#9f4a3a'},{type:'line',label:'储蓄率 %',data:data.savings,borderColor:'#a77b35',yAxisID:'y1'}]},options:{maintainAspectRatio:false,scales:{y:{beginAtZero:true},y1:{position:'right'}}}});
+      if (mixed) window.financeCharts.incomeExpense = new Chart(mixed, {
+        data: {labels: data.labels, datasets: [
+          {type: 'bar', label: '收入', data: data.income, backgroundColor: '#2f5d50'},
+          {type: 'bar', label: '支出', data: data.expense, backgroundColor: '#9f4a3a'},
+          {type: 'line', label: '储蓄率 %', data: data.savings, borderColor: '#a77b35', yAxisID: 'y1', tension: .3, pointRadius: 3}
+        ]},
+        options: {
+          maintainAspectRatio: false,
+          layout: {padding: {top: 24, right: 16}},
+          plugins: {
+            title: {display: true, text: '收入 / 支出 / 储蓄率 · ' + data.currency, padding: {bottom: 12}, font: {size: 13, weight: '500'}, color: '#3a302a'},
+            tooltip: {
+              itemSort: (a, b) => {
+                // 储蓄率(line on y1)排最上,然后收入,然后支出
+                const rank = (it) => it.dataset.yAxisID === 'y1' ? 0 : (it.dataset.label === '收入' ? 1 : 2);
+                return rank(a) - rank(b);
+              },
+              callbacks: {label: (ctx) => ctx.dataset.label + ': ' + (ctx.dataset.yAxisID === 'y1' ? fmtPct(ctx.parsed.y) : fmtMoney(ctx.parsed.y))}
+            },
+            datalabels: {
+              display: (ctx) => ctx.dataset.type !== 'line',
+              anchor: 'end', align: 'end', offset: 2,
+              color: '#3a302a', font: {size: 9, weight: '500'},
+              formatter: (v) => v == null || Number(v) === 0 ? '' : fmtMoney(v)
+            }
+          },
+          scales: {
+            y: {beginAtZero: true, ticks: {callback: (v) => fmtMoney(v)}},
+            y1: {position: 'right', ticks: {callback: (v) => v + '%'}, grid: {drawOnChartArea: false}}
+          }
+        },
+        plugins: [ChartDataLabels]
+      });
+
       const donut = document.getElementById('allocationChart');
-      if (donut) window.financeCharts.allocation = new Chart(donut, {type:'doughnut',data:{labels:data.allocationLabels,datasets:[{data:data.allocationValues,backgroundColor:['#a77b35','#2f5d50','#6f7f98','#8f6048','#333333']}]},options:{maintainAspectRatio:false}});
+      if (donut) {
+        const donutLabels = data.allocationLabels.map(s => String(s).split('\n'));
+        const total = data.allocationValues.reduce((s, v) => s + Number(v || 0), 0);
+        window.financeCharts.allocation = new Chart(donut, {
+          type: 'doughnut',
+          data: {labels: donutLabels, datasets: [{data: data.allocationValues, backgroundColor: ['#a77b35','#2f5d50','#6f7f98','#8f6048','#333333','#7a4f6b']}]},
+          options: {
+            maintainAspectRatio: false,
+            layout: {padding: 12},
+            plugins: {
+              title: {display: true, text: '资产配置 · ' + data.currency, padding: {bottom: 8}, font: {size: 13, weight: '500'}, color: '#3a302a'},
+              legend: {position: 'right', labels: {boxWidth: 14, font: {size: 12}}},
+              tooltip: {callbacks: {label: (ctx) => (Array.isArray(ctx.label) ? ctx.label.join(' ') : String(ctx.label).replace('\n', ' ')) + ': ' + fmtMoney(ctx.parsed) + ' · ' + (total > 0 ? (ctx.parsed * 100 / total).toFixed(1) + '%' : '')}},
+              datalabels: {
+                color: '#fffaf0',
+                font: {size: 11, weight: '600'},
+                textStrokeColor: 'rgba(26,23,20,.55)', textStrokeWidth: 2,
+                formatter: (v, ctx) => {
+                  if (!v || total === 0) return '';
+                  const pct = (v * 100 / total);
+                  if (pct < 4) return ''; // 太小的扇片不挤数字,hover 看
+                  return fmtMoney(v) + '\n' + pct.toFixed(0) + '%';
+                }
+              }
+            }
+          },
+          plugins: [ChartDataLabels]
+        });
+      }
     })();
   </script>
 </div>

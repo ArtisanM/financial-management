@@ -11,6 +11,6 @@ public record AppProperties(
         @DefaultValue("/tmp/finance-uploads") String uploadRoot,
         @DefaultValue("dev-only-key-change-in-prod") String rememberMeKey,
         @DefaultValue("2592000") int rememberMeValiditySeconds,
-        @DefaultValue("https://api.exchangerate.host") String fxApiBase,
+        @DefaultValue("https://api.frankfurter.dev") String fxApiBase,
         @DefaultValue("3000") long fxFetchTimeoutMs
 ) {}
