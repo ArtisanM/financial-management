@@ -64,7 +64,7 @@ LOG_FILE=$(mktemp)
 
 {
     echo "=== mysqldump $DB_NAME → $DUMP ==="
-    mysqldump "${mysql_args[@]}" \
+    mysqldump "${mysql_args[@]}" --no-tablespaces \
         --single-transaction --routines --triggers --quick \
         --default-character-set=utf8mb4 \
         "$DB_NAME" | gzip -9 > "$DUMP"

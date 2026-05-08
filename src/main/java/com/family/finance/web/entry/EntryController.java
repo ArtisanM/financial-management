@@ -10,6 +10,7 @@ import com.family.finance.service.EntryService;
 import com.family.finance.service.EntryRow;
 import com.family.finance.service.NavService;
 import com.family.finance.service.PeriodService;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
@@ -49,6 +50,12 @@ public class EntryController {
         if (accountFilter != null) {
             rows = rows.stream().filter(r -> r.account().getId().equals(accountFilter)).toList();
         }
+        // 把 ledger 拼成 HTML 字符串塞 model(规避 Thymeleaf each + record nested List 的 accessor bug)
+        java.util.Map<String, String> ledgerHtmlByAccount = new java.util.LinkedHashMap<>();
+        for (EntryRow r : rows) {
+            ledgerHtmlByAccount.put(String.valueOf(r.account().getId()), renderLedgerHtml(r));
+        }
+        model.addAttribute("ledgerHtmlByAccount", ledgerHtmlByAccount);
         model.addAttribute("period", period);
         model.addAttribute("periods", periodMapper.findLatest(me.getFamilyId(), 12));
         model.addAttribute("accounts", accountMapper.findActiveByFamily(me.getFamilyId()));
@@ -63,6 +70,7 @@ public class EntryController {
     public String submitBalance(@AuthenticationPrincipal MemberPrincipal me,
                                 @PathVariable long accountId,
                                 @RequestParam MultiValueMap<String, String> params,
+                                HttpServletResponse response,
                                 Model model) {
         long periodId = longParam(params, "periodId", () -> periodService.requireCurrentOpen(me.getFamilyId()).getId());
         EntryRow row = entryService.submitBalance(
@@ -75,6 +83,7 @@ public class EntryController {
                 transferLines(params),
                 params.getFirst("note")
         );
+        response.setHeader("HX-Trigger", "refresh-row-" + accountId);
         return rowFragment(me, row, periodId, model);
     }
 
@@ -86,9 +95,13 @@ public class EntryController {
                               @RequestParam(defaultValue = "other_income") String categoryCode,
                               @RequestParam BigDecimal amount,
                               @RequestParam(required = false) String note,
+                              HttpServletResponse response,
                               Model model) {
         EntryRow row = entryService.addCashFlow(me.getFamilyId(), me.getMemberId(), periodId, accountId,
                 kind, categoryCode, amount, note);
+        // 触发自身 hx-get refresh,确保 ledger details 用 GET 路径完整渲染(POST fragment 路径在 fragment 内嵌套时
+        // 会丢失 row.ledger 子元素求值结果,这里走 self-refresh 兜底)
+        response.setHeader("HX-Trigger", "refresh-row-" + accountId);
         return rowFragment(me, row, periodId, model);
     }
 
@@ -100,9 +113,12 @@ public class EntryController {
                               @RequestParam BigDecimal amount,
                               @RequestParam(required = false) String note,
                               @RequestParam(defaultValue = "false") boolean confirmDuplicate,
+                              HttpServletResponse response,
                               Model model) {
         EntryRow row = entryService.addTransfer(me.getFamilyId(), me.getMemberId(), periodId,
                 accountId, toAccountId, amount, note, confirmDuplicate);
+        // HX-Trigger:让目标行 div 自己再 hx-get 拉一次,实现"两行同时刷新",避开 Thymeleaf fragment 嵌套坑
+        response.setHeader("HX-Trigger", "refresh-row-" + toAccountId);
         return rowFragment(me, row, periodId, model);
     }
 
@@ -114,10 +130,12 @@ public class EntryController {
                                 @RequestParam BigDecimal amount,
                                 @RequestParam(required = false) String note,
                                 @RequestParam(defaultValue = "false") boolean confirmDuplicate,
+                                HttpServletResponse response,
                                 Model model) {
         EntryRow row = entryService.quickTransfer(me.getFamilyId(), me.getMemberId(), fromAccountId,
                 periodId, toAccountId, amount, note, confirmDuplicate);
         long effectivePeriodId = periodId == null ? periodService.requireCurrentOpen(me.getFamilyId()).getId() : periodId;
+        response.setHeader("HX-Trigger", "refresh-row-" + toAccountId);
         return rowFragment(me, row, effectivePeriodId, model);
     }
 
@@ -129,11 +147,73 @@ public class EntryController {
     }
 
     private String rowFragment(MemberPrincipal me, EntryRow row, long periodId, Model model) {
+        // 改为返回 block(row + ledger 整块),让 ledger 流水列表也实时刷新
+        return blockFragment(me, row, periodId, model);
+    }
+
+    /** 把 EntryRow.ledger 渲染为预格式化的 HTML 片段(规避 Thymeleaf 在 each 嵌套 List 上的 accessor bug)。 */
+    private String renderLedgerHtml(EntryRow row) {
+        if (row == null || row.ledger() == null || row.ledger().isEmpty()) return "";
+        StringBuilder sb = new StringBuilder();
+        sb.append("<details open class=\"paper-card -mt-3 mb-3 px-6 py-3 border-t-0 border-rule bg-card-soft\">");
+        sb.append("<summary class=\"font-mono text-[10px] tracking-[0.16em] uppercase text-ink-soft cursor-pointer select-none\">");
+        sb.append("展开本期 <b>").append(row.ledger().size()).append("</b> 笔流水</summary>");
+        sb.append("<ul class=\"mt-3 divide-y divide-rule-soft text-xs font-mono\">");
+        java.time.format.DateTimeFormatter fmt = java.time.format.DateTimeFormatter.ofPattern("M月d日 HH:mm");
+        for (EntryRow.LedgerEntry le : row.ledger()) {
+            String kindClass; String kindLabel;
+            switch (le.kind()) {
+                case INCOME -> { kindClass = "num-pos"; kindLabel = "+ 收入"; }
+                case EXPENSE -> { kindClass = "num-neg"; kindLabel = "- 支出"; }
+                case TRANSFER_IN -> { kindClass = "text-forest"; kindLabel = "↳ 划入"; }
+                case TRANSFER_OUT -> { kindClass = "text-rust"; kindLabel = "↱ 划出"; }
+                default -> { kindClass = "text-ink-subtle"; kindLabel = "= 校准余额"; }
+            }
+            sb.append("<li class=\"py-1.5 flex items-baseline gap-3 flex-wrap\">");
+            sb.append("<span class=\"w-24 inline-flex items-center gap-1 ").append(kindClass).append("\">").append(kindLabel).append("</span>");
+            sb.append("<span class=\"tnum w-28\">").append(escapeHtml(le.amountSignedLabel())).append("</span>");
+            String label = le.label() != null ? le.label()
+                    : (le.kind() == EntryRow.LedgerKind.SNAPSHOT ? "用户校准余额" : "");
+            sb.append("<span class=\"text-ink-soft flex-1 min-w-[120px]\">").append(escapeHtml(label)).append("</span>");
+            if (le.occurredAt() != null) {
+                sb.append("<span class=\"text-ink-subtle text-[10px]\">").append(le.occurredAt().format(fmt)).append("</span>");
+            }
+            if (le.note() != null && !le.note().isBlank()) {
+                sb.append("<span class=\"w-full text-ink-subtle italic pl-24\">· ").append(escapeHtml(le.note())).append("</span>");
+            }
+            sb.append("</li>");
+        }
+        sb.append("</ul></details>");
+        return sb.toString();
+    }
+
+    private String escapeHtml(String s) {
+        if (s == null) return "";
+        return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;");
+    }
+
+    /** 单行刷新:返回 entry-block 整块(row + ledger),由 HTMX 监听 refresh-row-{id} 事件 OR 用户手动刷新 icon 触发 */
+    @GetMapping("/entry/{accountId}/refresh")
+    public String refreshRow(@AuthenticationPrincipal MemberPrincipal me,
+                             @PathVariable long accountId,
+                             @RequestParam(required = false) Long period,
+                             Model model) {
+        long effectivePeriodId = period == null
+                ? periodService.requireCurrentOpen(me.getFamilyId()).getId() : period;
+        EntryRow row = entryService.rowFor(me.getFamilyId(), me.getMemberId(), effectivePeriodId, accountId);
+        return blockFragment(me, row, effectivePeriodId, model);
+    }
+
+    /** 渲染 entry-block 整块(row + ledger),用于 HTMX swap 整块 */
+    private String blockFragment(MemberPrincipal me, EntryRow row, long periodId, Model model) {
         model.addAttribute("me", me);
         model.addAttribute("row", row);
         model.addAttribute("period", periodMapper.findById(periodId).orElse(null));
         model.addAttribute("accounts", accountMapper.findActiveByFamily(me.getFamilyId()));
-        return "entry/_row :: row";
+        java.util.Map<String, String> singleLedger = new java.util.LinkedHashMap<>();
+        singleLedger.put(String.valueOf(row.account().getId()), renderLedgerHtml(row));
+        model.addAttribute("ledgerHtmlByAccount", singleLedger);
+        return "entry/_row :: block(row=${row}, oob=null)";
     }
 
     private List<EntryService.CashFlowLine> cashFlowLines(MultiValueMap<String, String> params) {

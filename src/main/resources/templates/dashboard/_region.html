@@ -1,7 +1,11 @@
 <!DOCTYPE html>
 <html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
 <body>
-<div th:fragment="region" id="dashboard-region">
+<div th:fragment="region" id="dashboard-region"
+     th:hx-get="@{/dashboard(range=${range},currency=${currency},accounts=${accountsCsv})}"
+     hx-target="#dashboard-region"
+     hx-swap="outerHTML"
+     hx-trigger="visibilitychange[document.visibilityState === 'visible'] from:document delay:200ms, every 90s">
   <section class="mb-10 fade-in">
     <div class="flex items-end justify-between flex-wrap gap-6 mb-6">
       <div>
@@ -57,24 +61,43 @@
       </div>
     </div>
     <details class="paper-card border-t-0 px-5 py-4 bg-card-soft">
-      <summary class="font-mono text-[10px] tracking-[0.18em] uppercase cursor-pointer">展开账户筛选</summary>
-      <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1">
-        <a th:each="account : ${allAccounts}"
-           th:href="@{/dashboard(range=${range},currency=${currency},accounts=${account.id})}"
-           hx-target="#dashboard-region" hx-swap="outerHTML"
-           class="flex items-center justify-between gap-3 py-1.5 hover:bg-paper px-2 -mx-2 no-underline">
-          <span>
-            <span class="font-display text-sm" th:text="${account.displayName}">账户</span>
-            <span class="ml-2 font-mono text-[10px] text-ink-subtle" th:text="${account.type.label} + ' (' + ${account.type.name()} + ')'">现金 (CASH)</span>
-          </span>
-          <span class="font-mono text-[10px] text-ink-subtle">只看</span>
-        </a>
-      </div>
+      <summary class="font-mono text-[10px] tracking-[0.18em] uppercase cursor-pointer">展开账户多选筛选</summary>
+      <form method="get" th:action="@{/dashboard}" class="mt-4">
+        <input type="hidden" name="range" th:value="${range}"/>
+        <input type="hidden" name="currency" th:value="${currency}"/>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1">
+          <label th:each="account : ${allAccounts}"
+                 class="flex items-center gap-3 py-1.5 hover:bg-paper px-2 -mx-2 cursor-pointer">
+            <input type="checkbox" name="accounts" th:value="${account.id}"
+                   th:checked="${#lists.isEmpty(selectedAccountIds) or #lists.contains(selectedAccountIds, account.id)}"
+                   class="accent-ink"/>
+            <span class="flex-1">
+              <span class="font-display text-sm" th:text="${account.displayName}">账户</span>
+              <span class="ml-2 font-mono text-[10px] text-ink-subtle"
+                    th:text="${account.type.label} + ' (' + ${account.type.name()} + ')'">现金 (CASH)</span>
+            </span>
+          </label>
+        </div>
+        <div class="mt-4 pt-3 border-t border-rule flex items-center gap-3 flex-wrap">
+          <button type="button" class="btn-ghost text-[10px]"
+                  onclick="this.closest('form').querySelectorAll('input[name=accounts]').forEach(el=>el.checked=true)">全选</button>
+          <button type="button" class="btn-ghost text-[10px]"
+                  onclick="this.closest('form').querySelectorAll('input[name=accounts]').forEach(el=>el.checked=false)">全清</button>
+          <span class="ml-auto font-mono text-[10px] text-ink-soft">勾选完成后点"应用"刷新所有图表</span>
+          <a th:href="@{/dashboard(range=${range},currency=${currency})}"
+             class="btn-paper text-[10px] no-underline">↺ 重置为全部</a>
+          <button type="submit" class="btn-ink text-[10px]">应用筛选</button>
+        </div>
+      </form>
     </details>
   </section>
 
   <section class="grid grid-cols-2 lg:grid-cols-5 gap-px bg-rule mb-10">
-    <div class="kpi-card"><span class="kpi-eyebrow">净资产</span><div class="kpi-value tnum" th:text="${kpiNetWorth}">¥0</div><div class="kpi-delta" th:text="${kpiDelta}">—</div></div>
+    <div class="kpi-card"><span class="kpi-eyebrow">净资产</span><div class="kpi-value tnum" th:text="${kpiNetWorth}">¥0</div>
+      <div class="kpi-delta"
+           th:classappend="${kpiDelta != null and kpiDelta.startsWith('+') ? ' num-pos' : (kpiDelta != null and kpiDelta.startsWith('-') ? ' num-neg' : '')}"
+           th:text="${kpiDelta}">—</div>
+    </div>
     <div class="kpi-card"><span class="kpi-eyebrow">总资产</span><div class="kpi-value tnum" th:text="${kpiAssets}">¥0</div><div class="kpi-delta">不含 LOAN</div></div>
     <div class="kpi-card"><span class="kpi-eyebrow">总负债</span><div class="kpi-value tnum num-neg" th:text="${kpiLiabilities}">¥0</div><div class="kpi-delta">仅 LOAN</div></div>
     <div class="kpi-card"><span class="kpi-eyebrow">紧急储备</span><div class="kpi-value tnum" th:text="${kpiEmergency}">—</div><div class="kpi-delta">流动资产 / 月均支出</div></div>
@@ -165,10 +188,11 @@
 
       const mixed = document.getElementById('incomeExpenseChart');
       if (mixed) window.financeCharts.incomeExpense = new Chart(mixed, {
+        // 储蓄率 line 放在 datasets 数组第一位 → tooltip 顺序里它在最上面;同时设 order:0 让 line 渲染在 bar 之上
         data: {labels: data.labels, datasets: [
-          {type: 'bar', label: '收入', data: data.income, backgroundColor: '#2f5d50'},
-          {type: 'bar', label: '支出', data: data.expense, backgroundColor: '#9f4a3a'},
-          {type: 'line', label: '储蓄率 %', data: data.savings, borderColor: '#a77b35', yAxisID: 'y1', tension: .3, pointRadius: 3}
+          {type: 'line', label: '储蓄率 %', data: data.savings, borderColor: '#a77b35', backgroundColor: 'rgba(167,123,53,.1)', yAxisID: 'y1', tension: .3, pointRadius: 4, pointBackgroundColor: '#a77b35', borderWidth: 2.5, order: 0},
+          {type: 'bar', label: '收入', data: data.income, backgroundColor: '#2f5d50', order: 1},
+          {type: 'bar', label: '支出', data: data.expense, backgroundColor: '#9f4a3a', order: 2}
         ]},
         options: {
           maintainAspectRatio: false,

@@ -13,9 +13,35 @@
       <div>
         <div class="eyebrow mb-2">成 · 员 · 管 · 理</div>
         <h1 class="font-display text-4xl font-medium" th:text="|${#lists.size(members)} 位成员|">2 位成员</h1>
-        <p class="text-ink-soft text-sm mt-2">改名、调整角色标签、重置密码。当前家庭暂只支持初始两位成员。</p>
+        <p class="text-ink-soft text-sm mt-2">改名、调整角色标签、重置密码、添加新成员。</p>
       </div>
-      <button class="btn-paper opacity-50 cursor-not-allowed" disabled>+ 添加成员 <span class="text-[9px] ml-1">后续版本</span></button>
+      <details class="relative">
+        <summary class="btn-paper cursor-pointer list-none inline-flex">+ 添加成员</summary>
+        <form th:action="@{/admin/members}" method="post"
+              class="absolute right-0 mt-2 z-20 bg-card border border-rule p-5 shadow-xl w-[360px] space-y-3">
+          <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+          <div>
+            <label class="field-label">用户名(登录用)·必填</label>
+            <input name="username" required pattern="[a-zA-Z0-9_]+" minlength="3" maxlength="40"
+                   class="field-input" placeholder="如:wangmei"/>
+          </div>
+          <div>
+            <label class="field-label">显示名(中文,展示用)·必填</label>
+            <input name="displayName" required class="field-input" placeholder="如:王梅"/>
+          </div>
+          <div>
+            <label class="field-label">角色标签(可选)</label>
+            <input name="roleLabel" class="field-input" placeholder="如:儿子 / 母亲 / 其它"/>
+          </div>
+          <p class="font-mono text-[10px] text-ink-subtle leading-relaxed">
+            提交后系统生成 12 位临时密码,屏幕一次性显示,请当面告知。<br/>
+            该成员首次登录后将被强制修改密码。
+          </p>
+          <div class="flex justify-end pt-2">
+            <button class="btn-ink">+ 创建成员</button>
+          </div>
+        </form>
+      </details>
     </div>
 
     <div th:if="${flash}" class="mb-4 border border-forest bg-forest/[0.05] px-4 py-2 text-sm" th:text="${flash}">已保存</div>

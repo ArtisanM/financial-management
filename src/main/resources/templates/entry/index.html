@@ -68,7 +68,7 @@
          th:classappend="${mineOnly ? ' bg-ink text-paper' : ' text-ink-soft hover:bg-card-soft'}">仅我</a>
     </div>
     <div class="flex items-center gap-2">
-      <button class="btn-paper" onclick="document.querySelector('[id^=entry-row-] select[name=toAccountId]')?.focus()">+ 账户间划转</button>
+      <span class="font-mono text-[10px] text-ink-subtle">划转入口在每个账户行右侧 ↔</span>
       <a th:href="@{/accounts/new}" class="btn-paper no-underline">+ 新账户</a>
     </div>
   </section>
@@ -86,7 +86,7 @@
     </div>
 
     <th:block th:each="row : ${rows}">
-      <div th:replace="~{entry/_row :: row(${row})}"></div>
+      <div th:replace="~{entry/_row :: block(${row}, null)}"></div>
     </th:block>
 
     <div th:if="${#lists.isEmpty(rows)}" class="paper-card p-8 text-center text-ink-soft">

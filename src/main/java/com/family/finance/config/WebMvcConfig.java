@@ -26,6 +26,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     private final AppProperties props;
     private final CacheHeaderInterceptor cacheHeaderInterceptor;
+    private final MustChangePasswordInterceptor mustChangePasswordInterceptor;
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry r) {
@@ -48,6 +49,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(cacheHeaderInterceptor)
+                .excludePathPatterns("/vendor/**", "/css/**", "/img/**", "/uploads/**", "/favicon.ico");
+        registry.addInterceptor(mustChangePasswordInterceptor)
                 .excludePathPatterns("/vendor/**", "/css/**", "/img/**", "/uploads/**", "/favicon.ico");
     }
 }

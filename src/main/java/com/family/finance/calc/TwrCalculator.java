@@ -33,7 +33,10 @@ public final class TwrCalculator {
         if (cumulativeReturn == null || monthsCount < 12) {
             return Optional.empty();
         }
-        double annualized = Math.pow(1.0d + cumulativeReturn.doubleValue(), 12.0d / monthsCount) - 1.0d;
+        double base = 1.0d + cumulativeReturn.doubleValue();
+        if (base <= 0) return Optional.empty(); // 累计亏损 ≥ 100%,无法年化
+        double annualized = Math.pow(base, 12.0d / monthsCount) - 1.0d;
+        if (Double.isNaN(annualized) || Double.isInfinite(annualized)) return Optional.empty();
         return Optional.of(BigDecimal.valueOf(annualized).setScale(8, RoundingMode.HALF_EVEN));
     }
 

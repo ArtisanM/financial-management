@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>家庭账房 · v0.2 Preview · 张家</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,ital,wght@9..144,0,300..700;9..144,1,300..600&family=JetBrains+Mono:wght@300;400;500&family=Noto+Serif+SC:wght@300;400;500;600&family=Source+Serif+4:opsz,wght@8..60,300;8..60,400;8..60,500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/style.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { theme: { extend: { colors: { paper: 'var(--paper)', 'paper-soft': 'var(--paper-soft)', 'paper-deep': 'var(--paper-deep)', card: 'var(--card)', 'card-soft': 'var(--card-soft)', ink: { DEFAULT: 'var(--ink)', soft: 'var(--ink-soft)', subtle: 'var(--ink-subtle)' }, rule: { DEFAULT: 'var(--rule)', soft: 'var(--rule-soft)' }, brass: { DEFAULT: 'var(--brass)', deep: 'var(--brass-deep)', soft: 'var(--brass-soft)' }, forest: 'var(--forest)', rust: 'var(--rust)' }, fontFamily: { display: ['Fraunces', 'Noto Serif SC', 'serif'], serif: ['"Source Serif 4"', 'Noto Serif SC', 'serif'], mono: ['JetBrains Mono', 'monospace'] } } } }
+  </script>
+</head>
+<body class="min-h-screen relative">
+
+  <div class="fixed top-0 left-0 right-0 h-1 bg-ink z-40"></div>
+
+  <header class="border-b border-rule pt-12 pb-10 px-8 md:px-16 relative z-10">
+    <div class="max-w-[1200px] mx-auto">
+      <div class="flex items-start justify-between flex-wrap gap-6">
+        <div>
+          <div class="eyebrow mb-3">№ 张 — 私家账房 · Family Counting House · v0.2</div>
+          <h1 class="font-display text-5xl md:text-7xl leading-[0.95] font-medium tracking-tight">
+            用得舒服 ·<br/>
+            <span class="italic font-light text-brass-deep">单账户深度 + 移动友好</span>
+          </h1>
+          <p class="font-serif text-base md:text-lg text-ink-soft max-w-2xl mt-6 leading-relaxed">
+            v0.2 在已交付的 v0.1 之上做增量,<span class="text-ink">不增加功能广度,只补深度和体验</span>:
+            单账户跨期完整流水 + 类型差异化体检报告 + 智能建议 + 微信内引导 + iOS PWA 添加到主屏。
+          </p>
+        </div>
+        <div class="flex flex-col gap-3 items-end">
+          <a href="../index.html" class="font-mono text-[10px] tracking-[0.18em] uppercase text-ink-subtle hover:text-ink no-underline">← 返回版本入口</a>
+          <div class="pill pill-brass">v0.2 · IN PROGRESS</div>
+          <div class="font-mono text-xs text-ink-soft tracking-widest">3 NEW PAGES · 6 NEW FRs</div>
+          <a href="../v0.1/index.html" class="btn-paper mt-2">↩ 看 v0.1 基线</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-[1200px] mx-auto px-8 md:px-16 py-16 relative z-10">
+
+    <!-- v0.2 新增:账户详情页 -->
+    <section class="mb-16">
+      <div class="flex items-baseline justify-between mb-8 rule-x pt-6">
+        <div>
+          <div class="eyebrow mb-2">第 一 · 卷 · v0.2 新增</div>
+          <h2 class="font-display text-3xl font-medium">账户深度 · 体检报告 · 智能建议</h2>
+        </div>
+        <div class="text-ink-soft font-mono text-xs tracking-widest">FR-30 · FR-30a/b/c/e/f</div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <a href="pages/account-detail.html" class="paper-card p-6 hover:shadow-lg transition no-underline group">
+          <div class="flex items-baseline justify-between mb-2">
+            <span class="font-mono text-[10px] tracking-[0.18em] uppercase text-brass-deep">P0 · 主战场</span>
+            <span class="font-mono text-[10px] text-forest">v0.2 新增</span>
+          </div>
+          <h3 class="font-display text-2xl font-medium mb-2 group-hover:text-brass-deep transition">账户详情 · /accounts/{id}</h3>
+          <p class="text-sm text-ink-soft mb-3 leading-relaxed">
+            单账户的"理财体检报告" — 智能建议(规则引擎)+ 类型差异化诊断卡(投资/储蓄/负债/简版) +
+            产品类目 / 风险评级 / 基准对照 + 月分组流水时间线 + CSV 导出 + 软删除。
+          </p>
+          <div class="flex flex-wrap gap-1.5">
+            <span class="pill text-[9px]">FR-30</span>
+            <span class="pill text-[9px]">FR-30a 投资</span>
+            <span class="pill text-[9px]">FR-30b 储蓄</span>
+            <span class="pill text-[9px]">FR-30c 负债</span>
+            <span class="pill text-[9px]">FR-30e 建议</span>
+            <span class="pill text-[9px]">FR-30f 类目</span>
+          </div>
+        </a>
+
+        <div class="paper-card p-6 bg-card-soft">
+          <div class="flex items-baseline justify-between mb-2">
+            <span class="font-mono text-[10px] tracking-[0.18em] uppercase text-ink-subtle">设 · 计 · 要 · 点</span>
+          </div>
+          <h3 class="font-display text-2xl font-medium mb-3">FR-30 关键决策</h3>
+          <ul class="space-y-2 text-sm text-ink-soft">
+            <li class="flex gap-2"><span class="text-brass-deep flex-shrink-0">·</span> 不只是流水查看,而是<span class="text-ink">理财体检</span>(收益 + 风险 + 建议)</li>
+            <li class="flex gap-2"><span class="text-brass-deep flex-shrink-0">·</span> 16 个产品类目 + 风险等级 ★1-6 + 基准 % 直接驱动智能建议</li>
+            <li class="flex gap-2"><span class="text-brass-deep flex-shrink-0">·</span> 10 条规则引擎(纯 Java),无 LLM,完全可预测</li>
+            <li class="flex gap-2"><span class="text-brass-deep flex-shrink-0">·</span> 类型差异化 — STOCK/WEALTH 看 XIRR/TWR,CASH 看缓冲月数,LOAN 看进度</li>
+            <li class="flex gap-2"><span class="text-brass-deep flex-shrink-0">·</span> 软删除 cash_flow / transfer · CSV 导出含 BOM 头</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- v0.2 新增:移动端引导 -->
+    <section class="mb-16">
+      <div class="flex items-baseline justify-between mb-8 rule-x pt-6">
+        <div>
+          <div class="eyebrow mb-2">第 二 · 卷 · v0.2 新增</div>
+          <h2 class="font-display text-3xl font-medium">移动端引导 · 手机为先</h2>
+        </div>
+        <div class="text-ink-soft font-mono text-xs tracking-widest">FR-33 · FR-34</div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <a href="pages/wechat-guide.html" class="paper-card p-6 hover:shadow-lg transition no-underline group">
+          <div class="flex items-baseline justify-between mb-2">
+            <span class="font-mono text-[10px] tracking-[0.18em] uppercase text-brass-deep">P0 · 移动端</span>
+            <span class="font-mono text-[10px] text-forest">v0.2 新增</span>
+          </div>
+          <h3 class="font-display text-2xl font-medium mb-2 group-hover:text-brass-deep transition">微信内浏览器引导</h3>
+          <p class="text-sm text-ink-soft mb-3 leading-relaxed">
+            UA 检测微信(MicroMessenger)→ 全屏遮罩 + 大箭头指右上 ⋯ + 文字步骤指引 + dismiss 24h 不再扰。
+          </p>
+          <div class="flex flex-wrap gap-1.5">
+            <span class="pill text-[9px]">FR-33</span>
+            <span class="pill text-[9px]">UA 检测</span>
+            <span class="pill text-[9px]">localStorage</span>
+          </div>
+        </a>
+
+        <a href="pages/ios-pwa-prompt.html" class="paper-card p-6 hover:shadow-lg transition no-underline group">
+          <div class="flex items-baseline justify-between mb-2">
+            <span class="font-mono text-[10px] tracking-[0.18em] uppercase text-brass-deep">P0 · 移动端</span>
+            <span class="font-mono text-[10px] text-forest">v0.2 新增</span>
+          </div>
+          <h3 class="font-display text-2xl font-medium mb-2 group-hover:text-brass-deep transition">iOS PWA · 添加到主屏</h3>
+          <p class="text-sm text-ink-soft mb-3 leading-relaxed">
+            iOS Safari 不支持 beforeinstallprompt,引导走系统分享 → 添加到主屏 → 之后从主屏点开是 standalone 模式。
+          </p>
+          <div class="flex flex-wrap gap-1.5">
+            <span class="pill text-[9px]">FR-34</span>
+            <span class="pill text-[9px]">manifest.webmanifest</span>
+            <span class="pill text-[9px]">apple-touch-icon</span>
+          </div>
+        </a>
+      </div>
+    </section>
+
+    <!-- v0.2 增强但未独立成页的功能 -->
+    <section class="mb-16">
+      <div class="flex items-baseline justify-between mb-8 rule-x pt-6">
+        <div>
+          <div class="eyebrow mb-2">第 三 · 卷 · v0.2 增强(无独立页)</div>
+          <h2 class="font-display text-3xl font-medium">隐性增强</h2>
+        </div>
+        <div class="text-ink-soft font-mono text-xs tracking-widest">FR-31 · FR-32 · FR-30g</div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="paper-card p-5">
+          <div class="flex items-baseline justify-between mb-2">
+            <span class="font-mono text-[10px] tracking-[0.18em] uppercase text-brass-deep">FR-31</span>
+            <span class="font-mono text-[9px] text-ink-subtle">P0</span>
+          </div>
+          <h4 class="font-display text-lg font-medium mb-2">单账户 CSV 导出</h4>
+          <p class="text-xs text-ink-soft leading-relaxed">
+            <code class="font-mono">/accounts/{id}/ledger.csv</code> · 支持 from/to/kind/q 筛选 · UTF-8 BOM 头 · Excel 中文不乱
+          </p>
+        </div>
+        <div class="paper-card p-5">
+          <div class="flex items-baseline justify-between mb-2">
+            <span class="font-mono text-[10px] tracking-[0.18em] uppercase text-brass-deep">FR-32</span>
+            <span class="font-mono text-[9px] text-ink-subtle">P0</span>
+          </div>
+          <h4 class="font-display text-lg font-medium mb-2">单条流水软删除</h4>
+          <p class="text-xs text-ink-soft leading-relaxed">
+            行末 ⋮ 菜单 → 删除此条 · CLOSED 期 toast 拒 · audit_log 含原值 · 详情页流水时间线已展示
+          </p>
+        </div>
+        <div class="paper-card p-5">
+          <div class="flex items-baseline justify-between mb-2">
+            <span class="font-mono text-[10px] tracking-[0.18em] uppercase text-brass-deep">FR-30g</span>
+            <span class="font-mono text-[9px] text-rust">P1 选做</span>
+          </div>
+          <h4 class="font-display text-lg font-medium mb-2">报表风险等级分布</h4>
+          <p class="text-xs text-ink-soft leading-relaxed">
+            <code class="font-mono">/reports</code> 加按 risk_level 1-6 着色环形图 · 让家庭看到激进/保守倾向
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- v0.1 继承的页面索引(只列,不重复呈现) -->
+    <section class="mb-12">
+      <div class="flex items-baseline justify-between mb-8 rule-x pt-6">
+        <div>
+          <div class="eyebrow mb-2">附 · 录 · v0.1 继承(15 页未变)</div>
+          <h2 class="font-display text-3xl font-medium">基线页面</h2>
+        </div>
+        <a href="../v0.1/index.html" class="btn-paper no-underline">↩ 看 v0.1 完整索引</a>
+      </div>
+      <p class="font-serif text-sm text-ink-soft max-w-2xl mb-6">
+        v0.2 不重做这些页面,继续复用 v0.1 已交付的版本。直接点链接打开 v0.1 文件夹下的预览。
+      </p>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
+        <a href="../v0.1/pages/login.html" class="px-3 py-2 border border-rule hover:bg-card-soft no-underline text-ink-soft hover:text-ink font-mono text-xs">login</a>
+        <a href="../v0.1/pages/dashboard.html" class="px-3 py-2 border border-rule hover:bg-card-soft no-underline text-ink-soft hover:text-ink font-mono text-xs">dashboard</a>
+        <a href="../v0.1/pages/setup-wizard.html" class="px-3 py-2 border border-rule hover:bg-card-soft no-underline text-ink-soft hover:text-ink font-mono text-xs">setup-wizard</a>
+        <a href="../v0.1/pages/entry-desktop.html" class="px-3 py-2 border border-rule hover:bg-card-soft no-underline text-ink-soft hover:text-ink font-mono text-xs">entry-desktop</a>
+        <a href="../v0.1/pages/entry-mobile.html" class="px-3 py-2 border border-rule hover:bg-card-soft no-underline text-ink-soft hover:text-ink font-mono text-xs">entry-mobile</a>
+        <a href="../v0.1/pages/my-todos.html" class="px-3 py-2 border border-rule hover:bg-card-soft no-underline text-ink-soft hover:text-ink font-mono text-xs">my-todos</a>
+        <a href="../v0.1/pages/accounts.html" class="px-3 py-2 border border-rule hover:bg-card-soft no-underline text-ink-soft hover:text-ink font-mono text-xs">accounts</a>
+        <a href="../v0.1/pages/reports.html" class="px-3 py-2 border border-rule hover:bg-card-soft no-underline text-ink-soft hover:text-ink font-mono text-xs">reports</a>
+        <a href="../v0.1/pages/admin.html" class="px-3 py-2 border border-rule hover:bg-card-soft no-underline text-ink-soft hover:text-ink font-mono text-xs">admin</a>
+        <a href="../v0.1/pages/admin-family.html" class="px-3 py-2 border border-rule hover:bg-card-soft no-underline text-ink-soft hover:text-ink font-mono text-xs">admin-family</a>
+        <a href="../v0.1/pages/admin-members.html" class="px-3 py-2 border border-rule hover:bg-card-soft no-underline text-ink-soft hover:text-ink font-mono text-xs">admin-members</a>
+        <a href="../v0.1/pages/admin-periods.html" class="px-3 py-2 border border-rule hover:bg-card-soft no-underline text-ink-soft hover:text-ink font-mono text-xs">admin-periods</a>
+        <a href="../v0.1/pages/admin-fx.html" class="px-3 py-2 border border-rule hover:bg-card-soft no-underline text-ink-soft hover:text-ink font-mono text-xs">admin-fx</a>
+        <a href="../v0.1/pages/admin-backup.html" class="px-3 py-2 border border-rule hover:bg-card-soft no-underline text-ink-soft hover:text-ink font-mono text-xs">admin-backup</a>
+        <a href="../v0.1/pages/admin-audit.html" class="px-3 py-2 border border-rule hover:bg-card-soft no-underline text-ink-soft hover:text-ink font-mono text-xs">admin-audit</a>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="border-t border-rule mt-12 py-8 px-8 text-center relative z-10">
+    <div class="font-mono text-[10px] tracking-[0.18em] text-ink-subtle">
+      家庭账房 · v0.2 PREVIEW · 仅限家庭内部使用
+    </div>
+    <div class="font-mono text-[10px] tracking-[0.18em] text-ink-subtle mt-2">
+      <a href="../index.html" class="hover:text-ink">← 版本入口</a>
+      <span class="mx-2">·</span>
+      <a href="../v0.1/index.html" class="hover:text-ink">v0.1 基线</a>
+      <span class="mx-2">·</span>
+      <span class="text-ink">v0.2 增量</span>
+    </div>
+  </footer>
+
+</body>
+</html>

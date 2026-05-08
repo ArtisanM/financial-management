@@ -35,6 +35,14 @@ public record EntryRow(
         /** PRD FR-7/8/9:本期所有流水合并视图(snapshot/cash_flow/transfer 统一为 LedgerEntry) */
         List<LedgerEntry> ledger
 ) {
+    /** Thymeleaf bean-style accessor 显式提供,绕过 record accessor 在某些 SpEL 上下文下解析为 null 的坑。 */
+    public List<LedgerEntry> getLedger() { return ledger; }
+    public List<TransferRef> getIncoming() { return incoming; }
+    public List<TransferRef> getOutgoing() { return outgoing; }
+    public PeriodSnapshot getCurrentSnapshot() { return currentSnapshot; }
+    public PeriodSnapshot getPreviousSnapshot() { return previousSnapshot; }
+    public Account getAccount() { return account; }
+    public SnapshotTodo getTodo() { return todo; }
     public record TransferRef(String counterpartyName, BigDecimal amount, String amountLabel) {}
 
     /**

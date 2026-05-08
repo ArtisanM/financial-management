@@ -48,11 +48,14 @@ public class DashboardController {
     @GetMapping("/dashboard")
     public String dashboard(@AuthenticationPrincipal MemberPrincipal me,
                             @RequestParam(defaultValue = "1Y") String range,
-                            @RequestParam(required = false) String accounts,
+                            @RequestParam(name = "accounts", required = false) List<Long> accounts,
                             @RequestParam(required = false) String currency,
                             @RequestHeader(value = "HX-Request", required = false) String htmx,
                             Model model) {
-        populateModel(me, range, accounts, currency, model);
+        String accountsCsv = accounts == null || accounts.isEmpty()
+                ? null
+                : accounts.stream().map(String::valueOf).collect(java.util.stream.Collectors.joining(","));
+        populateModel(me, range, accountsCsv, currency, model);
         if ("true".equalsIgnoreCase(htmx)) {
             return "dashboard/_region :: region";
         }
@@ -89,6 +92,7 @@ public class DashboardController {
         model.addAttribute("ranges", List.of("1M", "3M", "6M", "YTD", "1Y", "ALL"));
         model.addAttribute("currencies", List.of("CNY", "USD", "HKD"));
         model.addAttribute("accountsCsv", accountsCsv == null ? "" : accountsCsv);
+        model.addAttribute("selectedAccountIds", accountIds == null ? java.util.Collections.<Long>emptyList() : accountIds);
         model.addAttribute("selectedAccountCount", accountIds == null ? allAccounts.size() : accountIds.size());
         model.addAttribute("allAccounts", allAccounts);
         model.addAttribute("anchorPeriod", anchor);

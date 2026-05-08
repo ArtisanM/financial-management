@@ -71,4 +71,11 @@ public interface MemberMapper {
     int updateProfile(@Param("id") long id,
                       @Param("displayName") String displayName,
                       @Param("roleLabel") String roleLabel);
+
+    @org.apache.ibatis.annotations.Insert("""
+            INSERT INTO member (family_id, username, password_hash, display_name, role_label, must_change_pw)
+            VALUES (#{familyId}, #{username}, #{passwordHash}, #{displayName}, #{roleLabel}, 1)
+            """)
+    @org.apache.ibatis.annotations.Options(useGeneratedKeys = true, keyProperty = "id")
+    int insert(com.family.finance.domain.member.Member member);
 }

@@ -32,8 +32,25 @@ public class AccountController {
     @GetMapping
     public String index(@AuthenticationPrincipal MemberPrincipal me,
                         @RequestParam(value = "archived", defaultValue = "false") boolean includeArchived,
+                        @RequestParam(value = "type", required = false) String typeFilter,
                         Model model) {
         addModel(me, model, includeArchived, false);
+        // 用户视角的"按类型筛选"(CASH / STOCK / WEALTH / PROPERTY / LOAN / OTHER / ALL)
+        com.family.finance.domain.account.AccountType normalized = null;
+        if (typeFilter != null && !typeFilter.isBlank() && !"ALL".equalsIgnoreCase(typeFilter)) {
+            try { normalized = com.family.finance.domain.account.AccountType.valueOf(typeFilter.toUpperCase()); }
+            catch (IllegalArgumentException ignored) {}
+        }
+        @SuppressWarnings("unchecked")
+        java.util.List<com.family.finance.service.AccountRow> rows =
+                (java.util.List<com.family.finance.service.AccountRow>) model.getAttribute("rows");
+        if (normalized != null && rows != null) {
+            final var typed = normalized;
+            model.addAttribute("rows", rows.stream()
+                    .filter(r -> r.account().getType() == typed)
+                    .toList());
+        }
+        model.addAttribute("typeFilter", normalized == null ? "ALL" : normalized.name());
         return "accounts/index";
     }
 

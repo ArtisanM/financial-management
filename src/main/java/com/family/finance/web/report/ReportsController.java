@@ -52,11 +52,14 @@ public class ReportsController {
     @GetMapping("/reports")
     public String reports(@AuthenticationPrincipal MemberPrincipal me,
                           @RequestParam(defaultValue = "1Y") String range,
-                          @RequestParam(required = false) String accounts,
+                          @RequestParam(name = "accounts", required = false) List<Long> accounts,
                           @RequestParam(required = false) String currency,
                           @RequestHeader(value = "HX-Request", required = false) String htmx,
                           Model model) {
-        populateModel(me, range, accounts, currency, model);
+        String accountsCsv = accounts == null || accounts.isEmpty()
+                ? null
+                : accounts.stream().map(String::valueOf).collect(java.util.stream.Collectors.joining(","));
+        populateModel(me, range, accountsCsv, currency, model);
         if ("true".equalsIgnoreCase(htmx)) {
             return "reports/_region :: region";
         }

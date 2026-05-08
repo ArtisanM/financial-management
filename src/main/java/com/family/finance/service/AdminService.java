@@ -1,6 +1,7 @@
 package com.family.finance.service;
 
 import com.family.finance.domain.audit.AuditLogType;
+import com.family.finance.domain.member.Member;
 import com.family.finance.repository.MemberMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -47,5 +48,40 @@ public class AdminService {
         auditLogService.record(familyId, actorMemberId, AuditLogType.FAMILY_UPDATE,
                 "member", targetMemberId,
                 "成员资料更新:%s · %s".formatted(displayName, roleLabel == null ? "—" : roleLabel));
+    }
+
+    /**
+     * 添加新成员(同一家庭内)。生成 12 位临时密码 + must_change_pw=1,
+     * 返回明文供管理员当面/即时通讯告知对方。
+     */
+    public String createMember(long familyId, String username, String displayName, String roleLabel,
+                                Long actorMemberId) {
+        if (username == null || username.isBlank()) {
+            throw new IllegalArgumentException("用户名必填");
+        }
+        if (displayName == null || displayName.isBlank()) {
+            throw new IllegalArgumentException("显示名必填");
+        }
+        if (memberMapper.findByUsername(username).isPresent()) {
+            throw new IllegalArgumentException("用户名已被占用");
+        }
+        StringBuilder sb = new StringBuilder(12);
+        for (int i = 0; i < 12; i++) {
+            sb.append(PASSWORD_ALPHABET[RANDOM.nextInt(PASSWORD_ALPHABET.length)]);
+        }
+        String plain = sb.toString();
+        Member m = Member.builder()
+                .familyId(familyId)
+                .username(username)
+                .passwordHash(passwordEncoder.encode(plain))
+                .displayName(displayName)
+                .roleLabel(roleLabel)
+                .mustChangePw(true)
+                .build();
+        memberMapper.insert(m);
+        auditLogService.record(familyId, actorMemberId, AuditLogType.FAMILY_UPDATE,
+                "member", m.getId(),
+                "添加成员 · " + displayName + " · 临时密码已生成(only-once)");
+        return plain;
     }
 }

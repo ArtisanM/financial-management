@@ -10,6 +10,11 @@
   <meta name="_csrf" th:content="${_csrf.token}"/>
   <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
   <title th:text="${title} ?: '家庭账房'">家庭账房</title>
+  <!-- favicon:用户上传过 logo 走 uploads,否则走默认 SVG -->
+  <link rel="icon" type="image/svg+xml"
+        th:href="${nav != null and nav.family != null and nav.family.logoPath != null} ? @{|/uploads/${nav.family.logoPath}|} : @{/img/default-logo.svg(v=${buildVersion})}">
+  <link rel="alternate icon" type="image/svg+xml" th:href="@{/img/default-logo.svg(v=${buildVersion})}">
+  <link rel="apple-touch-icon" th:href="@{/img/default-logo.svg(v=${buildVersion})}">
   <link rel="stylesheet" th:href="@{/css/style.css(v=${buildVersion})}">
   <script th:src="@{/vendor/tailwind.js(v=${buildVersion})}"></script>
   <script th:src="@{/vendor/htmx.min.js(v=${buildVersion})}"></script>
@@ -39,6 +44,151 @@
       if (token && header) event.detail.headers[header] = token;
     });
   </script>
+  <!-- 全局加载进度条 + 印章式启动遮罩(早注入,首屏即生效) -->
+  <style>
+    /* 顶部 3px 渐变进度条 + 流动 shimmer 高光 */
+    #page-progress {
+      position: fixed; top: 0; left: 0; height: 3px; width: 0%;
+      background: linear-gradient(90deg, var(--ink) 0%, var(--brass) 45%, var(--brass-deep) 65%, var(--rust) 100%);
+      box-shadow: 0 0 12px rgba(167,123,53,0.6), 0 0 6px rgba(159,74,58,0.5), 0 1px 0 rgba(0,0,0,.05);
+      z-index: 9999; transition: width .35s cubic-bezier(.22,.9,.22,1), opacity .25s ease;
+      opacity: 1; pointer-events: none; overflow: hidden;
+    }
+    #page-progress::before {
+      content: ""; position: absolute; inset: 0; transform: translateX(-100%);
+      background: linear-gradient(90deg, transparent, rgba(255,250,240,.85), transparent);
+      animation: pp-shimmer 1.4s linear infinite;
+    }
+    #page-progress.done { opacity: 0; }
+    @keyframes pp-shimmer { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+
+    /* 中央印章式启动遮罩 */
+    #page-overlay {
+      position: fixed; inset: 0; z-index: 9998; background: var(--paper);
+      display: flex; align-items: center; justify-content: center;
+      transition: opacity .55s cubic-bezier(.22,.9,.22,1), visibility .55s;
+      opacity: 1; visibility: visible;
+    }
+    #page-overlay.hidden { opacity: 0; visibility: hidden; }
+    #page-overlay::before {
+      content: ""; position: absolute; inset: 0;
+      background: radial-gradient(circle at 50% 45%, transparent 35%, rgba(26,23,20,.04) 70%);
+      pointer-events: none;
+    }
+    #page-overlay .seal-stamp { position: relative; width: 140px; height: 140px; }
+    #page-overlay .seal-stamp svg { width: 100%; height: 100%; overflow: visible; }
+    #page-overlay .seal-ring-outer {
+      fill: none; stroke: var(--ink); stroke-width: 2.5;
+      stroke-dasharray: 360; stroke-dashoffset: 360;
+      animation: seal-ring 1.6s cubic-bezier(.4,0,.2,1) infinite;
+    }
+    #page-overlay .seal-ring-inner {
+      fill: none; stroke: var(--ink); stroke-width: 0.7; opacity: .7;
+      stroke-dasharray: 320; stroke-dashoffset: 320;
+      animation: seal-ring 1.6s cubic-bezier(.4,0,.2,1) infinite .15s;
+    }
+    #page-overlay .seal-fill {
+      fill: var(--ink); opacity: 0; transform-origin: center;
+      animation: seal-fill 1.6s ease-out infinite .4s;
+    }
+    #page-overlay .seal-character {
+      fill: var(--brass);
+      font-family: 'Fraunces', 'Noto Serif SC', serif;
+      font-size: 60px; font-weight: 500;
+      text-anchor: middle; dominant-baseline: central;
+      opacity: 0;
+      animation: seal-fade 1.6s ease-out infinite .55s;
+    }
+    #page-overlay .seal-ink-dot {
+      fill: var(--rust); opacity: 0; transform-origin: center;
+      animation: seal-pop 1.6s ease-out infinite .9s;
+    }
+    #page-overlay .seal-label {
+      position: absolute; bottom: -42px; left: 50%; transform: translateX(-50%);
+      font-family: 'Fraunces', 'Noto Serif SC', serif;
+      font-size: 11px; letter-spacing: 0.45em; color: var(--ink-subtle);
+      text-transform: uppercase; white-space: nowrap; opacity: 0;
+      animation: seal-fade 1.6s ease-out infinite .8s;
+    }
+    #page-overlay .seal-pulse {
+      position: absolute; inset: -20px; border-radius: 50%;
+      border: 1px solid var(--brass); opacity: 0;
+      animation: seal-wave 1.6s ease-out infinite 1.0s;
+    }
+    @keyframes seal-ring { 0% { stroke-dashoffset: 360; } 60%, 100% { stroke-dashoffset: 0; } }
+    @keyframes seal-fill { 0%, 30% { opacity: 0; transform: scale(0); } 60%, 100% { opacity: 1; transform: scale(1); } }
+    @keyframes seal-fade { 0%, 50% { opacity: 0; } 80%, 100% { opacity: 1; } }
+    @keyframes seal-pop {
+      0%, 50% { opacity: 0; transform: scale(0.3); }
+      70% { opacity: 1; transform: scale(1.6); }
+      90%, 100% { opacity: 1; transform: scale(1); }
+    }
+    @keyframes seal-wave { 0% { opacity: .8; transform: scale(.6); } 100% { opacity: 0; transform: scale(1.5); } }
+    @keyframes toast-in { from { transform: translateY(-12px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  </style>
+  <script>
+    (function () {
+      var SVG_NS = 'http://www.w3.org/2000/svg';
+      function el(tag, attrs, parent) {
+        var e = document.createElement(tag);
+        if (attrs) for (var k in attrs) e.setAttribute(k, attrs[k]);
+        if (parent) parent.appendChild(e);
+        return e;
+      }
+      function svg(tag, attrs, parent) {
+        var e = document.createElementNS(SVG_NS, tag);
+        if (attrs) for (var k in attrs) e.setAttribute(k, attrs[k]);
+        if (parent) parent.appendChild(e);
+        return e;
+      }
+
+      // 顶部进度条
+      var p = el('div', {id: 'page-progress'}, document.documentElement);
+      requestAnimationFrame(function () { p.style.width = '30%'; });
+
+      // 中央印章过渡
+      var ov = el('div', {id: 'page-overlay'}, document.documentElement);
+      var stamp = el('div', {class: 'seal-stamp'}, ov);
+      el('div', {class: 'seal-pulse'}, stamp);
+      var sv = svg('svg', {viewBox: '0 0 140 140'}, stamp);
+      svg('rect', {class: 'seal-ring-outer', x: 14, y: 14, width: 112, height: 112, rx: 6}, sv);
+      svg('rect', {class: 'seal-ring-inner', x: 22, y: 22, width:  96, height:  96, rx: 2}, sv);
+      svg('rect', {class: 'seal-fill',       x: 30, y: 30, width:  80, height:  80, rx: 2}, sv);
+      var ch = svg('text', {class: 'seal-character', x: 70, y: 73}, sv);
+      ch.textContent = '账';
+      svg('circle', {class: 'seal-ink-dot', cx: 118, cy: 22, r: 6}, sv);
+      var lbl = el('div', {class: 'seal-label'}, stamp);
+      lbl.textContent = '家 · 庭 · 账 · 房';
+
+      window.addEventListener('DOMContentLoaded', function () { p.style.width = '70%'; });
+      window.addEventListener('load', function () {
+        p.style.width = '100%';
+        setTimeout(function () { p.classList.add('done'); }, 250);
+        setTimeout(function () { p.style.width = '0%'; p.classList.remove('done'); }, 700);
+        // 给印章动画一个完整周期(~1.6s,首屏看完一次再淡出)
+        setTimeout(function () { ov.classList.add('hidden'); }, 1200);
+      });
+      // 兜底:任意资源 hang 也最多遮 3.5s
+      setTimeout(function () { ov.classList.add('hidden'); }, 3500);
+
+      function rearm() { p.classList.remove('done'); p.style.width = '40%'; }
+      document.addEventListener('click', function (e) {
+        var a = e.target.closest('a');
+        if (a && a.href && !a.target && !e.metaKey && !e.ctrlKey
+            && !a.hasAttribute('hx-get') && !a.hasAttribute('hx-post')
+            && !a.getAttribute('href').startsWith('#')) rearm();
+      });
+      document.addEventListener('submit', function (e) {
+        if (!e.target.hasAttribute('hx-post')) rearm();
+      });
+      document.addEventListener('htmx:beforeRequest', rearm);
+      document.addEventListener('htmx:afterRequest', function () {
+        p.style.width = '100%';
+        setTimeout(function () { p.classList.add('done'); }, 250);
+        setTimeout(function () { p.style.width = '0%'; p.classList.remove('done'); }, 700);
+      });
+    })();
+  </script>
 </head>
 
 <!--
@@ -49,6 +199,35 @@
   <div class="font-mono text-[10px] tracking-[0.18em] text-ink-subtle">
     家庭账房 · 仅限家庭内部使用
   </div>
+  <!-- 全局 Toast 容器(HX-Trigger=showToast 触发) — 居中顶部,z-index 高于 nav 与 progress -->
+  <div id="toast-stack"
+       class="fixed top-6 left-1/2 -translate-x-1/2 z-[10000] flex flex-col items-center space-y-2 pointer-events-none w-auto max-w-[90vw]"></div>
+  <script>
+    (function () {
+      function showToast(detail) {
+        const msg = (detail && detail.message) || '操作完成';
+        const level = (detail && detail.level) || 'info';
+        const el = document.createElement('div');
+        const palette = {
+          error: 'bg-rust text-paper border-rust',
+          warn:  'bg-brass text-ink border-brass-deep',
+          info:  'bg-ink text-paper border-ink',
+          success: 'bg-forest text-paper border-forest'
+        };
+        el.className = 'pointer-events-auto px-5 py-3 border-2 shadow-2xl max-w-md font-mono text-sm rounded ' + (palette[level] || palette.info);
+        el.style.animation = 'toast-in .3s cubic-bezier(.22,.9,.22,1)';
+        el.textContent = msg;
+        const stack = document.getElementById('toast-stack');
+        if (stack) {
+          stack.appendChild(el);
+          setTimeout(() => { el.style.transition = 'opacity .4s'; el.style.opacity = '0'; }, 4000);
+          setTimeout(() => el.remove(), 4500);
+        }
+      }
+      document.body.addEventListener('showToast', function (evt) { showToast(evt.detail); });
+      window.showToast = showToast;
+    })();
+  </script>
 </footer>
 </body>
 </html>

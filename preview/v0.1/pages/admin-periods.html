@@ -2,10 +2,10 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>汇率维护 · 家庭账房</title>
+  <title>周期管理 · 家庭账房</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,ital,wght@9..144,0,300..700;9..144,1,300..600&family=JetBrains+Mono:wght@300;400;500&family=Noto+Serif+SC:wght@300;400;500;600&family=Source+Serif+4:opsz,wght@8..60,300;8..60,400;8..60,500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../assets/style.css">
+  <link rel="stylesheet" href="../../assets/style.css">
   <script src="https://cdn.tailwindcss.com"></script>
   <script>tailwind.config = { theme: { extend: { colors: { paper: 'var(--paper)', 'paper-soft': 'var(--paper-soft)', 'paper-deep': 'var(--paper-deep)', card: 'var(--card)', 'card-soft': 'var(--card-soft)', ink: { DEFAULT: 'var(--ink)', soft: 'var(--ink-soft)', subtle: 'var(--ink-subtle)' }, rule: { DEFAULT: 'var(--rule)', soft: 'var(--rule-soft)' }, brass: { DEFAULT: 'var(--brass)', deep: 'var(--brass-deep)', soft: 'var(--brass-soft)' }, forest: 'var(--forest)', rust: 'var(--rust)' }, fontFamily: { display: ['Fraunces', 'Noto Serif SC', 'serif'], serif: ['"Source Serif 4"', 'Noto Serif SC', 'serif'], mono: ['JetBrains Mono', 'monospace'] } } } }</script>
 </head>
@@ -57,10 +57,10 @@
           <a href="accounts.html" class="py-2 px-3 border-l border-rule hover:border-ink hover:bg-card-soft text-ink-soft no-underline">账户</a>
           <a href="#" class="py-2 px-3 border-l border-rule hover:border-ink hover:bg-card-soft text-ink-subtle no-underline">账户模板 <span class="text-rust text-[10px]">·只读</span></a>
           <a href="#" class="py-2 px-3 border-l border-rule hover:border-ink hover:bg-card-soft text-ink-subtle no-underline">现金流类别 <span class="text-rust text-[10px]">·只读</span></a>
-          <a href="admin-periods.html" class="py-2 px-3 border-l border-rule hover:border-ink hover:bg-card-soft text-ink-soft no-underline">周期</a>
+          <a href="admin-periods.html" class="py-2 px-3 border-l-2 border-brass bg-card-soft text-ink no-underline font-display">周期</a>
           <a href="#" class="py-2 px-3 border-l border-rule hover:border-ink hover:bg-card-soft text-ink-soft no-underline">提醒</a>
           <a href="#" class="py-2 px-3 border-l border-rule hover:border-ink hover:bg-card-soft text-ink-soft no-underline">SMTP</a>
-          <a href="admin-fx.html" class="py-2 px-3 border-l-2 border-brass bg-card-soft text-ink no-underline font-display">汇率</a>
+          <a href="admin-fx.html" class="py-2 px-3 border-l border-rule hover:border-ink hover:bg-card-soft text-ink-soft no-underline">汇率</a>
           <a href="admin-backup.html" class="py-2 px-3 border-l border-rule hover:border-ink hover:bg-card-soft text-ink-soft no-underline">备份</a>
           <a href="admin-audit.html" class="py-2 px-3 border-l border-rule hover:border-ink hover:bg-card-soft text-ink-soft no-underline">审计</a>
           <a href="#" class="py-2 px-3 border-l border-rule hover:border-ink hover:bg-card-soft text-ink-soft no-underline">数值阈值</a>
@@ -69,127 +69,131 @@
     </aside>
 
     <section class="col-span-12 md:col-span-9">
-      <div class="mb-8 flex items-end justify-between">
-        <div>
-          <div class="eyebrow mb-2">汇 · 率 · 维 · 护</div>
-          <h1 class="font-display text-4xl font-medium">USD / HKD → CNY</h1>
-          <p class="text-ink-soft text-sm mt-2">每月 1 日凌晨 2:00 自动从 exchangerate.host 拉取上月末汇率。失败时手填覆盖。</p>
-        </div>
-        <button class="btn-paper">↻ 立即拉取</button>
+      <div class="mb-8">
+        <div class="eyebrow mb-2">周 · 期 · 管 · 理</div>
+        <h1 class="font-display text-4xl font-medium">所有周期 · 13 期</h1>
+        <p class="text-ink-soft text-sm mt-2">关闭周期会自动触发指标重算。已关闭周期可"重新打开",但需要填写理由,且会写入审计日志。</p>
       </div>
 
-      <!-- API 状态卡 -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-px bg-rule mb-8">
-        <div class="kpi-card">
-          <span class="kpi-eyebrow">API 状态</span>
-          <div class="font-display text-2xl mt-1 num-pos">正常</div>
-          <div class="font-mono text-xs text-ink-soft mt-1">最近成功 2 小时前</div>
+      <!-- 当前 OPEN 周期突出 -->
+      <div class="envelope p-6 mb-8" style="border-color: var(--brass);">
+        <div class="flex items-baseline justify-between mb-3">
+          <div>
+            <div class="eyebrow mb-1 text-brass-deep">当 · 前 · 周 · 期</div>
+            <h2 class="font-display text-3xl font-medium">2026 · 04</h2>
+            <p class="text-sm text-ink-soft mt-1">2026-04-01 — 2026-04-30 · OPEN · 第 13 期</p>
+          </div>
+          <span class="pill pill-brass">填报进行中</span>
         </div>
-        <div class="kpi-card">
-          <span class="kpi-eyebrow">本期汇率</span>
-          <div class="font-display text-2xl mt-1 tnum">7.2110</div>
-          <div class="font-mono text-xs text-ink-soft mt-1">USD / CNY · 自动</div>
-        </div>
-        <div class="kpi-card">
-          <span class="kpi-eyebrow">手填覆盖记录</span>
-          <div class="font-display text-2xl mt-1 tnum">1</div>
-          <div class="font-mono text-xs text-rust mt-1">2025-12 · API 当时挂掉</div>
+        <div class="rule-double mb-3"></div>
+        <div class="grid grid-cols-3 gap-6">
+          <div>
+            <div class="eyebrow-ink mb-1">快照待办</div>
+            <div class="font-display tnum text-2xl">5 / 7</div>
+          </div>
+          <div>
+            <div class="eyebrow-ink mb-1">张伟提交本期</div>
+            <div class="font-display text-2xl text-ink-subtle">未签</div>
+          </div>
+          <div>
+            <div class="eyebrow-ink mb-1">李静提交本期</div>
+            <div class="font-display text-2xl text-ink-subtle">未签</div>
+          </div>
         </div>
       </div>
 
-      <!-- 表 -->
+      <!-- 历史周期表 -->
       <div class="paper-card overflow-x-auto">
         <table class="ledger-table">
           <thead>
             <tr>
               <th>期号</th>
-              <th class="num">USD → CNY</th>
-              <th class="num">HKD → CNY</th>
-              <th>来源</th>
-              <th>更新时间</th>
+              <th>区间</th>
+              <th>状态</th>
+              <th>关闭时间</th>
+              <th class="num">期末净资产</th>
+              <th class="num">较上期</th>
               <th class="num">操作</th>
             </tr>
           </thead>
           <tbody>
             <tr>
               <td class="font-display">2026-04</td>
-              <td class="num">
-                <input class="font-mono tnum text-base text-right bg-transparent w-20 border-b border-transparent hover:border-rule focus:border-brass outline-none" value="7.2110">
-              </td>
-              <td class="num">
-                <input class="font-mono tnum text-base text-right bg-transparent w-20 border-b border-transparent hover:border-rule focus:border-brass outline-none" value="0.9241">
-              </td>
-              <td class="text-xs">exchangerate.host</td>
-              <td class="font-mono text-xs">04-01 02:14</td>
-              <td class="text-right text-xs text-ink-subtle">自动 ↻</td>
+              <td class="text-xs text-ink-soft">04-01 → 04-30</td>
+              <td><span class="pill pill-brass">OPEN</span></td>
+              <td class="text-ink-subtle">—</td>
+              <td class="num text-ink-subtle">—</td>
+              <td class="num text-ink-subtle">—</td>
+              <td class="text-right text-ink-subtle text-xs">—</td>
             </tr>
             <tr>
               <td class="font-display">2026-03</td>
-              <td class="num"><input class="font-mono tnum text-base text-right bg-transparent w-20 border-b border-transparent hover:border-rule focus:border-brass outline-none" value="7.2580"></td>
-              <td class="num"><input class="font-mono tnum text-base text-right bg-transparent w-20 border-b border-transparent hover:border-rule focus:border-brass outline-none" value="0.9302"></td>
-              <td class="text-xs">exchangerate.host</td>
-              <td class="font-mono text-xs">03-01 02:09</td>
-              <td class="text-right text-xs text-ink-subtle">自动 ↻</td>
+              <td class="text-xs text-ink-soft">03-01 → 03-31</td>
+              <td><span class="pill" style="background:var(--forest-soft);color:var(--forest);border-color:var(--forest)">CLOSED</span></td>
+              <td class="text-xs">2026-04-01 · 张伟</td>
+              <td class="num">¥2,799,000</td>
+              <td class="num num-pos">+¥30,000</td>
+              <td class="text-right"><button class="btn-ghost" style="color:var(--rust)">重新打开</button></td>
             </tr>
             <tr>
               <td class="font-display">2026-02</td>
-              <td class="num"><input class="font-mono tnum text-base text-right bg-transparent w-20 border-b border-transparent hover:border-rule focus:border-brass outline-none" value="7.2840"></td>
-              <td class="num"><input class="font-mono tnum text-base text-right bg-transparent w-20 border-b border-transparent hover:border-rule focus:border-brass outline-none" value="0.9335"></td>
-              <td class="text-xs">exchangerate.host</td>
-              <td class="font-mono text-xs">02-01 02:11</td>
-              <td class="text-right text-xs text-ink-subtle">自动 ↻</td>
+              <td class="text-xs text-ink-soft">02-01 → 02-28</td>
+              <td><span class="pill" style="background:var(--forest-soft);color:var(--forest);border-color:var(--forest)">CLOSED</span></td>
+              <td class="text-xs">2026-03-02 · 李静</td>
+              <td class="num">¥2,769,000</td>
+              <td class="num num-pos">+¥27,000</td>
+              <td class="text-right"><button class="btn-ghost" style="color:var(--rust)">重新打开</button></td>
             </tr>
-            <tr style="background: var(--rust-soft); opacity: 0.85;">
-              <td class="font-display">2025-12</td>
-              <td class="num"><input class="font-mono tnum text-base text-right bg-transparent w-20 border-b border-rust focus:border-brass outline-none" value="7.2320"></td>
-              <td class="num"><input class="font-mono tnum text-base text-right bg-transparent w-20 border-b border-rust focus:border-brass outline-none" value="0.9269"></td>
-              <td class="text-xs"><span class="font-mono text-rust">⚠ 手填覆盖</span></td>
-              <td class="font-mono text-xs">2026-01-02 · 张伟</td>
+            <tr style="background: var(--rust-soft); opacity: 0.92;">
+              <td class="font-display">2026-01</td>
+              <td class="text-xs text-ink-soft">01-01 → 01-31</td>
+              <td><span class="pill" style="background:var(--rust-soft);color:var(--rust);border-color:var(--rust)">REOPENED</span></td>
+              <td class="text-xs">2026-04-22 · 张伟<br>(已重开)</td>
+              <td class="num">¥2,742,000</td>
+              <td class="num num-pos">+¥24,000</td>
               <td class="text-right"><button class="btn-ghost">查看理由</button></td>
             </tr>
             <tr>
-              <td class="font-display text-ink-subtle">2025-11</td>
-              <td class="num"><input class="font-mono tnum text-base text-right bg-transparent w-20 border-b border-transparent hover:border-rule focus:border-brass outline-none" value="7.2100"></td>
-              <td class="num"><input class="font-mono tnum text-base text-right bg-transparent w-20 border-b border-transparent hover:border-rule focus:border-brass outline-none" value="0.9241"></td>
-              <td class="text-xs">exchangerate.host</td>
-              <td class="font-mono text-xs">2025-12-01 · 02:13</td>
-              <td class="text-right text-xs text-ink-subtle">自动 ↻</td>
+              <td class="font-display">2025-12</td>
+              <td class="text-xs text-ink-soft">12-01 → 12-31</td>
+              <td><span class="pill" style="background:var(--forest-soft);color:var(--forest);border-color:var(--forest)">CLOSED</span></td>
+              <td class="text-xs">2026-01-03 · 李静</td>
+              <td class="num">¥2,718,000</td>
+              <td class="num num-pos">+¥36,000</td>
+              <td class="text-right"><button class="btn-ghost" style="color:var(--rust)">重新打开</button></td>
+            </tr>
+            <tr>
+              <td class="font-display">2025-11</td>
+              <td class="text-xs text-ink-soft">11-01 → 11-30</td>
+              <td><span class="pill" style="background:var(--forest-soft);color:var(--forest);border-color:var(--forest)">CLOSED</span></td>
+              <td class="text-xs">2025-12-04 · 张伟</td>
+              <td class="num">¥2,682,000</td>
+              <td class="num num-pos">+¥41,000</td>
+              <td class="text-right"><button class="btn-ghost" style="color:var(--rust)">重新打开</button></td>
             </tr>
           </tbody>
         </table>
       </div>
 
-      <!-- 数据源配置 -->
-      <div class="bracket-card mt-10 max-w-2xl">
-        <div class="eyebrow mb-2">数 · 据 · 源</div>
-        <h3 class="font-display text-xl mb-4">汇率服务配置</h3>
-        <div class="space-y-5">
-          <div>
-            <label class="field-label">API URL</label>
-            <input class="field-input font-mono text-sm" value="https://api.exchangerate.host/latest">
-          </div>
-          <div class="grid grid-cols-2 gap-5">
-            <div>
-              <label class="field-label">拉取时间(cron)</label>
-              <input class="field-input font-mono text-sm" value="0 2 1 * *">
-            </div>
-            <div>
-              <label class="field-label">超时 · 秒</label>
-              <input class="field-input field-input-num" value="10">
-            </div>
-          </div>
-          <div class="rule-x pt-3 flex justify-end gap-2">
-            <button class="btn-paper">测试拉取</button>
-            <button class="btn-ink">保存</button>
-          </div>
+      <!-- 重开理由弹层(展示) -->
+      <div class="envelope-modal max-w-lg p-6 mt-10">
+        <div class="eyebrow mb-2">重 · 新 · 打 · 开 · MODAL</div>
+        <h3 class="font-display text-xl mb-2">重新打开 2026-03</h3>
+        <p class="text-sm text-ink-soft mb-4">⚠ 此操作会让 2026-03 起所有指标重算。变更后,所有成员需要再次"提交本期"才能再次关闭。</p>
+
+        <label class="field-label">理由 · 必填</label>
+        <textarea class="w-full border border-rule p-3 font-serif text-sm bg-paper" rows="3" placeholder="如:发现工资入账记到了二月,要修正">发现工资入账记到了二月,要修正</textarea>
+
+        <div class="flex justify-end gap-2 mt-5">
+          <button class="btn-paper">取消</button>
+          <button class="btn-ink" style="background: var(--rust)">确认重新打开</button>
         </div>
       </div>
-
     </section>
   </main>
 
   <footer class="border-t border-rule mt-12 py-6 px-8 text-center relative z-10">
-    <div class="font-mono text-[10px] tracking-[0.18em] text-ink-subtle">家庭账房 · /admin/fx</div>
+    <div class="font-mono text-[10px] tracking-[0.18em] text-ink-subtle">家庭账房 · /admin/periods</div>
   </footer>
 </body>
 </html>

@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>iOS PWA 添加到主屏 · v0.2 · FR-34</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=JetBrains+Mono:wght@300;400;500&family=Noto+Serif+SC:wght@300;400;500;600&family=Source+Serif+4:opsz,wght@8..60,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/style.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { theme: { extend: { colors: { paper: 'var(--paper)', 'paper-soft': 'var(--paper-soft)', 'paper-deep': 'var(--paper-deep)', card: 'var(--card)', 'card-soft': 'var(--card-soft)', ink: { DEFAULT: 'var(--ink)', soft: 'var(--ink-soft)', subtle: 'var(--ink-subtle)' }, rule: { DEFAULT: 'var(--rule)', soft: 'var(--rule-soft)' }, brass: { DEFAULT: 'var(--brass)', deep: 'var(--brass-deep)', soft: 'var(--brass-soft)' }, forest: 'var(--forest)', rust: 'var(--rust)' }, fontFamily: { display: ['Fraunces', 'Noto Serif SC', 'serif'], serif: ['"Source Serif 4"', 'Noto Serif SC', 'serif'], mono: ['JetBrains Mono', 'monospace'] } } } }
+  </script>
+  <style>
+    .phone-frame {
+      width: 380px; height: 760px;
+      border-radius: 36px;
+      background: #1a1714;
+      padding: 14px;
+      box-shadow: 0 30px 80px -20px rgba(26,23,20,.45), 0 12px 32px -10px rgba(26,23,20,.35);
+      position: relative;
+    }
+    .phone-frame::before {
+      content: ''; position: absolute;
+      top: 22px; left: 50%; transform: translateX(-50%);
+      width: 110px; height: 26px;
+      background: #1a1714;
+      border-radius: 0 0 16px 16px;
+      z-index: 100;
+    }
+    .phone-screen {
+      width: 100%; height: 100%;
+      border-radius: 24px;
+      background: var(--paper);
+      overflow: hidden;
+      position: relative;
+    }
+    .ios-statusbar {
+      height: 44px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 22px;
+      font-size: 14px; font-weight: 600; color: #000;
+      font-family: -apple-system, sans-serif;
+    }
+    .safari-titlebar {
+      height: 50px;
+      background: linear-gradient(to bottom, #f7f7f7, #e9e9e9);
+      border-bottom: 1px solid #cfcfcf;
+      display: flex; align-items: center;
+      padding: 0 14px;
+      font-family: -apple-system, sans-serif;
+    }
+    .safari-url {
+      flex: 1;
+      background: rgba(255,255,255,.8);
+      border-radius: 8px;
+      padding: 7px 12px;
+      font-size: 13px;
+      color: #555;
+      text-align: center;
+    }
+    .safari-bottombar {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 64px;
+      background: linear-gradient(to top, #f7f7f7, #e9e9e9);
+      border-top: 1px solid #cfcfcf;
+      display: flex; align-items: center;
+      padding: 0 22px;
+      gap: 22px;
+      font-family: -apple-system, sans-serif;
+      color: #007aff;
+      font-size: 22px;
+    }
+    .pwa-banner {
+      position: absolute;
+      bottom: 76px; left: 14px; right: 14px;
+      background: var(--paper);
+      border: 1px solid var(--ink);
+      box-shadow: 0 -8px 24px -4px rgba(26,23,20,.25), 0 0 0 1px rgba(26,23,20,.05);
+      padding: 18px 18px 16px;
+      animation: slideUp .5s ease-out;
+      font-family: 'Source Serif 4', 'Noto Serif SC', serif;
+    }
+    @keyframes slideUp { from{transform:translateY(100%);opacity:0} to{transform:translateY(0);opacity:1} }
+    .step-num {
+      width: 22px; height: 22px;
+      background: var(--ink); color: var(--paper);
+      border-radius: 50%;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px; font-weight: 500;
+    }
+    .icon-box {
+      width: 56px; height: 56px;
+      background: linear-gradient(135deg, var(--brass) 0%, var(--brass-deep) 100%);
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 12px -2px rgba(122,90,57,.4);
+      font-family: 'Fraunces', serif;
+      color: var(--paper);
+      font-size: 28px;
+      font-weight: 500;
+    }
+    /* 底部分享按钮高亮指引 */
+    .share-highlight {
+      position: absolute;
+      bottom: 14px; left: 16px;
+      width: 32px; height: 36px;
+      border: 2px solid #d6a04a;
+      border-radius: 8px;
+      animation: pulse 1.4s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100%{box-shadow:0 0 0 0 rgba(214,160,74,.6)} 50%{box-shadow:0 0 0 8px rgba(214,160,74,0)} }
+  </style>
+</head>
+<body class="min-h-screen">
+
+  <div class="fixed top-0 left-0 right-0 h-1 bg-ink z-40"></div>
+
+  <header class="sticky top-1 bg-paper/95 backdrop-blur border-b border-rule z-30">
+    <div class="max-w-[1400px] mx-auto px-6 lg:px-10 flex items-center justify-between h-16">
+      <div class="flex items-center gap-12">
+        <a href="../../index.html" class="flex items-baseline gap-2 no-underline">
+          <span class="font-display text-xl font-medium">账房</span>
+          <span class="font-mono text-[10px] tracking-[0.2em] text-ink-subtle">№ 张</span>
+        </a>
+        <span class="font-mono text-[11px] tracking-[0.14em] uppercase text-ink-subtle">v0.2 · FR-34 · iOS Safari PWA 添加到主屏</span>
+      </div>
+      <div class="flex items-center gap-4">
+        <a href="../index.html" class="font-mono text-[10px] tracking-[0.18em] uppercase text-ink-soft hover:text-ink no-underline">← v0.2 索引</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-[1400px] mx-auto px-6 lg:px-10 py-10 relative z-10">
+
+    <div class="mb-8">
+      <div class="eyebrow mb-3">/ 移 · 动 · 端 · 引 · 导 · MOBILE GUIDE</div>
+      <h1 class="font-display text-4xl md:text-5xl font-medium tracking-tight mb-3">iOS Safari · 添加到主屏</h1>
+      <p class="font-serif text-base text-ink-soft max-w-2xl leading-relaxed">
+        iOS Safari 不支持 Chrome 的 <code class="font-mono text-sm">beforeinstallprompt</code> 自动弹窗,只能引导用户走系统分享菜单。
+        家庭账房在 iOS Safari 首次访问时弹出一个底部卡片,引导添加桌面图标 ——
+        添加后从主屏点击进入是 standalone 模式(无浏览器 UI),用起来像 App。
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-10">
+
+      <!-- 左侧:手机模拟 -->
+      <div class="flex justify-center">
+        <div class="phone-frame">
+          <div class="phone-screen">
+            <!-- iOS 状态栏 -->
+            <div class="ios-statusbar">
+              <span>9:41</span>
+              <span style="font-family: -apple-system; letter-spacing: -.5px;">●●●  ●  📶</span>
+            </div>
+            <!-- Safari 顶栏 -->
+            <div class="safari-titlebar">
+              <span style="color:#007aff; font-size: 18px;">‹</span>
+              <span style="color:#007aff; font-size: 18px; margin-right: 12px;">›</span>
+              <div class="safari-url">
+                <span style="color:#888;">🔒 </span>family-finance.example.com
+              </div>
+              <span style="color:#007aff; margin-left: 12px; font-size: 18px;">⤴</span>
+            </div>
+
+            <!-- 模拟应用 -->
+            <div class="px-4 py-5">
+              <div class="text-xs font-mono uppercase tracking-widest text-ink-subtle mb-2">/ 仪表盘 · MAY 2026</div>
+              <div class="font-display text-3xl mb-4">¥ 1,847,200</div>
+              <div class="grid grid-cols-2 gap-2 mb-4">
+                <div class="border border-rule p-3">
+                  <div class="text-[10px] text-ink-subtle font-mono uppercase">总资产</div>
+                  <div class="text-lg tnum font-medium mt-1">¥ 2.6M</div>
+                </div>
+                <div class="border border-rule p-3">
+                  <div class="text-[10px] text-ink-subtle font-mono uppercase">总负债</div>
+                  <div class="text-lg tnum text-rust mt-1">¥ 780k</div>
+                </div>
+              </div>
+              <div class="h-32 bg-card-soft mb-4 border border-rule"></div>
+              <div class="text-xs text-ink-subtle">···</div>
+            </div>
+
+            <!-- 底部 PWA banner -->
+            <div class="pwa-banner">
+              <button class="absolute top-2 right-2 w-7 h-7 flex items-center justify-center text-ink-subtle hover:text-ink font-mono text-base">✕</button>
+              <div class="flex items-start gap-3 mb-3">
+                <div class="icon-box flex-shrink-0">账</div>
+                <div class="flex-1 pt-1">
+                  <h3 class="font-display text-base font-medium leading-tight">添加到主屏 · 像 App 一样使用</h3>
+                  <p class="text-[11px] text-ink-soft mt-0.5 font-mono tracking-wider">FAMILY · COUNTING · HOUSE</p>
+                </div>
+              </div>
+              <ol class="space-y-1.5 mb-3 text-[13px]">
+                <li class="flex items-baseline gap-2">
+                  <span class="step-num flex-shrink-0">1</span>
+                  <span>点击底部 <span style="color:#007aff; font-weight: 600;">分享按钮</span> ↗</span>
+                </li>
+                <li class="flex items-baseline gap-2">
+                  <span class="step-num flex-shrink-0">2</span>
+                  <span>滚动找到 <span class="font-medium">「添加到主屏幕」</span></span>
+                </li>
+                <li class="flex items-baseline gap-2">
+                  <span class="step-num flex-shrink-0">3</span>
+                  <span>点击右上角 <span class="font-medium">「添加」</span></span>
+                </li>
+              </ol>
+              <div class="flex gap-2 pt-2 border-t border-rule-soft">
+                <button class="flex-1 py-2 border border-rule font-mono text-[10px] tracking-wider hover:bg-card-soft">知道了</button>
+                <button class="flex-1 py-2 font-mono text-[10px] tracking-wider text-ink-subtle hover:text-ink">7 天内不再提示</button>
+              </div>
+            </div>
+
+            <!-- 高亮分享按钮 -->
+            <div class="share-highlight"></div>
+
+            <!-- Safari 底栏 -->
+            <div class="safari-bottombar">
+              <span>‹</span>
+              <span>›</span>
+              <span style="font-size: 24px;">⤴</span>
+              <span style="font-size: 22px; margin-left:auto;">▢</span>
+              <span style="font-size: 22px;">⊞</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 右侧:技术清单 -->
+      <div>
+        <section class="paper-card p-6 mb-4">
+          <div class="eyebrow mb-3">触 · 发 · 条 · 件</div>
+          <pre class="bg-card-soft p-3 text-[11px] font-mono leading-relaxed border border-rule overflow-x-auto"><code>const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+const isSafari = /^((?!chrome|android|crios|fxios).)*safari/i
+                   .test(navigator.userAgent);
+const inStandalone = window.navigator.standalone === true;
+const isWeChat = /MicroMessenger/i.test(navigator.userAgent);
+const dismissed = +localStorage.getItem('pwa_dismissed') || 0;
+const expired = Date.now() - dismissed &gt; 7 * 86400e3;
+
+if (isIOS &amp;&amp; isSafari &amp;&amp; !inStandalone &amp;&amp; !isWeChat &amp;&amp; expired) {
+  setTimeout(showAddToHomeBanner, 1500);
+}</code></pre>
+        </section>
+
+        <section class="paper-card p-6 mb-4">
+          <div class="eyebrow mb-3">配 · 套 · 文 · 件 · 清 · 单</div>
+          <table class="w-full text-sm">
+            <tbody class="divide-y divide-rule-soft">
+              <tr>
+                <td class="py-2 font-mono text-xs text-brass-deep">manifest.webmanifest</td>
+                <td class="py-2 text-ink-soft">PWA 元数据 · name / icons / start_url / display</td>
+              </tr>
+              <tr>
+                <td class="py-2 font-mono text-xs text-brass-deep">/img/icon-192.png</td>
+                <td class="py-2 text-ink-soft">通用 192×192 图标</td>
+              </tr>
+              <tr>
+                <td class="py-2 font-mono text-xs text-brass-deep">/img/icon-512.png</td>
+                <td class="py-2 text-ink-soft">通用 512×512 图标</td>
+              </tr>
+              <tr>
+                <td class="py-2 font-mono text-xs text-brass-deep">/img/apple-touch-icon-180.png</td>
+                <td class="py-2 text-ink-soft">iOS 专属 180×180(必须有,iOS 不读 manifest icons)</td>
+              </tr>
+              <tr>
+                <td class="py-2 font-mono text-xs text-brass-deep">layout.html &lt;head&gt;</td>
+                <td class="py-2 text-ink-soft">apple-mobile-web-app-* meta tags(4 行)</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section class="paper-card p-6 mb-4">
+          <div class="eyebrow mb-3">添 · 加 · 后 · 的 · 状 · 态</div>
+          <div class="space-y-3 text-sm text-ink-soft">
+            <div class="flex gap-3 items-baseline">
+              <span class="font-mono text-[10px] uppercase text-brass-deep tracking-widest w-16">前</span>
+              <span>顶部 Safari URL 栏 · 底部 Safari 工具栏 · 占两条工具栏空间</span>
+            </div>
+            <div class="flex gap-3 items-baseline">
+              <span class="font-mono text-[10px] uppercase text-forest tracking-widest w-16">后</span>
+              <span>全屏 standalone · 无 Safari UI · <code class="font-mono text-xs">navigator.standalone === true</code> · banner 不再弹</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="paper-card p-6">
+          <div class="eyebrow mb-3">业 · 界 · 参 · 考</div>
+          <p class="text-sm text-ink-soft leading-relaxed">
+            Trello、Pinterest、Twitter Lite 都用底部固定卡片这一形态。
+            做底部 banner 而非中央 modal 的理由:中央 modal 阻塞内容,
+            iOS 用户看到中央弹窗会下意识找 ✕ 关掉,而底部 banner 不阻塞,愿意看的就看。
+          </p>
+        </section>
+      </div>
+    </div>
+
+    <section class="border-t-2 border-double border-ink pt-6 flex items-center justify-between flex-wrap gap-4">
+      <a href="wechat-guide.html" class="btn-paper no-underline">← 上一页:微信引导</a>
+      <a href="../index.html" class="btn-paper no-underline">→ v0.2 预览索引</a>
+    </section>
+
+  </main>
+
+  <footer class="border-t border-rule mt-12 py-6 px-8 text-center relative z-10">
+    <div class="font-mono text-[10px] tracking-[0.18em] text-ink-subtle">
+      家庭账房 · v0.2 · FR-34 iOS PWA · 仅限家庭内部使用
+    </div>
+  </footer>
+
+</body>
+</html>

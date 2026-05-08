@@ -15,6 +15,27 @@
 
     <div th:if="${flash}" class="mb-4 border border-forest bg-forest/[0.05] px-4 py-2 text-sm" th:text="${flash}">已保存</div>
 
+    <!-- 立即开下一周期(测试 / 数据初始化用) -->
+    <div th:if="${currentPeriod == null}" class="mb-6 border border-rust bg-rust/[0.05] px-5 py-4 flex items-center justify-between">
+      <div>
+        <div class="font-mono text-[10px] text-rust tracking-wider uppercase">无 OPEN 周期</div>
+        <p class="text-sm mt-1">当前家庭尚无 OPEN 周期。点击右侧按钮立即开启下一周期(基于最近一次周期顺延,或当前自然月)。</p>
+      </div>
+      <form th:action="@{/admin/periods/open-next}" method="post"
+            onsubmit="return confirm('确认立即开启下一周期?会自动生成 snapshot_todo 与 LOAN 预填。');">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+        <button class="btn-ink">🚀 立即开下一周期</button>
+      </form>
+    </div>
+    <div th:if="${currentPeriod != null}" class="mb-6 paper-card px-5 py-3 flex items-center justify-between gap-4 flex-wrap">
+      <p class="text-xs text-ink-soft">关闭当前周期后,可点右侧按钮立即开启下一周期(测试用,生产由 cron 每日 0:30 触发)。</p>
+      <form th:action="@{/admin/periods/open-next}" method="post"
+            onsubmit="return confirm('当前已有 OPEN 周期。确认强制开启下一周期?');">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+        <button class="btn-paper text-[10px]">🚀 立即开下一周期(测试)</button>
+      </form>
+    </div>
+
     <!-- 当前 OPEN 周期突出 -->
     <div th:if="${currentPeriod != null}" class="envelope p-6 mb-8" style="border-color: var(--brass);">
       <div class="flex items-baseline justify-between mb-3">
@@ -25,7 +46,7 @@
           <p class="text-sm text-ink-soft mt-1"
              th:text="|${#temporals.format(currentPeriod.periodStart,'yyyy-MM-dd')} — ${#temporals.format(currentPeriod.periodEnd,'yyyy-MM-dd')} · ${currentPeriod.status}|">区间</p>
         </div>
-        <span class="pill pill-brass">填报进行中</span>
+        <span class="pill" style="background:rgba(47,93,80,.12);color:var(--forest);border-color:var(--forest)">填报进行中</span>
       </div>
     </div>
 
@@ -47,9 +68,10 @@
           <td class="text-xs text-ink-soft"
               th:text="|${#temporals.format(p.periodStart,'MM-dd')} → ${#temporals.format(p.periodEnd,'MM-dd')}|">04-01 → 04-30</td>
           <td>
-            <span class="pill pill-brass" th:if="${p.status.name() == 'OPEN'}">OPEN</span>
-            <span class="pill" th:if="${p.status.name() == 'CLOSED'}"
-                  style="background:var(--forest-soft);color:var(--forest);border-color:var(--forest)">CLOSED</span>
+            <span class="pill pill-forest" th:if="${p.status.name() == 'OPEN'}"
+                  style="background:rgba(47,93,80,.12);color:var(--forest);border-color:var(--forest)">OPEN · 进行中</span>
+            <span class="pill pill-rust" th:if="${p.status.name() == 'CLOSED'}"
+                  style="background:rgba(159,74,58,.12);color:var(--rust);border-color:var(--rust)">CLOSED · 已结束</span>
           </td>
           <td class="text-xs"
               th:text="${p.closedAt != null ? #temporals.format(p.closedAt,'yyyy-MM-dd HH:mm') : '—'}">—</td>
@@ -60,7 +82,12 @@
               <input type="text" name="reason" placeholder="必填理由" class="text-xs px-2 py-1 border border-rule" required>
               <button class="btn-ghost" style="color:var(--rust)">重新打开</button>
             </form>
-            <span th:if="${p.status.name() == 'OPEN'}" class="text-ink-subtle text-xs">—</span>
+            <form th:if="${p.status.name() == 'OPEN'}" th:action="@{/admin/periods/{id}/force-close(id=${p.id})}" method="post"
+                  onsubmit="return confirm('确认强制关闭周期 ' + this.dataset.label + '?\n\n未完成填报的账户将自动延续上期末余额作为本期值,系统会代所有成员签收并触发指标重算。\n\n此操作不可撤销(可后续通过重新打开恢复)。')"
+                  th:data-label="${#temporals.format(p.periodStart,'yyyy-MM')}">
+              <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+              <button class="btn-ghost" style="color:var(--rust)">关闭账期</button>
+            </form>
           </td>
         </tr>
         </tbody>

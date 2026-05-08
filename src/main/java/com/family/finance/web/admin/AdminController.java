@@ -53,6 +53,7 @@ public class AdminController {
     private final AuditMapper auditMapper;
     private final FxService fxService;
     private final AdminService adminService;
+    private final com.family.finance.service.PeriodOpener periodOpener;
     private final AuditLogService auditLogService;
 
     // ---------------------------------------------------------------------
@@ -139,6 +140,25 @@ public class AdminController {
         return "redirect:/admin/members";
     }
 
+    /** 添加成员(PRD §7.9 维护性变更:把原"v0.3 才开放"提前到 v0.1 末)。 */
+    @PostMapping("/members")
+    public String createMember(@AuthenticationPrincipal MemberPrincipal me,
+                               @RequestParam String username,
+                               @RequestParam String displayName,
+                               @RequestParam(required = false) String roleLabel,
+                               RedirectAttributes ra) {
+        try {
+            String temp = adminService.createMember(me.getFamilyId(),
+                    username, displayName, blankToNull(roleLabel), me.getMemberId());
+            ra.addFlashAttribute("tempPassword", temp);
+            ra.addFlashAttribute("tempPasswordFor", displayName);
+            ra.addFlashAttribute("flash", "已添加成员:" + displayName);
+        } catch (IllegalArgumentException ex) {
+            ra.addFlashAttribute("flash", "添加失败:" + ex.getMessage());
+        }
+        return "redirect:/admin/members";
+    }
+
     // ---------------------------------------------------------------------
     // 4. /admin/accounts · 直接复用 /accounts(已存在)
     // ---------------------------------------------------------------------
@@ -174,6 +194,32 @@ public class AdminController {
         model.addAttribute("periods", periods);
         model.addAttribute("currentPeriod", periodService.findCurrentOpen(me.getFamilyId()).orElse(null));
         return "admin/periods";
+    }
+
+    @PostMapping("/periods/open-next")
+    public String openNextPeriod(@AuthenticationPrincipal MemberPrincipal me,
+                                 RedirectAttributes ra) {
+        try {
+            Period period = periodOpener.openNextNow(me.getFamilyId());
+            ra.addFlashAttribute("flash",
+                    "已开启新周期:" + period.getPeriodStart() + "(snapshot_todo / LOAN 预填已生成)");
+        } catch (Exception ex) {
+            ra.addFlashAttribute("flash", "开启失败:" + ex.getMessage());
+        }
+        return "redirect:/admin/periods";
+    }
+
+    @PostMapping("/periods/{periodId}/force-close")
+    public String forceClose(@AuthenticationPrincipal MemberPrincipal me,
+                              @PathVariable long periodId,
+                              RedirectAttributes ra) {
+        try {
+            int filled = periodService.forceClose(periodId, me.getMemberId());
+            ra.addFlashAttribute("flash", "已强制关账,代填 " + filled + " 个账户的余额(延续上期末);触发指标重算");
+        } catch (Exception ex) {
+            ra.addFlashAttribute("flash", "强制关账失败:" + ex.getMessage());
+        }
+        return "redirect:/admin/periods";
     }
 
     @PostMapping("/periods/{periodId}/reopen")

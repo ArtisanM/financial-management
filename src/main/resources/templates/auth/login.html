@@ -50,14 +50,19 @@
           <label class="field-label" for="username">登录名 · USERNAME</label>
           <input id="username" name="username" type="text"
                  class="field-input" autocomplete="username"
-                 required autofocus placeholder="例:zhangwei">
+                 required autofocus>
         </div>
 
         <div>
           <label class="field-label" for="password">口令 · PASSWORD</label>
-          <input id="password" name="password" type="password"
-                 class="field-input" autocomplete="current-password"
-                 required placeholder="">
+          <div class="relative">
+            <input id="password" name="password" type="password"
+                   class="field-input pr-12" autocomplete="current-password"
+                   required placeholder="">
+            <button type="button" tabindex="-1" aria-label="显示/隐藏密码"
+                    onclick="(()=>{const i=document.getElementById('password');i.type=i.type==='password'?'text':'password';this.textContent=i.type==='password'?'显示':'隐藏';})()"
+                    class="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1 font-mono text-[10px] text-ink-soft hover:text-ink select-none">显示</button>
+          </div>
         </div>
 
         <label class="flex items-center gap-3 select-none cursor-pointer pt-2">
@@ -88,6 +93,20 @@
 </main>
 
 <footer th:replace="~{fragments/layout :: footer}"></footer>
-
+<script>
+(function () {
+  // 用户名长期记忆:成功登录前在 input 预填上次值;提交时把用户名写入 localStorage
+  var KEY = 'finance_last_username';
+  var input = document.getElementById('username');
+  if (!input) return;
+  try { var saved = localStorage.getItem(KEY); if (saved && !input.value) input.value = saved; } catch (_) {}
+  var form = input.form;
+  if (form) {
+    form.addEventListener('submit', function () {
+      try { localStorage.setItem(KEY, input.value || ''); } catch (_) {}
+    });
+  }
+})();
+</script>
 </body>
 </html>

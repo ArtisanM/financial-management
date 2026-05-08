@@ -31,7 +31,7 @@ public class DevSeedRunner implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        for (String username : List.of("zhangwei", "lijing")) {
+        for (String username : List.of("diwa", "lijing")) {
             memberMapper.findByUsername(username).ifPresent(this::resetIfPlaceholder);
         }
     }
@@ -39,7 +39,8 @@ public class DevSeedRunner implements CommandLineRunner {
     private void resetIfPlaceholder(Member m) {
         if (m.getPasswordHash() != null && m.getPasswordHash().startsWith(PLACEHOLDER_PREFIX)) {
             String hash = passwordEncoder.encode(DEV_PASSWORD);
-            memberMapper.updatePasswordHash(m.getId(), hash, true);
+            // dev profile 直接放行 — 不要求 dev 用户首次登录强制改密(否则 QA / 手测都被拦)
+            memberMapper.updatePasswordHash(m.getId(), hash, false);
             log.warn("[DevSeed] reset password for username='{}' (member id={}) to '{}'",
                     m.getUsername(), m.getId(), DEV_PASSWORD);
         }

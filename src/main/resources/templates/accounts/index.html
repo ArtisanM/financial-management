@@ -31,14 +31,16 @@
 
   <section class="flex items-center gap-3 mb-6 flex-wrap">
     <span class="font-mono text-[10px] tracking-[0.16em] text-ink-soft uppercase">筛选 ·</span>
-    <span class="pill pill-ink">全部</span>
-    <span class="pill">CASH</span>
-    <span class="pill">STOCK</span>
-    <span class="pill">WEALTH</span>
-    <span class="pill">PROPERTY</span>
-    <span class="pill">LOAN</span>
+    <a th:href="@{/accounts(archived=${includeArchived})}"
+       class="pill no-underline"
+       th:classappend="${typeFilter == 'ALL' or typeFilter == null ? ' pill-ink' : ''}">全部</a>
+    <a th:each="t : ${T(com.family.finance.domain.account.AccountType).values()}"
+       th:href="@{/accounts(archived=${includeArchived},type=${t.name()})}"
+       class="pill no-underline"
+       th:classappend="${typeFilter == t.name() ? ' pill-ink' : ''}"
+       th:text="${t.label} + ' (' + ${t.name()} + ')'">现金 (CASH)</a>
     <span class="ml-auto"></span>
-    <a th:href="@{/accounts(archived=${!includeArchived})}" class="btn-ghost no-underline"
+    <a th:href="@{/accounts(archived=${!includeArchived},type=${typeFilter})}" class="btn-ghost no-underline"
        th:text="${includeArchived ? '隐藏已归档' : '显示已归档'}">显示已归档</a>
   </section>
 

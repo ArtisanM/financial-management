@@ -65,6 +65,11 @@ public class EntryService {
         return Optional.empty();
     }
 
+    /** Thymeleaf SpEL 调用绕过 record accessor 在某些 fragment 嵌套场景下返回 null 的问题。 */
+    public static List<EntryRow.LedgerEntry> safeLedger(EntryRow row) {
+        return row == null || row.ledger() == null ? List.of() : row.ledger();
+    }
+
     public List<EntryRow> listRows(long familyId, long memberId, Period period, boolean mineOnly) {
         List<Account> accounts = accountMapper.findActiveByFamily(familyId).stream()
                 .filter(a -> !mineOnly
@@ -155,6 +160,9 @@ public class EntryService {
                                 String note) {
         Period period = requireOpenPeriod(familyId, periodId);
         Account account = requireAccount(familyId, accountId);
+        BigDecimal delta = kind == CashFlowKind.INCOME ? amount : amount.negate();
+        applyDeltaToBalance(period, account, memberId, delta,
+                (kind == CashFlowKind.INCOME ? "+收入 " : "-支出 ") + money(amount));
         insertCashFlow(period, account, memberId, new CashFlowLine(kind, categoryCode, amount, note));
         auditLogService.record(familyId, memberId, AuditLogType.SYSTEM, "cash_flow", accountId,
                 "新增现金流 " + kind + " " + money(amount));
@@ -171,11 +179,53 @@ public class EntryService {
                                 String note,
                                 boolean confirmDuplicate) {
         Period period = requireOpenPeriod(familyId, periodId);
-        requireAccount(familyId, fromAccountId);
+        Account fromAccount = requireAccount(familyId, fromAccountId);
+        Account toAccount = requireAccount(familyId, toAccountId);
+        // 划转 A→B:A 余额 -amount,B 余额 +amount
+        applyDeltaToBalance(period, fromAccount, memberId, amount.negate(),
+                "↱ 划出到 " + toAccount.getDisplayName() + " " + money(amount));
+        applyDeltaToBalance(period, toAccount, memberId, amount,
+                "↳ 收到来自 " + fromAccount.getDisplayName() + " " + money(amount));
         insertTransfer(period, familyId, fromAccountId, toAccountId, amount, note, memberId, confirmDuplicate);
         auditLogService.record(familyId, memberId, AuditLogType.TRANSFER_CREATE, "transfer", fromAccountId,
                 "新增转账 " + fromAccountId + " → " + toAccountId + " " + money(amount));
         return rowFor(familyId, memberId, periodId, fromAccountId);
+    }
+
+    /**
+     * 用户点 +收入 / -支出 / ↔划转 等"快捷按钮"时,把 delta 直接累加到本期余额上:
+     *   - baseBalance = 当前 snapshot.end_balance(若没填过,fallback 到上期末,再 fallback 到 0)
+     *   - newBalance = baseBalance + delta
+     *   - upsert snapshot,note 标"快捷按钮调整"
+     * 这样 4 种场景:
+     *   1. 余额不变 — 用户进入页面时输入框默认显示上期末;不动直接提交即等于"本期=上期"
+     *   2. 余额变化(原因不明)— 用户在余额输入框填新值,snapshot 直接覆盖
+     *   3. A→B 转 500 — 自动 A 余额 -500、B 余额 +500
+     *   4. 收入 4000 快捷 — 自动余额 +4000
+     * 见 PRD § 2.4 / FR-7~9 / §7.9。
+     */
+    private void applyDeltaToBalance(Period period, Account account, long memberId,
+                                      BigDecimal delta, String reason) {
+        Optional<PeriodSnapshot> currentOpt = snapshotMapper.findByPeriodAndAccount(period.getId(), account.getId());
+        BigDecimal base;
+        if (currentOpt.isPresent()) {
+            base = currentOpt.get().getEndBalance();
+        } else {
+            PeriodSnapshot prevSnap = snapshotMapper.findLatestBefore(account.getId(), period.getPeriodStart(), 1)
+                    .stream().findFirst().orElse(null);
+            base = prevSnap == null ? BigDecimal.ZERO : prevSnap.getEndBalance();
+        }
+        BigDecimal newBalance = base.add(delta).setScale(2, RoundingMode.HALF_EVEN);
+        snapshotMapper.upsert(PeriodSnapshot.builder()
+                .periodId(period.getId())
+                .accountId(account.getId())
+                .endBalance(newBalance)
+                .submittedBy(memberId)
+                .note(reason + " · 余额 " + base + " → " + newBalance)
+                .build());
+        auditLogService.record(period.getFamilyId(), memberId, AuditLogType.SNAPSHOT_WRITE,
+                "period_snapshot", account.getId(),
+                reason + ":余额 " + base + " → " + newBalance);
     }
 
     @Transactional
@@ -372,36 +422,14 @@ public class EntryService {
         return transfer;
     }
 
+    /**
+     * 历史版本会在用户改 LOAN 余额时"自动调整 / 确认"一笔从 default_payment_source 的 transfer。
+     * 经产品反馈,LOAN 余额修改应**与其他账户解耦**(避免暗中改招行卡等"还款来源"账户的余额),
+     * 留给用户在 LOAN 行的快捷划转按钮显式登记。本方法保留为空 op,
+     * 兼容既有调用方但不再产生联动副作用。详见 PRD §7.9 第六批维护。
+     */
     private void adjustLoanDraft(Period period, Account loan, BigDecimal newBalance, long memberId) {
-        if (loan.getType() != AccountType.LOAN || loan.getDefaultPaymentSourceAccountId() == null) {
-            return;
-        }
-        PeriodSnapshot previous = snapshotMapper.findLatestBefore(loan.getId(), period.getPeriodStart(), 1)
-                .stream()
-                .findFirst()
-                .orElse(null);
-        if (previous == null) {
-            return;
-        }
-        BigDecimal amount = newBalance.subtract(previous.getEndBalance()).abs().setScale(2, RoundingMode.HALF_EVEN);
-        if (amount.signum() == 0) {
-            return;
-        }
-        SnapshotTodo todo = snapshotTodoMapper.findByPeriodAndAccount(period.getId(), loan.getId()).orElse(null);
-        if (todo != null && todo.getPrefilledTransferId() != null) {
-            Transfer draft = transferMapper.findById(todo.getPrefilledTransferId()).orElse(null);
-            if (draft != null) {
-                draft.setAmount(amount);
-                draft.setOccurredAt(period.getPeriodEnd());
-                draft.setNote("根据本期贷款余额自动调整并确认");
-                draft.setSubmittedBy(memberId);
-                draft.setDraft(false);
-                transferMapper.updateAmountAndDraft(draft);
-                return;
-            }
-        }
-        insertTransfer(period, loan.getFamilyId(), loan.getDefaultPaymentSourceAccountId(), loan.getId(),
-                amount, "根据贷款余额变化自动登记本金还款", memberId, true);
+        // intentionally no-op
     }
 
     private ReconciliationTotals reconciliationTotals(long periodId, long accountId) {

@@ -33,6 +33,7 @@ public class PeriodService {
     private final SnapshotTodoMapper snapshotTodoMapper;
     private final PeriodMemberCompletionMapper completionMapper;
     private final com.family.finance.repository.PeriodReopenLogMapper periodReopenLogMapper;
+    private final com.family.finance.repository.SnapshotMapper snapshotMapperRef;
     private final AuditLogService auditLogService;
     private final MetricsRecomputeJob metricsRecomputeJob;
 
@@ -79,6 +80,52 @@ public class PeriodService {
     @Transactional
     public void close(long periodId) {
         close(periodId, null, "全员完成自动关闭周期");
+    }
+
+    /**
+     * 强制关闭周期(管理员操作,见 PRD §7.9 第六批维护):
+     *   - 找出本期所有 PENDING 的账户,upsert period_snapshot.end_balance = 上期末(延续)
+     *   - 标记所有 todo DONE
+     *   - 为所有未完成填报的成员代签 period_member_completion(由 actor 名义)
+     *   - 调用 close 标 status=CLOSED + 异步 metrics 重算
+     */
+    @Transactional
+    public int forceClose(long periodId, long actorMemberId) {
+        Period period = periodMapper.findById(periodId)
+                .orElseThrow(() -> new IllegalArgumentException("周期不存在: " + periodId));
+        if (period.getStatus() != PeriodStatus.OPEN) {
+            throw new IllegalStateException("周期已是 CLOSED,无需强制关闭");
+        }
+        int filledFromPrev = 0;
+        for (com.family.finance.domain.snapshot.SnapshotTodo todo : snapshotTodoMapper.findByPeriod(periodId)) {
+            if (todo.getStatus() != com.family.finance.domain.snapshot.TodoStatus.PENDING) continue;
+            // 延续上期末作为本期末
+            java.math.BigDecimal prevBalance = snapshotMapperRef
+                    .findLatestBefore(todo.getAccountId(), period.getPeriodStart(), 1)
+                    .stream().findFirst()
+                    .map(com.family.finance.domain.snapshot.PeriodSnapshot::getEndBalance)
+                    .orElse(java.math.BigDecimal.ZERO);
+            snapshotMapperRef.upsert(com.family.finance.domain.snapshot.PeriodSnapshot.builder()
+                    .periodId(periodId)
+                    .accountId(todo.getAccountId())
+                    .endBalance(prevBalance)
+                    .submittedBy(actorMemberId)
+                    .note("强制关账:延续上期末余额 " + prevBalance)
+                    .build());
+            snapshotTodoMapper.markDone(periodId, todo.getAccountId(), actorMemberId);
+            filledFromPrev++;
+        }
+        // 全员代签 period_member_completion
+        for (com.family.finance.domain.member.Member m : memberMapper.findActiveByFamily(period.getFamilyId())) {
+            completionMapper.insertIgnore(PeriodMemberCompletion.builder()
+                    .periodId(periodId)
+                    .memberId(m.getId())
+                    .build());
+        }
+        auditLogService.record(period.getFamilyId(), actorMemberId, AuditLogType.PERIOD_CLOSE,
+                "period", periodId, "管理员强制关闭周期(代填 " + filledFromPrev + " 个账户的余额=上期末)");
+        close(periodId, actorMemberId, "管理员强制关闭周期 · 代填 " + filledFromPrev + " 行");
+        return filledFromPrev;
     }
 
     @Transactional
@@ -157,6 +204,14 @@ public class PeriodService {
         return switch (type) {
             case MONTHLY -> today.withDayOfMonth(1);
             case WEEKLY -> today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+        };
+    }
+
+    /** 给定一个 period_start,返回下一周期的 period_start。 */
+    public LocalDate nextPeriodStart(PeriodType type, LocalDate currentStart) {
+        return switch (type) {
+            case MONTHLY -> currentStart.plusMonths(1).withDayOfMonth(1);
+            case WEEKLY -> currentStart.plusWeeks(1);
         };
     }
 

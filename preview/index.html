@@ -3,296 +3,140 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>家庭账房 · Preview Index · 张家</title>
+  <title>家庭账房 · 版本入口 · 张家</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600;9..144,700&family=JetBrains+Mono:wght@300;400;500&family=Noto+Serif+SC:wght@300;400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,300;8..60,400;8..60,500;8..60,600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,ital,wght@9..144,0,300..700;9..144,1,300..600&family=JetBrains+Mono:wght@300;400;500&family=Noto+Serif+SC:wght@300;400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,300;8..60,400;8..60,500;8..60,600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/style.css">
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            paper: 'var(--paper)',
-            'paper-soft': 'var(--paper-soft)',
-            'paper-deep': 'var(--paper-deep)',
-            card: 'var(--card)',
-            'card-soft': 'var(--card-soft)',
-            ink: { DEFAULT: 'var(--ink)', soft: 'var(--ink-soft)', subtle: 'var(--ink-subtle)' },
-            rule: { DEFAULT: 'var(--rule)', soft: 'var(--rule-soft)' },
-            brass: { DEFAULT: 'var(--brass)', deep: 'var(--brass-deep)', soft: 'var(--brass-soft)' },
-            forest: 'var(--forest)',
-            rust: 'var(--rust)',
-            plum: 'var(--plum)',
-          },
-          fontFamily: {
-            display: ['Fraunces', 'Noto Serif SC', 'Georgia', 'serif'],
-            serif: ['"Source Serif 4"', 'Noto Serif SC', 'Georgia', 'serif'],
-            mono: ['JetBrains Mono', 'ui-monospace', 'monospace'],
-          },
-        }
-      }
-    }
+    tailwind.config = { theme: { extend: { colors: { paper: 'var(--paper)', 'paper-soft': 'var(--paper-soft)', 'paper-deep': 'var(--paper-deep)', card: 'var(--card)', 'card-soft': 'var(--card-soft)', ink: { DEFAULT: 'var(--ink)', soft: 'var(--ink-soft)', subtle: 'var(--ink-subtle)' }, rule: { DEFAULT: 'var(--rule)', soft: 'var(--rule-soft)' }, brass: { DEFAULT: 'var(--brass)', deep: 'var(--brass-deep)', soft: 'var(--brass-soft)' }, forest: 'var(--forest)', rust: 'var(--rust)' }, fontFamily: { display: ['Fraunces', 'Noto Serif SC', 'serif'], serif: ['"Source Serif 4"', 'Noto Serif SC', 'serif'], mono: ['JetBrains Mono', 'monospace'] } } } }
   </script>
 </head>
 <body class="min-h-screen relative">
 
-  <!-- 顶部装饰条 -->
   <div class="fixed top-0 left-0 right-0 h-1 bg-ink z-40"></div>
 
-  <!-- 头部 -->
-  <header class="border-b border-rule pt-12 pb-10 px-8 md:px-16 relative z-10">
-    <div class="max-w-[1200px] mx-auto">
-      <div class="flex items-start justify-between flex-wrap gap-6">
-        <div>
-          <div class="eyebrow mb-3">№ 张 — 私家账房 · Family Counting House · v0.1</div>
-          <h1 class="font-display text-5xl md:text-7xl leading-[0.95] font-medium tracking-tight">
-            一份起居室里<br/>
-            <span class="italic font-light text-brass-deep">的银行家账册</span>
-          </h1>
-          <p class="font-serif text-base md:text-lg text-ink-soft max-w-xl mt-6 leading-relaxed">
-            十五张页面的预览。每页都是独立的 HTML,使用 Tailwind via CDN + Chart.js / ECharts;
-            最终落地到 Spring Boot 3 + Thymeleaf + HTMX 时,DOM 结构与样式直接复用。
-          </p>
-        </div>
-        <div class="flex flex-col gap-3 items-end">
-          <div class="pill pill-brass">PREVIEW · MAY 2026</div>
-          <div class="font-mono text-xs text-ink-soft tracking-widest">15 PAGES · DESKTOP + MOBILE</div>
-          <a href="https://localhost/preview/" class="btn-paper mt-2">↗ ALL PAGES</a>
-        </div>
-      </div>
+  <main class="max-w-[1100px] mx-auto px-8 md:px-16 py-20 md:py-28 relative z-10">
+
+    <div class="mb-16">
+      <div class="eyebrow mb-4">№ 张 — 私家账房 · FAMILY · COUNTING · HOUSE</div>
+      <h1 class="font-display text-5xl md:text-7xl leading-[0.95] font-medium tracking-tight">
+        家庭账房<br/>
+        <span class="italic font-light text-brass-deep">设计预览索引</span>
+      </h1>
+      <p class="font-serif text-base md:text-lg text-ink-soft max-w-2xl mt-6 leading-relaxed">
+        每个版本一卷预览。v0.1 是已交付的最小闭环(填报 + 仪表盘 + 报表),
+        v0.2 是当前在做的增量(单账户深度 + 移动端体验 + 智能建议)。
+        所有页面是静态 HTML + Tailwind CDN,落地到 Spring Boot + Thymeleaf 时 DOM 直接复用。
+      </p>
     </div>
-  </header>
 
-  <!-- 页面索引 -->
-  <main class="max-w-[1200px] mx-auto px-8 md:px-16 py-16 relative z-10">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-px bg-rule mb-12">
 
-    <!-- 公共 -->
-    <section class="mb-16">
-      <div class="flex items-baseline justify-between mb-8 rule-x pt-6">
-        <div>
-          <div class="eyebrow mb-2">第一卷</div>
-          <h2 class="font-display text-3xl font-medium">公共与初始化</h2>
+      <!-- v0.1 已交付 -->
+      <a href="v0.1/index.html" class="bg-card p-8 md:p-10 hover:bg-card-soft transition no-underline group block">
+        <div class="flex items-baseline justify-between mb-6">
+          <div>
+            <div class="eyebrow mb-2" style="color:var(--forest)">已 · 交 · 付 · 2026-05</div>
+            <h2 class="font-display text-4xl md:text-5xl font-medium tracking-tight group-hover:text-forest transition">v0.1</h2>
+          </div>
+          <span class="pill" style="background:rgba(47,93,80,.12);color:var(--forest);border-color:var(--forest)">SHIPPED</span>
         </div>
-        <div class="text-ink-soft font-mono text-xs tracking-widest">PUBLIC · ONBOARDING</div>
-      </div>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-px bg-rule">
-        <a href="pages/login.html" class="group bg-card hover:bg-card-soft transition p-8 flex justify-between items-start">
+        <h3 class="font-serif text-xl mb-3 italic">起居室里的银行家账册</h3>
+        <p class="text-sm text-ink-soft mb-5 leading-relaxed">
+          22 条 FR · 78 条 QA 全 PASS · 跑通"夫妻每月 10 分钟"最小闭环。
+          填报 / 仪表盘 / 报表 / 多币种 / CSV 导出 / 强制关账 / 周期重开 / 完整审计。
+        </p>
+        <div class="grid grid-cols-3 gap-4 mb-5 pt-5 border-t border-rule-soft">
           <div>
-            <div class="folio mb-1">i</div>
-            <div class="eyebrow-ink mb-2">/login</div>
-            <h3 class="font-display text-2xl">登录</h3>
-            <p class="text-ink-soft text-sm mt-2">凭信进门,会话三十日。</p>
+            <div class="font-mono text-[9px] tracking-wider text-ink-subtle uppercase mb-1">页面</div>
+            <div class="font-display text-2xl tnum">15</div>
           </div>
-          <span class="font-mono text-xs text-brass tracking-widest opacity-0 group-hover:opacity-100 transition">→ OPEN</span>
-        </a>
-        <a href="pages/setup-wizard.html" class="group bg-card hover:bg-card-soft transition p-8 flex justify-between items-start">
           <div>
-            <div class="folio mb-1">ii</div>
-            <div class="eyebrow-ink mb-2">/setup-wizard</div>
-            <h3 class="font-display text-2xl">家庭起手向导</h3>
-            <p class="text-ink-soft text-sm mt-2">家庭名 → 成员 → 账户模板 → 完成</p>
+            <div class="font-mono text-[9px] tracking-wider text-ink-subtle uppercase mb-1">FR</div>
+            <div class="font-display text-2xl tnum">22</div>
           </div>
-          <span class="font-mono text-xs text-brass tracking-widest opacity-0 group-hover:opacity-100 transition">→ OPEN</span>
-        </a>
-      </div>
-    </section>
-
-    <!-- 核心日常 -->
-    <section class="mb-16">
-      <div class="flex items-baseline justify-between mb-8 rule-x pt-6">
-        <div>
-          <div class="eyebrow mb-2">第二卷</div>
-          <h2 class="font-display text-3xl font-medium">月度起居 · 日常使用</h2>
+          <div>
+            <div class="font-mono text-[9px] tracking-wider text-ink-subtle uppercase mb-1">QA</div>
+            <div class="font-display text-2xl tnum">78</div>
+          </div>
         </div>
-        <div class="text-ink-soft font-mono text-xs tracking-widest">CORE · DAILY</div>
-      </div>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-px bg-rule">
-        <a href="pages/dashboard.html" class="group bg-card hover:bg-card-soft transition p-8 flex justify-between items-start col-span-1 md:col-span-2">
-          <div>
-            <div class="folio mb-1">iii</div>
-            <div class="flex items-center gap-3 mb-2">
-              <div class="eyebrow-ink">/</div>
-              <span class="pill pill-brass">主图</span>
-            </div>
-            <h3 class="font-display text-3xl">仪表盘</h3>
-            <p class="text-ink-soft text-sm mt-2 max-w-2xl">5 张 KPI(净资产 / 总资产 / 总负债 / 紧急储备月数 / 负债率)、净资产趋势主图、收支柱+储蓄率、资产配置环形、账户余额 sparkline 列表。带 1M/3M/6M/YTD/1Y/ALL 切换。</p>
-          </div>
-          <span class="font-mono text-xs text-brass tracking-widest opacity-0 group-hover:opacity-100 transition">→ OPEN</span>
-        </a>
-        <a href="pages/entry-desktop.html" class="group bg-card hover:bg-card-soft transition p-8 flex justify-between items-start">
-          <div>
-            <div class="folio mb-1">iv</div>
-            <div class="eyebrow-ink mb-2">/entry · 桌面</div>
-            <h3 class="font-display text-2xl">月度填报 · 桌面</h3>
-            <p class="text-ink-soft text-sm mt-2">表格 + 行内编辑 + 轧差弹层</p>
-          </div>
-          <span class="font-mono text-xs text-brass tracking-widest opacity-0 group-hover:opacity-100 transition">→ OPEN</span>
-        </a>
-        <a href="pages/entry-mobile.html" class="group bg-card hover:bg-card-soft transition p-8 flex justify-between items-start">
-          <div>
-            <div class="folio mb-1">v</div>
-            <div class="eyebrow-ink mb-2">/entry?mine=true · 手机</div>
-            <h3 class="font-display text-2xl">月度填报 · 手机卡片</h3>
-            <p class="text-ink-soft text-sm mt-2">大字号、单卡片、引导分类</p>
-          </div>
-          <span class="font-mono text-xs text-brass tracking-widest opacity-0 group-hover:opacity-100 transition">→ OPEN</span>
-        </a>
-        <a href="pages/my-todos.html" class="group bg-card hover:bg-card-soft transition p-8 flex justify-between items-start">
-          <div>
-            <div class="folio mb-1">vi</div>
-            <div class="eyebrow-ink mb-2">/my-todos</div>
-            <h3 class="font-display text-2xl">我的待办</h3>
-            <p class="text-ink-soft text-sm mt-2">按周期分组,跳转填报</p>
-          </div>
-          <span class="font-mono text-xs text-brass tracking-widest opacity-0 group-hover:opacity-100 transition">→ OPEN</span>
-        </a>
-        <a href="pages/accounts.html" class="group bg-card hover:bg-card-soft transition p-8 flex justify-between items-start">
-          <div>
-            <div class="folio mb-1">vii</div>
-            <div class="eyebrow-ink mb-2">/accounts</div>
-            <h3 class="font-display text-2xl">账户与模板向导</h3>
-            <p class="text-ink-soft text-sm mt-2">13 内置模板 + 自定义</p>
-          </div>
-          <span class="font-mono text-xs text-brass tracking-widest opacity-0 group-hover:opacity-100 transition">→ OPEN</span>
-        </a>
-      </div>
-    </section>
-
-    <!-- 报表 -->
-    <section class="mb-16">
-      <div class="flex items-baseline justify-between mb-8 rule-x pt-6">
-        <div>
-          <div class="eyebrow mb-2">第三卷</div>
-          <h2 class="font-display text-3xl font-medium">报表 · 月度大账</h2>
-        </div>
-        <div class="text-ink-soft font-mono text-xs tracking-widest">REPORTS</div>
-      </div>
-      <a href="pages/reports.html" class="group block bg-card hover:bg-card-soft transition p-8 border border-rule">
-        <div class="flex justify-between items-start">
-          <div>
-            <div class="folio mb-1">viii</div>
-            <div class="eyebrow-ink mb-2">/reports</div>
-            <h3 class="font-display text-3xl">收益、瀑布、桑基与流向</h3>
-            <p class="text-ink-soft text-sm mt-2 max-w-2xl">账户级 XIRR、家庭 XIRR/TWR、月度收支瀑布、收入桑基、累计本金 vs 收益分解、负债下降曲线、汇率折算明细。Chart.js + ECharts 双栈。</p>
-          </div>
-          <span class="font-mono text-xs text-brass tracking-widest opacity-0 group-hover:opacity-100 transition">→ OPEN</span>
+        <div class="font-mono text-[11px] tracking-[0.16em] uppercase text-ink-subtle group-hover:text-forest transition">
+          → 进入 v0.1 完整索引
         </div>
       </a>
-    </section>
 
-    <!-- 管理 -->
-    <section class="mb-16">
-      <div class="flex items-baseline justify-between mb-8 rule-x pt-6">
-        <div>
-          <div class="eyebrow mb-2">第四卷</div>
-          <h2 class="font-display text-3xl font-medium">管理与维护</h2>
+      <!-- v0.2 在做 -->
+      <a href="v0.2/index.html" class="bg-card p-8 md:p-10 hover:bg-card-soft transition no-underline group block"
+         style="background: linear-gradient(180deg, rgba(122,90,57,.04) 0%, var(--card) 50%);">
+        <div class="flex items-baseline justify-between mb-6">
+          <div>
+            <div class="eyebrow mb-2" style="color:var(--brass-deep)">设 · 计 · 中 · 2026-05</div>
+            <h2 class="font-display text-4xl md:text-5xl font-medium tracking-tight group-hover:text-brass-deep transition">v0.2</h2>
+          </div>
+          <span class="pill pill-brass">IN PROGRESS</span>
         </div>
-        <div class="text-ink-soft font-mono text-xs tracking-widest">/admin · CONFIG</div>
-      </div>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-px bg-rule">
-        <a href="pages/admin.html" class="group bg-card hover:bg-card-soft transition p-8 flex justify-between items-start">
+        <h3 class="font-serif text-xl mb-3 italic">用着舒服 · 单账户深度 + 移动友好</h3>
+        <p class="text-sm text-ink-soft mb-5 leading-relaxed">
+          7 条新 FR(FR-30~35)· 不扩广度,聚焦深度。
+          账户体检报告 + 智能建议 + 产品类目 + 风险评级 + 基准对照 + 微信引导 + iOS PWA。
+        </p>
+        <div class="grid grid-cols-3 gap-4 mb-5 pt-5 border-t border-rule-soft">
           <div>
-            <div class="folio mb-1">ix</div>
-            <div class="eyebrow-ink mb-2">/admin</div>
-            <h3 class="font-display text-xl">管理总览</h3>
+            <div class="font-mono text-[9px] tracking-wider text-ink-subtle uppercase mb-1">新页</div>
+            <div class="font-display text-2xl tnum text-brass-deep">3</div>
           </div>
-          <span class="font-mono text-xs text-brass tracking-widest opacity-0 group-hover:opacity-100 transition">→</span>
-        </a>
-        <a href="pages/admin-family.html" class="group bg-card hover:bg-card-soft transition p-8 flex justify-between items-start">
           <div>
-            <div class="folio mb-1">x</div>
-            <div class="eyebrow-ink mb-2">/admin/family</div>
-            <h3 class="font-display text-xl">家庭设置</h3>
+            <div class="font-mono text-[9px] tracking-wider text-ink-subtle uppercase mb-1">新 FR</div>
+            <div class="font-display text-2xl tnum text-brass-deep">7</div>
           </div>
-          <span class="font-mono text-xs text-brass tracking-widest opacity-0 group-hover:opacity-100 transition">→</span>
-        </a>
-        <a href="pages/admin-members.html" class="group bg-card hover:bg-card-soft transition p-8 flex justify-between items-start">
           <div>
-            <div class="folio mb-1">xi</div>
-            <div class="eyebrow-ink mb-2">/admin/members</div>
-            <h3 class="font-display text-xl">成员管理</h3>
+            <div class="font-mono text-[9px] tracking-wider text-ink-subtle uppercase mb-1">DDL</div>
+            <div class="font-display text-2xl tnum text-brass-deep">V10/V11</div>
           </div>
-          <span class="font-mono text-xs text-brass tracking-widest opacity-0 group-hover:opacity-100 transition">→</span>
-        </a>
-        <a href="pages/admin-periods.html" class="group bg-card hover:bg-card-soft transition p-8 flex justify-between items-start">
-          <div>
-            <div class="folio mb-1">xii</div>
-            <div class="eyebrow-ink mb-2">/admin/periods</div>
-            <h3 class="font-display text-xl">周期管理</h3>
-          </div>
-          <span class="font-mono text-xs text-brass tracking-widest opacity-0 group-hover:opacity-100 transition">→</span>
-        </a>
-        <a href="pages/admin-fx.html" class="group bg-card hover:bg-card-soft transition p-8 flex justify-between items-start">
-          <div>
-            <div class="folio mb-1">xiii</div>
-            <div class="eyebrow-ink mb-2">/admin/fx</div>
-            <h3 class="font-display text-xl">汇率维护</h3>
-          </div>
-          <span class="font-mono text-xs text-brass tracking-widest opacity-0 group-hover:opacity-100 transition">→</span>
-        </a>
-        <a href="pages/admin-backup.html" class="group bg-card hover:bg-card-soft transition p-8 flex justify-between items-start">
-          <div>
-            <div class="folio mb-1">xiv</div>
-            <div class="eyebrow-ink mb-2">/admin/backup</div>
-            <h3 class="font-display text-xl">备份与恢复</h3>
-          </div>
-          <span class="font-mono text-xs text-brass tracking-widest opacity-0 group-hover:opacity-100 transition">→</span>
-        </a>
-        <a href="pages/admin-audit.html" class="group bg-card hover:bg-card-soft transition p-8 flex justify-between items-start col-span-1 md:col-span-3">
-          <div>
-            <div class="folio mb-1">xv</div>
-            <div class="eyebrow-ink mb-2">/admin/audit</div>
-            <h3 class="font-display text-xl">审计日志</h3>
-            <p class="text-ink-soft text-sm mt-2">谁、何时、改了什么 — 一份永不消失的脚注。</p>
-          </div>
-          <span class="font-mono text-xs text-brass tracking-widest opacity-0 group-hover:opacity-100 transition">→</span>
-        </a>
+        </div>
+        <div class="font-mono text-[11px] tracking-[0.16em] uppercase text-ink-subtle group-hover:text-brass-deep transition">
+          → 进入 v0.2 增量索引
+        </div>
+      </a>
+    </div>
+
+    <!-- 关系说明 -->
+    <section class="paper-card p-8 mb-8">
+      <div class="eyebrow mb-3">版 · 本 · 关 · 系</div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div>
+          <div class="font-mono text-[10px] tracking-[0.16em] uppercase text-forest mb-2">v0.1 · 已交付</div>
+          <p class="text-sm text-ink-soft leading-relaxed">
+            跑通最小闭环:夫妻每月 10 分钟填报、看仪表盘、看报表、按账户筛选、CSV 导出。
+          </p>
+        </div>
+        <div>
+          <div class="font-mono text-[10px] tracking-[0.16em] uppercase text-brass-deep mb-2">v0.2 · 当前</div>
+          <p class="text-sm text-ink-soft leading-relaxed">
+            <span class="text-ink">用着舒服</span> · 单账户回溯 + 类型差异化诊断 + 智能建议 + 移动端体验。
+            不动 v0.1 的页面,只在它之上做增量。
+          </p>
+        </div>
+        <div>
+          <div class="font-mono text-[10px] tracking-[0.16em] uppercase text-ink-subtle mb-2">v1.0 · 远景</div>
+          <p class="text-sm text-ink-subtle leading-relaxed">
+            数据可视化纵深 — 同比箭头 / YTD 速览 / 类别趋势 / 风险雷达 / 复利推演,见 v0.1 PRD §7.6。
+          </p>
+        </div>
       </div>
     </section>
 
-    <!-- 设计说明 -->
-    <section class="mt-24 pt-10 border-t border-rule">
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
-        <div>
-          <div class="eyebrow mb-3">001 · 美学方向</div>
-          <h3 class="font-display text-xl mb-3">私家账房</h3>
-          <p class="text-sm text-ink-soft leading-relaxed">米纸、墨字、黄铜点缀。介乎 19 世纪银行家账册与极简软件之间。不喧哗、不冷漠 — 一份你能在十年后还想打开的账本。</p>
-        </div>
-        <div>
-          <div class="eyebrow mb-3">002 · 字体配伍</div>
-          <h3 class="font-display text-xl mb-3">三体并陈</h3>
-          <ul class="text-sm text-ink-soft leading-relaxed space-y-2">
-            <li><span class="font-display">Fraunces</span> · 标题 / 数字 / 情绪</li>
-            <li><span class="font-serif">Source Serif 4 · 思源宋体</span> · 正文中英</li>
-            <li><span class="font-mono">JetBrains Mono</span> · 数字 / 编码 / 元数据</li>
-          </ul>
-        </div>
-        <div>
-          <div class="eyebrow mb-3">003 · 配色</div>
-          <h3 class="font-display text-xl mb-3">米纸·墨·黄铜</h3>
-          <div class="flex gap-2 mb-3 flex-wrap">
-            <span class="w-10 h-10 border border-rule" style="background:var(--paper);" title="paper"></span>
-            <span class="w-10 h-10 border border-rule" style="background:var(--card);" title="card"></span>
-            <span class="w-10 h-10 border border-rule" style="background:var(--ink);" title="ink"></span>
-            <span class="w-10 h-10 border border-rule" style="background:var(--brass);" title="brass"></span>
-            <span class="w-10 h-10 border border-rule" style="background:var(--forest);" title="forest +"></span>
-            <span class="w-10 h-10 border border-rule" style="background:var(--rust);" title="rust −"></span>
-          </div>
-          <p class="text-xs text-ink-soft">主纸张 · 卡片 · 墨色 · 黄铜 · 苔绿(+)· 锈红(−)</p>
-        </div>
+    <section class="border-t-2 border-double border-ink pt-6 flex items-center justify-between flex-wrap gap-4 mt-12">
+      <div class="font-mono text-[10px] tracking-[0.18em] uppercase text-ink-subtle">家 · 庭 · 内 · 部 · 使 · 用</div>
+      <div class="flex gap-3">
+        <a href="v0.1/index.html" class="btn-paper no-underline">v0.1 · SHIPPED</a>
+        <a href="v0.2/index.html" class="btn-ink no-underline">v0.2 · IN PROGRESS</a>
       </div>
     </section>
 
   </main>
-
-  <!-- 底部 -->
-  <footer class="border-t border-rule mt-16 py-8 px-8 md:px-16 text-center relative z-10">
-    <div class="font-mono text-xs text-ink-soft tracking-widest">
-      家庭账房 · v0.1 PREVIEW · 张家定制 · ANNO MMXXVI
-    </div>
-  </footer>
 
 </body>
 </html>
