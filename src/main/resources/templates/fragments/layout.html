@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<!--
+  Layout fragment · 公共骨架(Tailwind CDN + 三套字体 + 共享样式表)
+  详见 TDD § 8.2
+-->
+<head th:fragment="head(title)">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="_csrf" th:content="${_csrf.token}"/>
+  <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+  <title th:text="${title} ?: '家庭账房'">家庭账房</title>
+  <link rel="stylesheet" th:href="@{/css/style.css}">
+  <script th:src="@{/vendor/tailwind.js}"></script>
+  <script th:src="@{/vendor/htmx.min.js}"></script>
+  <script th:inline="javascript">
+    tailwind.config = {
+      theme: { extend: {
+        colors: {
+          paper: 'var(--paper)', 'paper-soft': 'var(--paper-soft)', 'paper-deep': 'var(--paper-deep)',
+          card: 'var(--card)', 'card-soft': 'var(--card-soft)',
+          ink: { DEFAULT: 'var(--ink)', soft: 'var(--ink-soft)', subtle: 'var(--ink-subtle)' },
+          rule: { DEFAULT: 'var(--rule)', soft: 'var(--rule-soft)' },
+          brass: { DEFAULT: 'var(--brass)', deep: 'var(--brass-deep)', soft: 'var(--brass-soft)' },
+          forest: 'var(--forest)', rust: 'var(--rust)'
+        },
+        fontFamily: {
+          display: ['Fraunces', 'Noto Serif SC', 'serif'],
+          serif:   ['"Source Serif 4"', 'Noto Serif SC', 'serif'],
+          mono:    ['JetBrains Mono', 'monospace']
+        }
+      }}
+    }
+  </script>
+  <script>
+    document.addEventListener('htmx:configRequest', function (event) {
+      const token = document.querySelector('meta[name="_csrf"]')?.content;
+      const header = document.querySelector('meta[name="_csrf_header"]')?.content;
+      if (token && header) event.detail.headers[header] = token;
+    });
+  </script>
+</head>
+
+<!--
+  Footer fragment
+-->
+<body>
+<footer th:fragment="footer" class="border-t border-rule mt-12 py-6 px-8 text-center relative z-10">
+  <div class="font-mono text-[10px] tracking-[0.18em] text-ink-subtle">
+    家庭账房 · v0.1 · 仅限内部使用
+  </div>
+</footer>
+</body>
+</html>

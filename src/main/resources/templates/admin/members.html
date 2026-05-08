@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('成员管理 · 家庭账房')}"></head>
+<body class="min-h-screen relative">
+<div class="fixed top-0 left-0 right-0 h-1 bg-ink z-40"></div>
+<header th:replace="~{fragments/nav :: nav('admin', ${me}, ${nav})}"></header>
+
+<main class="max-w-[1400px] mx-auto px-6 lg:px-10 py-10 relative z-10 grid grid-cols-12 gap-8">
+  <aside th:replace="~{admin/_sidebar :: sidebar('members')}"></aside>
+
+  <section class="col-span-12 md:col-span-9">
+    <div class="mb-8 flex items-end justify-between">
+      <div>
+        <div class="eyebrow mb-2">成 · 员 · 管 · 理</div>
+        <h1 class="font-display text-4xl font-medium" th:text="|${#lists.size(members)} 位成员|">2 位成员</h1>
+        <p class="text-ink-soft text-sm mt-2">改名、调整角色标签、重置密码。v0.1 不暴露"添加成员"按钮。</p>
+      </div>
+      <button class="btn-paper opacity-50 cursor-not-allowed" disabled>+ 添加成员 <span class="text-[9px] ml-1">v0.3+</span></button>
+    </div>
+
+    <div th:if="${flash}" class="mb-4 border border-forest bg-forest/[0.05] px-4 py-2 text-sm" th:text="${flash}">已保存</div>
+
+    <!-- 重置密码弹层 -->
+    <div th:if="${tempPassword}" class="envelope-modal max-w-md p-6 mb-6">
+      <div class="eyebrow mb-2">重 · 置 · 密 · 码 · 临 · 时</div>
+      <h3 class="font-display text-xl mb-3">为 <span th:text="${tempPasswordFor}">XX</span> 生成的临时密码</h3>
+      <p class="text-sm text-ink-soft mb-4">该密码只显示一次。下次登录后系统强制要求 ta 改成自己的密码。</p>
+      <div class="bg-paper-deep p-3 mb-4 font-mono text-base tnum tracking-widest border border-rule" th:text="${tempPassword}">xxxxx</div>
+      <p class="text-xs text-ink-subtle">v0.1 不发邮件 — 请当面 / 微信告诉对方</p>
+    </div>
+
+    <!-- 成员卡片 -->
+    <div th:each="m : ${members}" class="paper-card p-6 mb-5">
+      <form th:action="@{/admin/members/{id}(id=${m.id})}" method="post">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+        <div class="grid grid-cols-12 gap-6 items-start">
+          <div class="col-span-12 md:col-span-3 flex flex-col items-center">
+            <div class="w-24 h-24 rounded-full bg-ink text-paper flex items-center justify-center font-display text-4xl"
+                 th:text="${#strings.substring(m.displayName,0,1)}">伟</div>
+            <span class="pill mt-3" th:if="${m.id == me.memberId}" th:classappend="'pill-brass'">主用 · 当前登录</span>
+            <span class="pill mt-3" th:unless="${m.id == me.memberId}">成员</span>
+          </div>
+          <div class="col-span-12 md:col-span-9 grid grid-cols-2 gap-5">
+            <div>
+              <label class="field-label">显示名 · DISPLAY NAME</label>
+              <input class="field-input" name="displayName" th:value="${m.displayName}">
+            </div>
+            <div>
+              <label class="field-label">登录名 · USERNAME</label>
+              <input class="field-input" th:value="${m.username}" disabled style="opacity:0.6">
+              <p class="font-mono text-[10px] text-ink-subtle mt-1 tracking-wider">不可改</p>
+            </div>
+            <div>
+              <label class="field-label">角色标签 · ROLE LABEL(可空)</label>
+              <input class="field-input" name="roleLabel" th:value="${m.roleLabel}" placeholder="自由文本">
+            </div>
+            <div>
+              <label class="field-label">必须改密码</label>
+              <p class="font-mono tnum text-base mt-2" th:text="${m.mustChangePw} ? '是 · 下次登录强制改' : '否'">否</p>
+            </div>
+            <div class="col-span-2 rule-x pt-4 flex flex-wrap items-center gap-3">
+              <button class="btn-paper">保存</button>
+            </div>
+          </div>
+        </div>
+      </form>
+
+      <!-- 重置密码独立 form -->
+      <form th:action="@{/admin/members/{id}/reset-password(id=${m.id})}" method="post" class="mt-3">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+        <button class="btn-paper" onclick="return confirm('确认重置 ' + this.dataset.name + ' 的密码?');" th:attr="data-name=${m.displayName}">↻ 重置密码</button>
+        <span class="font-mono text-[10px] text-ink-subtle ml-3 tracking-wider"
+              th:text="|UID ${m.id} · 加入 ${#temporals.format(m.createdAt,'yyyy-MM-dd')}|">UID 1 · 加入 2026-04-15</span>
+      </form>
+    </div>
+
+  </section>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

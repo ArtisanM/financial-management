@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('账户模板 · 管理 · 家庭账房')}"></head>
+<body class="min-h-screen relative">
+<div class="fixed top-0 left-0 right-0 h-1 bg-ink z-40"></div>
+<header th:replace="~{fragments/nav :: nav('admin', ${me}, ${nav})}"></header>
+
+<main class="max-w-[1400px] mx-auto px-6 lg:px-10 py-10 relative z-10 grid grid-cols-12 gap-8">
+  <aside th:replace="~{admin/_sidebar :: sidebar('templates')}"></aside>
+
+  <section class="col-span-12 md:col-span-9">
+    <div class="mb-8 flex items-end justify-between">
+      <div>
+        <div class="eyebrow mb-2">账 · 户 · 模 · 板</div>
+        <h1 class="font-display text-4xl font-medium">14 个内置模板</h1>
+        <p class="text-ink-soft text-sm mt-2">v0.1 只读 · v0.2 开放编辑 + 自定义模板</p>
+      </div>
+      <span class="pill pill-rust">v0.1 只读</span>
+    </div>
+
+    <div class="paper-card overflow-x-auto">
+      <table class="ledger-table">
+        <thead>
+        <tr>
+          <th>顺序</th>
+          <th>名称</th>
+          <th>code</th>
+          <th>类型</th>
+          <th>默认币种</th>
+          <th>类型</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="t : ${templates}">
+          <td class="font-mono text-xs text-ink-subtle" th:text="${t.sortOrder}">1</td>
+          <td><span class="font-display" th:text="${t.displayName}">招行</span></td>
+          <td class="font-mono text-xs text-ink-soft" th:text="${t.code}">cmb</td>
+          <td><span class="pill" th:text="${t.type}">CASH</span></td>
+          <td class="font-mono text-xs" th:text="${t.defaultCurrency}">CNY</td>
+          <td class="text-xs text-ink-subtle" th:text="${t.customSlot} ? '自定义占位' : '内置'">内置</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

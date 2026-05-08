@@ -1,0 +1,18 @@
+# /etc/systemd/system/finance-backup.timer
+# 每周日 03:00 触发备份
+#
+# 启用:
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now finance-backup.timer
+#   systemctl list-timers finance-backup
+[Unit]
+Description=Finance Weekly Backup Timer
+Requires=finance-backup.service
+
+[Timer]
+OnCalendar=Sun 03:00:00
+RandomizedDelaySec=15m
+Persistent=true             # 错过(机器关机)上次会补一次
+
+[Install]
+WantedBy=timers.target

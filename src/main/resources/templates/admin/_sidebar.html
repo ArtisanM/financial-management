@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<aside th:fragment="sidebar(active)" class="col-span-12 md:col-span-3">
+  <div class="sticky top-24">
+    <div class="eyebrow mb-4">/ADMIN · 12 项</div>
+    <nav class="flex flex-col text-sm">
+      <a th:href="@{/admin}" th:classappend="${active=='hub'?'border-l-2 border-brass bg-card-soft text-ink font-display':'border-l border-rule hover:border-ink hover:bg-card-soft text-ink-soft'}" class="py-2 px-3 no-underline">总览</a>
+      <a th:href="@{/admin/family}" th:classappend="${active=='family'?'border-l-2 border-brass bg-card-soft text-ink font-display':'border-l border-rule hover:border-ink hover:bg-card-soft text-ink-soft'}" class="py-2 px-3 no-underline">家庭设置</a>
+      <a th:href="@{/admin/members}" th:classappend="${active=='members'?'border-l-2 border-brass bg-card-soft text-ink font-display':'border-l border-rule hover:border-ink hover:bg-card-soft text-ink-soft'}" class="py-2 px-3 no-underline">成员</a>
+      <a th:href="@{/accounts}" class="py-2 px-3 border-l border-rule hover:border-ink hover:bg-card-soft text-ink-soft no-underline">账户</a>
+      <a th:href="@{/admin/account-templates}" th:classappend="${active=='templates'?'border-l-2 border-brass bg-card-soft text-ink font-display':'border-l border-rule hover:border-ink hover:bg-card-soft text-ink-subtle'}" class="py-2 px-3 no-underline">账户模板 <span class="text-rust text-[10px]">·只读</span></a>
+      <a th:href="@{/admin/cash-flow-categories}" th:classappend="${active=='categories'?'border-l-2 border-brass bg-card-soft text-ink font-display':'border-l border-rule hover:border-ink hover:bg-card-soft text-ink-subtle'}" class="py-2 px-3 no-underline">现金流类别 <span class="text-rust text-[10px]">·只读</span></a>
+      <a th:href="@{/admin/periods}" th:classappend="${active=='periods'?'border-l-2 border-brass bg-card-soft text-ink font-display':'border-l border-rule hover:border-ink hover:bg-card-soft text-ink-soft'}" class="py-2 px-3 no-underline">周期</a>
+      <a th:href="@{/admin/reminders}" th:classappend="${active=='reminders'?'border-l-2 border-brass bg-card-soft text-ink font-display':'border-l border-rule hover:border-ink hover:bg-card-soft text-ink-soft'}" class="py-2 px-3 no-underline">提醒</a>
+      <a th:href="@{/admin/fx}" th:classappend="${active=='fx'?'border-l-2 border-brass bg-card-soft text-ink font-display':'border-l border-rule hover:border-ink hover:bg-card-soft text-ink-soft'}" class="py-2 px-3 no-underline">汇率</a>
+      <a th:href="@{/admin/backup}" th:classappend="${active=='backup'?'border-l-2 border-brass bg-card-soft text-ink font-display':'border-l border-rule hover:border-ink hover:bg-card-soft text-ink-soft'}" class="py-2 px-3 no-underline">备份</a>
+      <a th:href="@{/admin/audit}" th:classappend="${active=='audit'?'border-l-2 border-brass bg-card-soft text-ink font-display':'border-l border-rule hover:border-ink hover:bg-card-soft text-ink-soft'}" class="py-2 px-3 no-underline">审计</a>
+      <a th:href="@{/admin/calc-tweaks}" th:classappend="${active=='tweaks'?'border-l-2 border-brass bg-card-soft text-ink font-display':'border-l border-rule hover:border-ink hover:bg-card-soft text-ink-soft'}" class="py-2 px-3 no-underline">数值阈值</a>
+    </nav>
+  </div>
+</aside>
+</body>
+</html>

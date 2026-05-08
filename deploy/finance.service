@@ -1,0 +1,48 @@
+# =========================================================
+# /etc/systemd/system/finance.service
+# 家庭账房 v0.1 · Spring Boot 应用 systemd unit
+#
+# 安装:
+#   sudo install -m 644 deploy/finance.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable finance
+#   sudo systemctl start finance
+#   sudo journalctl -u finance -f       # 看日志
+# =========================================================
+[Unit]
+Description=Family Finance Web App (Spring Boot)
+After=network.target mysql.service
+Wants=mysql.service
+StartLimitIntervalSec=120
+StartLimitBurst=5
+
+[Service]
+Type=simple
+User=finance
+Group=finance
+WorkingDirectory=/opt/finance
+EnvironmentFile=/etc/finance.env
+ExecStart=/usr/lib/jvm/java-21-openjdk-amd64/bin/java \
+    -Xms256m -Xmx512m \
+    -Dfile.encoding=UTF-8 \
+    -Duser.timezone=Asia/Shanghai \
+    -Dspring.profiles.active=prod \
+    -jar /opt/finance/app.jar
+Restart=on-failure
+RestartSec=5
+SuccessExitStatus=143
+
+# Resource caps — 单家庭使用,限制保守
+LimitNPROC=512
+LimitNOFILE=4096
+MemoryMax=1G
+
+# Hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/opt/finance/logs /var/finance/uploads /tmp
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('审计日志 · 家庭账房')}"></head>
+<body class="min-h-screen relative">
+<div class="fixed top-0 left-0 right-0 h-1 bg-ink z-40"></div>
+<header th:replace="~{fragments/nav :: nav('admin', ${me}, ${nav})}"></header>
+<main class="max-w-[1400px] mx-auto px-6 lg:px-10 py-10 relative z-10 grid grid-cols-12 gap-8">
+  <aside th:replace="~{admin/_sidebar :: sidebar('audit')}"></aside>
+  <section class="col-span-12 md:col-span-9">
+    <div class="mb-8 flex items-end justify-between flex-wrap gap-4">
+      <div>
+        <div class="eyebrow mb-2">审 · 计 · 日 · 志</div>
+        <h1 class="font-display text-4xl font-medium">永不消失的脚注</h1>
+        <p class="text-ink-soft text-sm mt-2">谁、何时、改了什么 · 一切配置变更、周期重开、密码重置、cron 执行 都留痕。</p>
+      </div>
+      <form method="get" th:action="@{/admin/audit}">
+        <select name="type" class="border border-rule px-3 py-2 bg-card font-mono text-[11px] tracking-wider"
+                onchange="this.form.submit()">
+          <option value="">所有事件类型</option>
+          <option th:each="t : ${availableTypes}" th:value="${t}" th:selected="${t.name() == filterType}" th:text="${t}">TYPE</option>
+        </select>
+      </form>
+    </div>
+
+    <!-- 时间轴 -->
+    <div class="paper-card p-2 overflow-x-auto">
+      <div class="px-6 py-4 grid grid-cols-12 gap-4 border-b border-rule">
+        <div class="col-span-3 md:col-span-2 font-mono text-xs tracking-wider text-ink-subtle uppercase">时间</div>
+        <div class="col-span-3 md:col-span-2 font-mono text-xs tracking-wider text-ink-subtle uppercase">类型</div>
+        <div class="col-span-3 md:col-span-1 font-mono text-xs tracking-wider text-ink-subtle uppercase">由谁</div>
+        <div class="col-span-3 md:col-span-7 font-mono text-xs tracking-wider text-ink-subtle uppercase">详情</div>
+      </div>
+
+      <div class="divide-y divide-rule-soft">
+        <div th:each="r : ${rows}"
+             class="px-6 py-4 grid grid-cols-12 gap-4 hover:bg-card-soft text-sm">
+          <div class="col-span-3 md:col-span-2 font-mono text-xs tnum"
+               th:text="${#temporals.format(r.createdAt,'yyyy-MM-dd HH:mm:ss')}">2026-05-07 15:00</div>
+          <div class="col-span-3 md:col-span-2"><span class="pill" th:text="${r.type}">SYSTEM</span></div>
+          <div class="col-span-3 md:col-span-1 text-ink-soft text-xs"
+               th:text="${r.actorMemberId == null ? '系统' : '#' + r.actorMemberId}">系统</div>
+          <div class="col-span-3 md:col-span-7"
+               th:text="${r.summary}">事件</div>
+        </div>
+        <div th:if="${#lists.isEmpty(rows)}" class="text-center text-ink-subtle py-8">(暂无审计记录)</div>
+      </div>
+    </div>
+    <p class="mt-6 text-xs text-ink-subtle leading-relaxed">审计日志只增不删,长期保留。下载完整 CSV 留作搬迁备份。</p>
+  </section>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

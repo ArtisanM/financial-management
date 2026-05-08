@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.family.finance.repository.FactMapper">
+
+  <resultMap id="FactBaseRowMap" type="com.family.finance.factview.FactBaseRow">
+    <constructor>
+      <idArg column="account_id" javaType="java.lang.Long"/>
+      <arg column="account_name" javaType="java.lang.String"/>
+      <arg column="account_type" javaType="java.lang.String"/>
+      <arg column="account_currency" javaType="java.lang.String"/>
+      <arg column="owner_id" javaType="java.lang.Long"/>
+      <arg column="display_order" javaType="java.lang.Integer"/>
+      <arg column="period_id" javaType="java.lang.Long"/>
+      <arg column="period_start" javaType="java.time.LocalDate"/>
+      <arg column="period_end" javaType="java.time.LocalDate"/>
+      <arg column="previous_end_balance" javaType="java.math.BigDecimal"/>
+      <arg column="end_balance" javaType="java.math.BigDecimal"/>
+      <arg column="income_orig" javaType="java.math.BigDecimal"/>
+      <arg column="expense_orig" javaType="java.math.BigDecimal"/>
+      <arg column="transfer_in_orig" javaType="java.math.BigDecimal"/>
+      <arg column="transfer_out_orig" javaType="java.math.BigDecimal"/>
+      <arg column="fx_to_base" javaType="java.math.BigDecimal"/>
+    </constructor>
+  </resultMap>
+
+  <select id="queryBase" parameterType="com.family.finance.factview.FactFilter" resultMap="FactBaseRowMap">
+    SELECT
+        a.id AS account_id,
+        a.display_name AS account_name,
+        a.type AS account_type,
+        a.currency AS account_currency,
+        a.primary_owner_member_id AS owner_id,
+        a.display_order AS display_order,
+        p.id AS period_id,
+        p.period_start AS period_start,
+        p.period_end AS period_end,
+        (
+          SELECT ps_prev.end_balance
+            FROM period_snapshot ps_prev
+            JOIN period p_prev ON p_prev.id = ps_prev.period_id
+           WHERE ps_prev.account_id = a.id
+             AND p_prev.period_start &lt; p.period_start
+           ORDER BY p_prev.period_start DESC
+           LIMIT 1
+        ) AS previous_end_balance,
+        ps.end_balance AS end_balance,
+        COALESCE(cf.income_orig, 0) AS income_orig,
+        COALESCE(cf.expense_orig, 0) AS expense_orig,
+        COALESCE(tin.transfer_in_orig, 0) AS transfer_in_orig,
+        COALESCE(tout.transfer_out_orig, 0) AS transfer_out_orig,
+        CASE
+          WHEN a.currency = #{viewCurrency} THEN 1.000000
+          WHEN fx_direct.rate IS NOT NULL THEN fx_direct.rate
+          WHEN fx_inverse.rate IS NOT NULL THEN 1 / fx_inverse.rate
+          ELSE 1.000000
+        END AS fx_to_base
+    FROM account a
+    JOIN period p
+      ON p.family_id = a.family_id
+     AND p.period_type = #{periodType}
+    LEFT JOIN period_snapshot ps
+      ON ps.account_id = a.id
+     AND ps.period_id = p.id
+    LEFT JOIN (
+        SELECT period_id,
+               account_id,
+               SUM(CASE WHEN kind = 'INCOME' THEN amount ELSE 0 END) AS income_orig,
+               SUM(CASE WHEN kind = 'EXPENSE' THEN amount ELSE 0 END) AS expense_orig
+          FROM cash_flow
+         GROUP BY period_id, account_id
+    ) cf
+      ON cf.period_id = p.id
+     AND cf.account_id = a.id
+    LEFT JOIN (
+        SELECT period_id,
+               to_account_id AS account_id,
+               SUM(amount) AS transfer_in_orig
+          FROM transfer
+         WHERE is_draft = 0
+         GROUP BY period_id, to_account_id
+    ) tin
+      ON tin.period_id = p.id
+     AND tin.account_id = a.id
+    LEFT JOIN (
+        SELECT period_id,
+               from_account_id AS account_id,
+               SUM(amount) AS transfer_out_orig
+          FROM transfer
+         WHERE is_draft = 0
+         GROUP BY period_id, from_account_id
+    ) tout
+      ON tout.period_id = p.id
+     AND tout.account_id = a.id
+    LEFT JOIN fx_rate fx_direct
+      ON fx_direct.family_id = a.family_id
+     AND fx_direct.base_currency = #{viewCurrency}
+     AND fx_direct.quote_currency = a.currency
+     AND fx_direct.period_id = p.id
+    LEFT JOIN fx_rate fx_inverse
+      ON fx_inverse.family_id = a.family_id
+     AND fx_inverse.base_currency = a.currency
+     AND fx_inverse.quote_currency = #{viewCurrency}
+     AND fx_inverse.period_id = p.id
+    WHERE a.family_id = #{familyId}
+      AND p.period_start BETWEEN #{rangeStart} AND #{rangeEnd}
+      <if test="!includeArchived">
+        AND a.archived_at IS NULL
+      </if>
+      <if test="accountIds != null and !accountIds.isEmpty()">
+        AND a.id IN
+        <foreach collection="accountIds" item="id" open="(" separator="," close=")">
+          #{id}
+        </foreach>
+      </if>
+    ORDER BY p.period_start, a.display_order, a.id
+  </select>
+</mapper>

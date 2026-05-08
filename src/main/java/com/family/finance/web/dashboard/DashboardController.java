@@ -1,0 +1,210 @@
+package com.family.finance.web.dashboard;
+
+import com.family.finance.auth.MemberPrincipal;
+import com.family.finance.domain.account.Account;
+import com.family.finance.domain.family.Family;
+import com.family.finance.domain.period.Period;
+import com.family.finance.domain.period.PeriodStatus;
+import com.family.finance.factview.AccountPerformance;
+import com.family.finance.factview.AllocationSlice;
+import com.family.finance.factview.FactFilter;
+import com.family.finance.factview.FactSlice;
+import com.family.finance.factview.FactViewService;
+import com.family.finance.factview.KpiSnapshot;
+import com.family.finance.factview.TrendPoint;
+import com.family.finance.factview.WaterfallSegment;
+import com.family.finance.repository.AccountMapper;
+import com.family.finance.repository.PeriodMapper;
+import com.family.finance.service.EntryService;
+import com.family.finance.service.FamilyService;
+import com.family.finance.service.NavService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
+import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.List;
+
+@Controller
+@RequiredArgsConstructor
+public class DashboardController {
+    private static final DecimalFormat MONEY = new DecimalFormat("#,##0");
+
+    private final FactViewService factViewService;
+    private final FamilyService familyService;
+    private final PeriodMapper periodMapper;
+    private final AccountMapper accountMapper;
+    private final EntryService entryService;
+    private final NavService navService;
+
+    @GetMapping("/dashboard")
+    public String dashboard(@AuthenticationPrincipal MemberPrincipal me,
+                            @RequestParam(defaultValue = "1Y") String range,
+                            @RequestParam(required = false) String accounts,
+                            @RequestParam(required = false) String currency,
+                            @RequestHeader(value = "HX-Request", required = false) String htmx,
+                            Model model) {
+        populateModel(me, range, accounts, currency, model);
+        if ("true".equalsIgnoreCase(htmx)) {
+            return "dashboard/_region :: region";
+        }
+        return "dashboard/index";
+    }
+
+    private void populateModel(MemberPrincipal me, String range, String accountsCsv, String currency, Model model) {
+        Family family = familyService.require(me.getFamilyId());
+        Period anchor = anchorPeriod(me.getFamilyId());
+        List<Long> accountIds = parseAccountIds(accountsCsv);
+        String viewCurrency = parseCurrency(currency, family.getBaseCurrency());
+        FactFilter filter = new FactFilter(
+                me.getFamilyId(),
+                family.getPeriodType(),
+                rangeStart(range, anchor.getPeriodStart()),
+                anchor.getPeriodStart(),
+                false,
+                accountIds,
+                viewCurrency
+        );
+        FactSlice slice = factViewService.load(filter);
+        KpiSnapshot kpis = factViewService.kpis(slice);
+        List<TrendPoint> trend = factViewService.netWorthTrend(slice);
+        List<WaterfallSegment> waterfall = factViewService.incomeExpenseWaterfall(slice);
+        List<AllocationSlice> allocation = factViewService.allocationByType(slice, slice.lastPeriodId());
+        List<AccountPerformance> accountRows = factViewService.accountPerformance(slice);
+        List<Account> allAccounts = accountMapper.findActiveByFamily(me.getFamilyId());
+        Period currentOpen = periodMapper.findCurrentOpen(me.getFamilyId()).orElse(null);
+
+        model.addAttribute("me", me);
+        model.addAttribute("nav", navService.load(me));
+        model.addAttribute("range", normalizeRange(range));
+        model.addAttribute("currency", viewCurrency);
+        model.addAttribute("ranges", List.of("1M", "3M", "6M", "YTD", "1Y", "ALL"));
+        model.addAttribute("currencies", List.of("CNY", "USD", "HKD"));
+        model.addAttribute("accountsCsv", accountsCsv == null ? "" : accountsCsv);
+        model.addAttribute("selectedAccountCount", accountIds == null ? allAccounts.size() : accountIds.size());
+        model.addAttribute("allAccounts", allAccounts);
+        model.addAttribute("anchorPeriod", anchor);
+        model.addAttribute("currentOpen", currentOpen);
+        model.addAttribute("pendingRows", currentOpen == null ? List.of() : entryService.listRows(me.getFamilyId(), me.getMemberId(), currentOpen, false).stream()
+                .filter(row -> !row.done())
+                .toList());
+
+        model.addAttribute("kpis", kpis);
+        model.addAttribute("kpiNetWorth", money(viewCurrency, kpis.netWorth()));
+        model.addAttribute("kpiAssets", money(viewCurrency, kpis.totalAssets()));
+        model.addAttribute("kpiLiabilities", money(viewCurrency, kpis.totalLiabilities()));
+        model.addAttribute("kpiEmergency", kpis.emergencyFundMonths() == null ? "—" : kpis.emergencyFundMonths().toPlainString() + " 月");
+        model.addAttribute("kpiDebtRatio", percent(kpis.debtToAssetRatio()));
+        model.addAttribute("kpiDelta", moneyDelta(viewCurrency, kpis.netWorthDelta()));
+        model.addAttribute("savingsRate", percent(factViewService.savingsRate(slice)));
+
+        model.addAttribute("trend", trend);
+        model.addAttribute("allocation", allocation);
+        model.addAttribute("waterfall", waterfall);
+        model.addAttribute("accountRows", accountRows);
+
+        model.addAttribute("trendLabels", trend.stream().map(TrendPoint::label).toList());
+        model.addAttribute("trendValues", trend.stream().map(TrendPoint::value).toList());
+        model.addAttribute("incomeValues", waterfall.stream().map(WaterfallSegment::income).toList());
+        model.addAttribute("expenseValues", waterfall.stream().map(WaterfallSegment::expense).toList());
+        model.addAttribute("savingsValues", waterfall.stream().map(this::savingsRatePoint).toList());
+        model.addAttribute("allocationLabels", allocation.stream().map(AllocationSlice::label).toList());
+        model.addAttribute("allocationValues", allocation.stream().map(AllocationSlice::value).toList());
+    }
+
+    private Period anchorPeriod(long familyId) {
+        return periodMapper.findLatest(familyId, 120).stream()
+                .filter(period -> period.getStatus() == PeriodStatus.CLOSED)
+                .findFirst()
+                .or(() -> periodMapper.findLatest(familyId, 1).stream().findFirst())
+                .orElseThrow(() -> new IllegalStateException("尚未创建周期"));
+    }
+
+    private LocalDate rangeStart(String range, LocalDate anchor) {
+        return switch (normalizeRange(range)) {
+            case "1M" -> anchor;
+            case "3M" -> anchor.minusMonths(2);
+            case "6M" -> anchor.minusMonths(5);
+            case "YTD" -> anchor.withDayOfYear(1);
+            case "ALL" -> LocalDate.of(1970, 1, 1);
+            default -> anchor.minusMonths(11);
+        };
+    }
+
+    private String normalizeRange(String range) {
+        if (range == null) {
+            return "1Y";
+        }
+        return switch (range.toUpperCase()) {
+            case "1M", "3M", "6M", "YTD", "ALL" -> range.toUpperCase();
+            default -> "1Y";
+        };
+    }
+
+    private List<Long> parseAccountIds(String csv) {
+        if (csv == null || csv.isBlank()) {
+            return null;
+        }
+        List<Long> ids = Arrays.stream(csv.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isBlank())
+                .map(Long::parseLong)
+                .distinct()
+                .toList();
+        return ids.isEmpty() ? null : ids;
+    }
+
+    private String parseCurrency(String currency, String fallback) {
+        if (currency == null || currency.isBlank()) {
+            return fallback;
+        }
+        return switch (currency.toUpperCase()) {
+            case "CNY", "USD", "HKD" -> currency.toUpperCase();
+            default -> fallback;
+        };
+    }
+
+    private BigDecimal savingsRatePoint(WaterfallSegment segment) {
+        if (segment.income().signum() == 0) {
+            return null;
+        }
+        return segment.income().subtract(segment.expense())
+                .divide(segment.income(), 6, RoundingMode.HALF_EVEN)
+                .multiply(new BigDecimal("100"))
+                .setScale(2, RoundingMode.HALF_EVEN);
+    }
+
+    private String money(String currency, BigDecimal amount) {
+        if (amount == null) {
+            return "—";
+        }
+        String symbol = switch (currency) {
+            case "USD" -> "$";
+            case "HKD" -> "HK$";
+            default -> "¥";
+        };
+        return symbol + MONEY.format(amount.setScale(0, RoundingMode.HALF_UP));
+    }
+
+    private String moneyDelta(String currency, BigDecimal amount) {
+        if (amount == null) {
+            return "—";
+        }
+        return (amount.signum() >= 0 ? "+" : "") + money(currency, amount);
+    }
+
+    private String percent(BigDecimal ratio) {
+        if (ratio == null) {
+            return "—";
+        }
+        return ratio.multiply(new BigDecimal("100")).setScale(1, RoundingMode.HALF_UP).toPlainString() + "%";
+    }
+}

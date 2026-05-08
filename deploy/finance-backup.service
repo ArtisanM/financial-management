@@ -1,0 +1,20 @@
+# /etc/systemd/system/finance-backup.service
+# 由 finance-backup.timer 触发,不开机自启。
+#
+# 失败仅写 systemd journal + 退出非 0;管理员通过
+#   journalctl -u finance-backup.service
+#   /admin/backup 页面查看 backup_log
+[Unit]
+Description=Finance DB & Uploads Weekly Backup
+After=mysql.service network.target
+
+[Service]
+Type=oneshot
+User=finance
+Group=finance
+EnvironmentFile=/etc/finance.env
+ExecStart=/opt/finance/deploy/backup.sh
+TimeoutStartSec=900
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('登录 · 家庭账房')}"></head>
+<body class="min-h-screen flex flex-col">
+
+<!-- 装饰条 -->
+<div class="fixed top-0 left-0 right-0 h-1 bg-ink z-40"></div>
+
+<main class="flex-1 grid md:grid-cols-2 relative z-10">
+
+  <!-- 左侧:引言 -->
+  <div class="flex flex-col justify-between p-12 md:p-20 border-r border-rule">
+    <div class="font-mono text-[10px] tracking-[0.22em] text-brass-deep">
+      家 · 庭 · 账 · 房
+    </div>
+    <div class="my-12">
+      <h1 class="font-display text-5xl md:text-7xl leading-[0.95] font-medium tracking-tight">
+        凡入此册者,<br>
+        <span class="italic text-brass-deep font-light">皆有定数。</span>
+      </h1>
+      <p class="font-serif text-lg text-ink-soft mt-8 max-w-md leading-relaxed">
+        每月一日,系统按时备好账册;您与家人各自登录,异步落笔,十分钟内毕事。
+      </p>
+    </div>
+    <div class="font-mono text-[10px] tracking-[0.18em] text-ink-subtle">
+      ANNO 2026 · v0.1
+    </div>
+  </div>
+
+  <!-- 右侧:表单 -->
+  <div class="flex items-center justify-center p-8 md:p-12 bg-card-soft">
+    <div class="w-full max-w-md">
+
+      <div class="flex items-baseline justify-between mb-10">
+        <h2 class="font-display text-3xl">登录</h2>
+        <div class="font-mono text-[10px] tracking-[0.16em] text-ink-subtle">SIGN IN</div>
+      </div>
+
+      <!-- 错误 / 退出提示 -->
+      <div th:if="${error}"
+           class="border border-rust bg-rust/[0.04] px-4 py-3 mb-6 text-sm"
+           th:text="${error}">用户名或密码错误</div>
+      <div th:if="${logout}"
+           class="border border-forest bg-forest/[0.05] px-4 py-3 mb-6 text-sm"
+           th:text="${logout}">已退出</div>
+
+      <form th:action="@{/login}" method="post" class="space-y-8">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+        <div>
+          <label class="field-label" for="username">登录名 · USERNAME</label>
+          <input id="username" name="username" type="text"
+                 class="field-input" autocomplete="username"
+                 required autofocus placeholder="例:zhangwei">
+        </div>
+
+        <div>
+          <label class="field-label" for="password">口令 · PASSWORD</label>
+          <input id="password" name="password" type="password"
+                 class="field-input" autocomplete="current-password"
+                 required placeholder="">
+        </div>
+
+        <label class="flex items-center gap-3 select-none cursor-pointer pt-2">
+          <input type="checkbox" name="remember-me" class="w-4 h-4 accent-[var(--brass)]">
+          <span class="font-mono text-[11px] tracking-[0.14em] uppercase text-ink-soft">
+            三十日免输 · keep me
+          </span>
+        </label>
+
+        <div class="pt-4">
+          <button type="submit" class="btn-ink w-full justify-center">
+            入册 · sign in
+            <span class="font-display italic">→</span>
+          </button>
+        </div>
+      </form>
+
+      <div class="mt-12 pt-6 border-t border-rule">
+        <div class="font-mono text-[10px] tracking-[0.16em] text-ink-subtle mb-3">忘了口令?</div>
+        <p class="text-sm text-ink-soft leading-relaxed">
+          v0.1 不开放找回。请联系另一位家庭管理员在
+          <span class="font-mono text-[12px] text-ink">/admin/members</span>
+          重置临时口令。
+        </p>
+      </div>
+
+    </div>
+  </div>
+
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+
+</body>
+</html>

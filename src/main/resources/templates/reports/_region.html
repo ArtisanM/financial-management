@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="region" id="reports-region">
+  <section class="mb-8 flex items-end justify-between flex-wrap gap-6">
+    <div>
+      <div class="eyebrow mb-2">月 · 度 · 大 · 账</div>
+      <h1 class="font-display text-5xl font-medium tracking-tight">数 · 字 · <span class="italic font-light text-brass-deep">所至</span></h1>
+      <p class="text-ink-soft text-sm mt-3 max-w-xl">收益率、现金流、负债与本金收益分解全部来自同一份 Fact View。</p>
+    </div>
+    <div class="flex border border-rule">
+      <a th:each="r : ${ranges}"
+         th:href="@{/reports(range=${r},currency=${currency},accounts=${accountsCsv})}"
+         hx-target="#reports-region" hx-swap="outerHTML"
+         class="font-mono text-[11px] px-4 py-2 no-underline border-l border-rule first:border-l-0"
+         th:classappend="${range == r ? ' bg-ink text-paper' : ' text-ink-soft hover:bg-card-soft'}"
+         th:text="${r}">1Y</a>
+    </div>
+  </section>
+
+  <section class="mb-8">
+    <div class="paper-card px-5 py-3 flex items-center justify-between flex-wrap gap-4">
+      <div class="flex items-center gap-3 flex-wrap">
+        <span class="font-mono text-[10px] tracking-[0.18em] uppercase text-ink-soft">账户范围</span>
+        <span class="font-display text-base" th:text="${selectedAccountCount} + ' 个已选'">11 个已选</span>
+        <a th:href="@{/reports(range=${range},currency=${currency})}" hx-target="#reports-region" hx-swap="outerHTML"
+           class="font-mono text-[10px] tracking-wider text-ink-soft hover:text-brass-deep no-underline">↺ 重置</a>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="font-mono text-[10px] tracking-[0.18em] uppercase text-ink-soft">显示</span>
+        <div class="flex border border-rule">
+          <a th:each="c : ${currencies}"
+             th:href="@{/reports(range=${range},currency=${c},accounts=${accountsCsv})}"
+             hx-target="#reports-region" hx-swap="outerHTML"
+             class="font-mono text-[11px] px-3 py-1.5 tracking-wider no-underline border-l border-rule first:border-l-0"
+             th:classappend="${currency == c ? ' bg-ink text-paper' : ' text-ink-soft hover:bg-card-soft'}"
+             th:text="${c == 'CNY' ? '¥ CNY' : (c == 'USD' ? '$ USD' : 'HK$ HKD')}">¥ CNY</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="grid grid-cols-2 md:grid-cols-4 gap-px bg-rule mb-12">
+    <div class="kpi-card"><span class="kpi-eyebrow">家庭 XIRR</span><div class="kpi-value tnum num-pos font-display" th:text="${familyXirr}">—</div><div class="kpi-delta">资金加权</div></div>
+    <div class="kpi-card"><span class="kpi-eyebrow">家庭 TWR</span><div class="kpi-value tnum num-pos font-display" th:text="${familyTwr}">—</div><div class="kpi-delta">时间加权</div></div>
+    <div class="kpi-card"><span class="kpi-eyebrow">累计净流入</span><div class="kpi-value tnum" th:text="${cumulativeNetInflow}">¥0</div><div class="kpi-delta">收入 - 支出</div></div>
+    <div class="kpi-card"><span class="kpi-eyebrow">累计投资损益</span><div class="kpi-value tnum" th:text="${cumulativePnl}">¥0</div><div class="kpi-delta">轧差收益</div></div>
+  </section>
+
+  <section class="mb-12">
+    <div class="bracket-card">
+      <div class="flex items-end justify-between mb-2">
+        <div><div class="eyebrow mb-1">第 一 表 · ECharts</div><h2 class="font-display text-2xl font-medium">月度收支瀑布</h2></div>
+        <div class="text-xs text-ink-soft">点击月份查看账户明细</div>
+      </div>
+      <div class="rule-double pt-2 mb-3"></div>
+      <div id="waterfallChart" style="height: 340px;"></div>
+    </div>
+  </section>
+
+  <section class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-12">
+    <div class="paper-card p-6 lg:col-span-7">
+      <div class="eyebrow mb-1">第 二 表 · ECharts</div>
+      <h3 class="font-display text-xl font-medium">收入流向桑基图</h3>
+      <div class="rule-x pt-2 mb-2"></div>
+      <div id="sankeyChart" style="height: 360px;"></div>
+    </div>
+    <div class="paper-card p-6 lg:col-span-5">
+      <div class="eyebrow mb-1">第 三 表</div>
+      <h3 class="font-display text-xl font-medium">本金 vs 收益分解</h3>
+      <div class="rule-x pt-2 mb-2"></div>
+      <div style="height: 360px;"><canvas id="decomposeChart"></canvas></div>
+    </div>
+  </section>
+
+  <section class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-12">
+    <div class="paper-card p-6">
+      <div class="eyebrow mb-1">第 四 表</div>
+      <h3 class="font-display text-xl font-medium">月度收支对比</h3>
+      <div class="rule-x pt-2 mb-3"></div>
+      <div style="height: 280px;"><canvas id="incomeBarChart"></canvas></div>
+    </div>
+    <div class="paper-card p-6">
+      <div class="eyebrow mb-1">第 五 表</div>
+      <h3 class="font-display text-xl font-medium">负债下降曲线</h3>
+      <div class="rule-x pt-2 mb-3"></div>
+      <div style="height: 280px;"><canvas id="debtChart"></canvas></div>
+    </div>
+  </section>
+
+  <section class="mb-12">
+    <div class="flex items-end justify-between mb-3">
+      <div><div class="eyebrow mb-1">第 六 表</div><h3 class="font-display text-2xl font-medium">账户级收益率</h3></div>
+    </div>
+    <div class="paper-card overflow-hidden">
+      <table class="ledger-table">
+        <thead><tr><th>账户</th><th>类型</th><th class="num">XIRR / 累计</th><th class="num">当前价值</th><th>近况</th></tr></thead>
+        <tbody>
+        <tr th:each="account : ${accountRows}">
+          <td><span class="font-display" th:text="${account.accountName}">账户</span></td>
+          <td><span class="pill" th:text="${account.accountType}">STOCK</span></td>
+          <td class="num" th:text="${account.xirr == null ? '—' : (#numbers.formatDecimal(account.xirr * 100, 1, 2) + '%')}">—</td>
+          <td class="num" th:text="${account.currentValue == null ? '—' : account.currentValue}">0</td>
+          <td><svg class="sparkline-pos" width="80" height="22" viewBox="0 0 80 22"><polyline fill="none" stroke="currentColor" stroke-width="1.5" points="0,16 10,14 20,16 30,12 40,14 50,10 60,12 70,8 80,6"/></svg></td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="paper-card p-6 mb-12">
+    <div class="eyebrow mb-1">汇率明细</div>
+    <table class="ledger-table">
+      <thead><tr><th>Base</th><th>Quote</th><th class="num">Rate</th><th>来源</th></tr></thead>
+      <tbody>
+      <tr th:each="fx : ${fxRates}">
+        <td th:text="${fx.baseCurrency}">CNY</td>
+        <td th:text="${fx.quoteCurrency}">USD</td>
+        <td class="num" th:text="${fx.rate}">7.2</td>
+        <td th:text="${fx.source}">manual</td>
+      </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <script th:inline="javascript">
+    (() => {
+      const data = {
+        labels: [[${labels}]],
+        periodIds: [[${periodIds}]],
+        income: [[${incomeValues}]],
+        expense: [[${expenseValues}]],
+        pnl: [[${pnlValues}]],
+        principal: [[${decompPrincipal}]],
+        decompPnl: [[${decompPnl}]],
+        debt: [[${debtValues}]],
+        sankeyNodes: [[${sankeyNodes}]],
+        sankeyLinks: [[${sankeyLinks}]]
+      };
+      window.reportCharts = window.reportCharts || {};
+      Object.values(window.reportCharts).forEach(chart => chart && chart.destroy && chart.destroy());
+      if (window.echarts) {
+        const waterfall = echarts.init(document.getElementById('waterfallChart'));
+        waterfall.setOption({tooltip:{},xAxis:{type:'category',data:data.labels},yAxis:{type:'value'},series:[{type:'bar',name:'收入',stack:'total',data:data.income,itemStyle:{color:'#2f5d50'}},{type:'bar',name:'支出',stack:'total',data:data.expense.map(v => -Math.abs(v)),itemStyle:{color:'#9f4a3a'}},{type:'bar',name:'损益',stack:'total',data:data.pnl,itemStyle:{color:'#6f7f98'}}]});
+        waterfall.on('click', p => { const id = data.periodIds[p.dataIndex]; if (id) htmx.ajax('GET', '/reports/period/' + id, '#modal'); });
+        window.reportCharts.waterfall = waterfall;
+        const sankey = echarts.init(document.getElementById('sankeyChart'));
+        sankey.setOption({tooltip:{},series:[{type:'sankey',data:data.sankeyNodes,links:data.sankeyLinks,lineStyle:{color:'gradient'}}]});
+        window.reportCharts.sankey = sankey;
+      }
+      const decompose = document.getElementById('decomposeChart');
+      if (decompose) window.reportCharts.decompose = new Chart(decompose,{type:'bar',data:{labels:data.labels.slice(1),datasets:[{label:'本金',data:data.principal,backgroundColor:'#a77b35'},{label:'收益',data:data.decompPnl,backgroundColor:'#2f5d50'}]},options:{maintainAspectRatio:false,scales:{x:{stacked:true},y:{stacked:true}}}});
+      const income = document.getElementById('incomeBarChart');
+      if (income) window.reportCharts.income = new Chart(income,{type:'bar',data:{labels:data.labels,datasets:[{label:'收入',data:data.income,backgroundColor:'#2f5d50'},{label:'支出',data:data.expense,backgroundColor:'#9f4a3a'}]},options:{maintainAspectRatio:false}});
+      const debt = document.getElementById('debtChart');
+      if (debt) window.reportCharts.debt = new Chart(debt,{type:'line',data:{labels:data.labels,datasets:[{label:'负债',data:data.debt,borderColor:'#9f4a3a',tension:.35}]},options:{maintainAspectRatio:false}});
+    })();
+  </script>
+</div>
+</body>
+</html>

@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('报表 · 家庭账房')}"></head>
+<body class="min-h-screen relative">
+<script src="/vendor/chart.umd.min.js"></script>
+<script src="/vendor/echarts.min.js"></script>
+<div class="fixed top-0 left-0 right-0 h-1 bg-ink z-40"></div>
+<header th:replace="~{fragments/nav :: nav('reports', ${me}, ${nav})}"></header>
+<main class="max-w-[1400px] mx-auto px-6 lg:px-10 py-10 relative z-10">
+  <div id="reports-region" th:replace="~{reports/_region :: region}"></div>
+</main>
+<div id="modal"></div>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

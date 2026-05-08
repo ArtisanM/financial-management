@@ -1,0 +1,69 @@
+# =========================================================
+# nginx 反代片段 · 家庭账房 v0.1
+#
+# 注:用户上游(域名服务/CDN)已终结 TLS,本机 nginx 仅接 HTTP
+#
+# 安装:
+#   sudo install -m 644 deploy/nginx-finance.conf.example \
+#       /etc/nginx/sites-available/finance.conf
+#   sudo ln -sf /etc/nginx/sites-available/finance.conf \
+#       /etc/nginx/sites-enabled/finance.conf
+#   sudo nginx -t && sudo systemctl reload nginx
+# =========================================================
+
+upstream finance_backend {
+    server 127.0.0.1:8080 fail_timeout=10s max_fails=3;
+    keepalive 16;
+}
+
+server {
+    listen 80;
+    server_name finance.example.com;       # ← 改成你的域名
+
+    client_max_body_size 256k;             # 与 Spring multipart 对齐(logo 上限 200KB)
+    access_log /var/log/nginx/finance.access.log;
+    error_log  /var/log/nginx/finance.error.log warn;
+
+    # 静态资源 — 优先 nginx 直发,绕过 Java
+    location /css/ {
+        proxy_pass http://finance_backend;     # CSS 由 Spring 打包在 jar 里,反代上去最简单
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+
+    location /uploads/ {
+        alias /var/finance/uploads/;
+        expires 7d;
+        add_header Cache-Control "public";
+        access_log off;
+        try_files $uri =404;
+    }
+
+    location /favicon.ico {
+        proxy_pass http://finance_backend;
+        access_log off;
+        log_not_found off;
+        expires 30d;
+    }
+
+    # 应用主路径
+    location / {
+        proxy_pass         http://finance_backend;
+        proxy_http_version 1.1;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto http;     # 上游已脱 TLS,这里就是 http
+        proxy_set_header   Connection        "";
+        proxy_read_timeout 30s;
+        proxy_send_timeout 30s;
+    }
+
+    # 限制后台 admin 只允许内网 IP(可选,按需打开)
+    # location /admin/ {
+    #     allow 192.168.0.0/16;
+    #     allow 10.0.0.0/8;
+    #     deny all;
+    #     proxy_pass http://finance_backend;
+    # }
+}

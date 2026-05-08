@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('备份 · 管理 · 家庭账房')}"></head>
+<body class="min-h-screen relative">
+<div class="fixed top-0 left-0 right-0 h-1 bg-ink z-40"></div>
+<header th:replace="~{fragments/nav :: nav('admin', ${me}, ${nav})}"></header>
+<main class="max-w-[1400px] mx-auto px-6 lg:px-10 py-10 relative z-10 grid grid-cols-12 gap-8">
+  <aside th:replace="~{admin/_sidebar :: sidebar('backup')}"></aside>
+  <section class="col-span-12 md:col-span-9">
+    <div class="mb-8 flex items-end justify-between">
+      <div>
+        <div class="eyebrow mb-2">备 · 份 · 与 · 恢 · 复</div>
+        <h1 class="font-display text-4xl font-medium">数据安守</h1>
+        <p class="text-ink-soft text-sm mt-2">每周日凌晨 03:00 通过 mysqldump 自动备份。保留 8 周。</p>
+      </div>
+      <a th:href="@{/export.zip}" class="btn-ink text-xs">📦 导出 CSV 包</a>
+    </div>
+
+    <!-- 状态 -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-px bg-rule mb-8">
+      <div class="kpi-card">
+        <span class="kpi-eyebrow">最近备份</span>
+        <div class="font-display text-2xl mt-1"
+             th:text="${#lists.isEmpty(logs) ? '—' : #temporals.format(logs[0].startedAt,'M月d日 HH:mm')}">5 月 4 日 03:00</div>
+        <div class="font-mono text-xs num-pos mt-1"
+             th:if="${!#lists.isEmpty(logs) and logs[0].status == 'SUCCESS'}"
+             th:text="|✓ 成功 · ${logs[0].sizeBytes != null ? (logs[0].sizeBytes / 1024 / 1024) + ' MB' : ''}|">✓ 成功</div>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-eyebrow">保留</span>
+        <div class="font-display text-2xl mt-1 tnum">8 周</div>
+        <div class="font-mono text-xs text-ink-soft mt-1">滚动删除最旧</div>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-eyebrow">异地存储</span>
+        <div class="font-display text-2xl mt-1">已启用</div>
+        <div class="font-mono text-xs text-ink-soft mt-1">阿里云 OSS</div>
+      </div>
+    </div>
+
+    <!-- 历次备份 -->
+    <div class="paper-card overflow-x-auto">
+      <div class="px-6 py-4 border-b border-rule flex items-baseline justify-between">
+        <h3 class="font-display text-lg" th:text="|最近 ${#lists.size(logs)} 次备份|">最近 8 次备份</h3>
+      </div>
+      <table class="ledger-table">
+        <thead>
+          <tr>
+            <th>序</th><th>开始时间</th><th>状态</th><th>类型</th>
+            <th>本地路径</th><th>异地</th><th class="num">大小</th><th>错误</th>
+          </tr>
+        </thead>
+        <tbody>
+        <tr th:each="b, st : ${logs}">
+          <td class="font-mono text-xs" th:text="${#strings.toString(st.count)}">1</td>
+          <td class="font-mono" th:text="${#temporals.format(b.startedAt,'yyyy-MM-dd HH:mm')}">2026-05-04 03:00</td>
+          <td>
+            <span class="pill" th:if="${b.status == 'SUCCESS'}"
+                  style="background:var(--forest-soft);color:var(--forest);border-color:var(--forest)">SUCCESS</span>
+            <span class="pill" th:if="${b.status == 'FAILED'}" style="background:var(--rust-soft);color:var(--rust);border-color:var(--rust)">FAILED</span>
+            <span class="pill" th:if="${b.status == 'RUNNING'}">RUNNING</span>
+          </td>
+          <td class="text-xs" th:text="${b.kind}">WEEKLY</td>
+          <td class="text-xs text-ink-soft" th:text="${b.locationLocal}">—</td>
+          <td class="text-xs text-ink-soft" th:text="${b.locationRemote != null ? b.locationRemote : '—'}">—</td>
+          <td class="num" th:text="${b.sizeBytes != null ? (b.sizeBytes / 1024) + ' KB' : '—'}">—</td>
+          <td class="text-xs text-rust" th:text="${b.errorMessage}">—</td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(logs)}"><td colspan="8" class="text-center text-ink-subtle py-6">(暂无备份记录)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

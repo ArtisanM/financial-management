@@ -1,0 +1,86 @@
+# =========================================================
+# 家庭账房 v0.1 · 公共配置
+# =========================================================
+spring:
+  application:
+    name: finance
+  profiles:
+    active: dev
+  datasource:
+    url: jdbc:mysql://${DB_HOST:127.0.0.1}:${DB_PORT:3306}/${DB_NAME:finance}?useSSL=false&serverTimezone=Asia/Shanghai&characterEncoding=utf8&useUnicode=true&allowPublicKeyRetrieval=true
+    username: ${DB_USER:finance}
+    password: ${DB_PASS:finance}
+    hikari:
+      maximum-pool-size: 8
+      minimum-idle: 2
+      connection-timeout: 5000
+  servlet:
+    multipart:
+      max-file-size: 200KB
+      max-request-size: 256KB
+  thymeleaf:
+    cache: true
+    prefix: classpath:/templates/
+    suffix: .html
+    encoding: UTF-8
+    mode: HTML
+  mvc:
+    static-path-pattern: /**
+  web:
+    locale: zh_CN
+  messages:
+    basename: messages
+    encoding: UTF-8
+
+server:
+  port: 8080
+  forward-headers-strategy: framework  # 信任 nginx 上游(X-Forwarded-*)
+  servlet:
+    session:
+      timeout: 30m
+      cookie:
+        http-only: true
+        secure: false  # TLS 在用户更上游处终结,本服务接收 HTTP
+        same-site: lax
+
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+    default-fetch-size: 100
+    default-statement-timeout: 5
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+
+logging:
+  level:
+    root: INFO
+    com.family.finance: DEBUG
+    org.springframework.security: INFO
+    org.mybatis: INFO
+
+app:
+  upload-root: ${UPLOAD_ROOT:/tmp/finance-uploads}
+  remember-me-key: ${REMEMBER_ME_KEY:dev-only-key-change-in-prod}
+  remember-me-validity-seconds: 2592000  # 30 天
+
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+  thymeleaf:
+    cache: false
+logging:
+  level:
+    com.family.finance: TRACE
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+  thymeleaf:
+    cache: true
+logging:
+  level:
+    com.family.finance: INFO

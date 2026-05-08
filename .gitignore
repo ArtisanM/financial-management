@@ -1,0 +1,36 @@
+# Maven
+target/
+*.jar
+*.war
+*.class
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.settings/
+.project
+.classpath
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Local env
+.env
+.env.local
+application-local.yml
+application-secrets.yml
+
+# Spring Boot
+/finance.pid
+
+# Test output
+.testcontainers-state
+
+# Local upload dir(开发可能用 /tmp/ 下,生产用 /var/finance/uploads/)
+/uploads/

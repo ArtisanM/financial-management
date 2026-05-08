@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('汇率维护 · 家庭账房')}"></head>
+<body class="min-h-screen relative">
+<div class="fixed top-0 left-0 right-0 h-1 bg-ink z-40"></div>
+<header th:replace="~{fragments/nav :: nav('admin', ${me}, ${nav})}"></header>
+<main class="max-w-[1400px] mx-auto px-6 lg:px-10 py-10 relative z-10 grid grid-cols-12 gap-8">
+  <aside th:replace="~{admin/_sidebar :: sidebar('fx')}"></aside>
+  <section class="col-span-12 md:col-span-9">
+    <div class="mb-8 flex items-end justify-between">
+      <div>
+        <div class="eyebrow mb-2">汇 · 率 · 维 · 护</div>
+        <h1 class="font-display text-4xl font-medium" th:text="|${family.baseCurrency} ↔ USD / HKD|">CNY ↔ USD / HKD</h1>
+        <p class="text-ink-soft text-sm mt-2">每月 1 日凌晨 02:30 自动从 exchangerate.host 拉取上月末汇率。失败时手填覆盖。</p>
+      </div>
+      <form th:action="@{/admin/fx/fetch}" method="post">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+        <button class="btn-paper">↻ 立即拉取</button>
+      </form>
+    </div>
+
+    <div th:if="${flash}" class="mb-4 border border-forest bg-forest/[0.05] px-4 py-2 text-sm" th:text="${flash}">已保存</div>
+
+    <!-- 历史汇率 -->
+    <div class="paper-card overflow-x-auto mb-8">
+      <table class="ledger-table">
+        <thead>
+          <tr>
+            <th>期 ID</th>
+            <th>base</th>
+            <th>quote</th>
+            <th class="num">rate</th>
+            <th>来源</th>
+            <th>更新时间</th>
+          </tr>
+        </thead>
+        <tbody>
+        <tr th:each="r : ${rates}">
+          <td class="font-mono text-xs" th:text="${r.periodId}">1</td>
+          <td class="font-mono text-xs" th:text="${r.baseCurrency}">CNY</td>
+          <td class="font-mono text-xs" th:text="${r.quoteCurrency}">USD</td>
+          <td class="num font-mono tnum" th:text="${r.rate}">7.21</td>
+          <td class="text-xs"
+              th:classappend="${r.source == 'manual' ? 'text-rust' : 'text-ink-soft'}"
+              th:text="${r.source}">exchangerate.host</td>
+          <td class="font-mono text-xs"
+              th:text="${#temporals.format(r.fetchedAt,'yyyy-MM-dd HH:mm')}">2026-05-01 02:30</td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(rates)}"><td colspan="6" class="text-center text-ink-subtle py-6">(暂无汇率数据)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 手填覆盖 -->
+    <div class="bracket-card max-w-3xl">
+      <div class="eyebrow-ink mb-3">手 · 填 · 覆 · 盖</div>
+      <form th:action="@{/admin/fx/override}" method="post" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+        <div>
+          <label class="field-label">周期</label>
+          <select class="field-input bg-transparent" name="periodId" required>
+            <option th:each="p : ${periods}" th:value="${p.id}"
+                    th:text="|${#temporals.format(p.periodStart,'yyyy-MM')} (${p.status})|">2026-05</option>
+          </select>
+        </div>
+        <div>
+          <label class="field-label">quote 币种</label>
+          <select class="field-input bg-transparent" name="quoteCurrency" required>
+            <option value="USD">USD</option>
+            <option value="HKD">HKD</option>
+          </select>
+        </div>
+        <div>
+          <label class="field-label">汇率(1 quote = ? base)</label>
+          <input class="field-input field-input-num" name="rate" placeholder="7.211000" required>
+        </div>
+        <div>
+          <button class="btn-ink">手填覆盖</button>
+        </div>
+      </form>
+    </div>
+  </section>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('数值阈值 · 家庭账房')}"></head>
+<body class="min-h-screen relative">
+<div class="fixed top-0 left-0 right-0 h-1 bg-ink z-40"></div>
+<header th:replace="~{fragments/nav :: nav('admin', ${me}, ${nav})}"></header>
+<main class="max-w-[1400px] mx-auto px-6 lg:px-10 py-10 relative z-10 grid grid-cols-12 gap-8">
+  <aside th:replace="~{admin/_sidebar :: sidebar('tweaks')}"></aside>
+  <section class="col-span-12 md:col-span-9">
+    <div class="mb-8 flex items-end justify-between">
+      <div>
+        <div class="eyebrow mb-2">数 · 值 · 阈 · 值</div>
+        <h1 class="font-display text-4xl font-medium">计算与提示常数</h1>
+        <p class="text-ink-soft text-sm mt-2">v0.1 只读 · v0.2 开放编辑</p>
+      </div>
+      <span class="pill pill-rust">v0.1 只读</span>
+    </div>
+
+    <div class="paper-card overflow-x-auto">
+      <table class="ledger-table">
+        <thead>
+          <tr><th>键</th><th class="num">值</th><th>说明</th></tr>
+        </thead>
+        <tbody>
+          <tr th:each="t : ${tweaks}">
+            <td class="font-mono text-xs" th:text="${t[0]}">key</td>
+            <td class="num font-mono tnum" th:text="${t[1]}">val</td>
+            <td class="text-ink-soft text-sm" th:text="${t[2]}">desc</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="wizard" class="scrim" style="position: relative; height: auto; background: rgba(26,23,20,0.04); padding: 40px 24px;">
+  <div class="envelope-modal max-w-[720px] mx-auto p-8">
+    <div class="flex items-baseline justify-between mb-1">
+      <div class="eyebrow">添加账户向导 · MODAL</div>
+      <a th:href="@{/accounts}" class="font-mono text-xs text-ink-subtle hover:text-ink no-underline">关闭 ×</a>
+    </div>
+    <h3 class="font-display text-2xl mb-1">挑一个模板,或自定义</h3>
+    <p class="text-sm text-ink-soft mb-5">13 个内置模板覆盖常见场景。具体行名在自定义名里写就行。</p>
+
+    <div class="rule-double mb-4"></div>
+
+    <div class="grid grid-cols-2 md:grid-cols-3 gap-2 mb-5">
+      <button th:each="tpl : ${templates}" type="button"
+              class="border border-rule p-3 text-left hover:border-ink hover:bg-card-soft"
+              th:classappend="${tpl.customSlot ? ' border-dashed md:col-span-3' : ''}">
+        <div class="font-display text-sm" th:text="${tpl.displayName}">招商银行</div>
+        <div class="font-mono text-[9px] tracking-wider text-ink-subtle mt-1"
+             th:text="${tpl.type.label} + ' · ' + ${tpl.defaultCurrency}">现金 · CNY</div>
+      </button>
+    </div>
+
+    <form th:action="@{/accounts}" method="post" class="border-t border-rule pt-5">
+      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+      <div class="eyebrow-ink mb-3">新账户</div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div>
+          <label class="field-label">模板</label>
+          <select name="templateId" class="field-input bg-transparent">
+            <option value="">自定义账户</option>
+            <option th:each="tpl : ${templates}" th:value="${tpl.id}" th:text="${tpl.displayName}">招商银行</option>
+          </select>
+        </div>
+        <div>
+          <label class="field-label">显示名 ·必填</label>
+          <input name="displayName" class="field-input" placeholder="如: 招行储蓄卡-工资" required>
+        </div>
+        <div>
+          <label class="field-label">类型</label>
+          <select name="type" class="field-input bg-transparent">
+            <option th:each="t : ${types}" th:value="${t}" th:text="${t.label} + ' (' + ${t.name()} + ')'">现金 (CASH)</option>
+          </select>
+        </div>
+        <div>
+          <label class="field-label">币种</label>
+          <select name="currency" class="field-input bg-transparent">
+            <option th:each="c : ${currencies}" th:value="${c}"
+                    th:text="${c == 'CNY' ? '人民币 (CNY)' : (c == 'USD' ? '美元 (USD)' : (c == 'HKD' ? '港币 (HKD)' : c))}">人民币 (CNY)</option>
+          </select>
+        </div>
+        <div>
+          <label class="field-label">主理人</label>
+          <select name="primaryOwnerMemberId" class="field-input bg-transparent">
+            <option value="">共同</option>
+            <option th:each="m : ${members}" th:value="${m.id}" th:text="${m.displayName}">张伟</option>
+          </select>
+        </div>
+        <div>
+          <label class="field-label">显示顺序</label>
+          <input name="displayOrder" class="field-input field-input-num" placeholder="末尾自动">
+        </div>
+        <div class="md:col-span-2">
+          <label class="field-label">LOAN 默认还款来源</label>
+          <select name="defaultPaymentSourceAccountId" class="field-input bg-transparent">
+            <option value="">不设置</option>
+            <option th:each="row : ${rows}" th:if="${row.account.type.name() != 'LOAN'}"
+                    th:value="${row.account.id}" th:text="${row.account.displayName}">招行储蓄卡-工资</option>
+          </select>
+        </div>
+      </div>
+      <div class="flex justify-end mt-6 gap-3">
+        <a th:href="@{/accounts}" class="btn-paper no-underline">取消</a>
+        <button class="btn-ink">+ 添加账户</button>
+      </div>
+    </form>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('月度填报 · 家庭账房')}"></head>
+<body class="min-h-screen relative">
+
+<div class="fixed top-0 left-0 right-0 h-1 bg-ink z-40"></div>
+<header th:replace="~{fragments/nav :: nav('entry', ${me}, ${nav})}"></header>
+
+<main class="max-w-[1400px] mx-auto px-6 lg:px-10 py-10 relative z-10">
+  <section class="mb-8">
+    <div class="flex items-end justify-between flex-wrap gap-6">
+      <div>
+        <div class="eyebrow mb-2">填 · 报 · 月 · 度</div>
+        <h1 class="font-display text-5xl font-medium tracking-tight">
+          本月账册
+          <span class="font-mono text-base text-ink-subtle ml-3"
+                th:text="${#temporals.format(period.periodStart, 'yyyy.MM.dd')} + ' - ' + ${#temporals.format(period.periodEnd, 'yyyy.MM.dd')}">2026.05.01 - 2026.05.31</span>
+        </h1>
+        <p class="text-ink-soft text-sm mt-2">余额驱动填报:保存期末余额后,本行会按现金流与转账实时轧差。</p>
+      </div>
+      <div class="flex items-center gap-3">
+        <a th:href="@{/entry(mine=${mineOnly})}" class="btn-paper no-underline">本期</a>
+        <select class="font-mono text-[11px] tracking-[0.14em] uppercase border border-rule px-4 py-2 bg-card"
+                onchange="location.href='/entry?period=' + this.value">
+          <option th:each="p : ${periods}" th:value="${p.id}" th:selected="${p.id == period.id}"
+                  th:text="${#temporals.format(p.periodStart, 'yyyy · MM')} + ' · ' + ${p.status}">2026 · 05 · OPEN</option>
+        </select>
+      </div>
+    </div>
+  </section>
+
+  <section class="mb-8 paper-card p-6">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 col-rule">
+      <div>
+        <div class="eyebrow-ink mb-2">本期总进度</div>
+        <div class="flex items-baseline gap-2 mb-3">
+          <span class="font-display text-4xl tnum" th:text="${doneCount}">5</span>
+          <span class="text-ink-soft font-mono" th:text="'/ ' + ${#lists.size(rows)} + ' 账户'">/ 7 账户</span>
+        </div>
+        <div class="h-1 bg-paper-deep">
+          <div class="h-1 bg-ink" style="width: 70%"></div>
+        </div>
+      </div>
+      <div>
+        <div class="eyebrow-ink mb-2">当前视图</div>
+        <div class="flex items-baseline gap-2 mb-3">
+          <span class="font-display text-4xl tnum" th:text="${mineOnly ? '仅我' : '全家'}">全家</span>
+        </div>
+        <p class="text-xs text-ink-soft mt-2">本页支持行内余额、现金流与转账登记。</p>
+      </div>
+      <div>
+        <div class="eyebrow-ink mb-2">周期状态</div>
+        <div class="flex items-baseline gap-2 mb-3">
+          <span class="font-display text-4xl tnum" th:text="${period.status}">OPEN</span>
+        </div>
+        <p class="text-xs text-ink-soft mt-2" th:text="'本期截止 ' + ${#temporals.format(period.periodEnd, 'dd 日')}">本期截止 31 日</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="flex items-center justify-between mb-6 flex-wrap gap-4">
+    <div class="flex border border-rule">
+      <a th:href="@{/entry(period=${period.id},mine=false)}"
+         class="font-mono text-[11px] tracking-[0.14em] px-4 py-2 no-underline"
+         th:classappend="${!mineOnly ? ' bg-ink text-paper' : ' text-ink-soft hover:bg-card-soft'}">全部</a>
+      <a th:href="@{/entry(period=${period.id},mine=true)}"
+         class="font-mono text-[11px] tracking-[0.14em] px-4 py-2 border-l border-rule no-underline"
+         th:classappend="${mineOnly ? ' bg-ink text-paper' : ' text-ink-soft hover:bg-card-soft'}">仅我</a>
+    </div>
+    <div class="flex items-center gap-2">
+      <button class="btn-paper" onclick="document.querySelector('[id^=entry-row-] select[name=toAccountId]')?.focus()">+ 转账</button>
+      <a th:href="@{/accounts/new}" class="btn-paper no-underline">+ 新账户</a>
+    </div>
+  </section>
+
+  <section th:if="${accountFilter != null}" class="mb-6 paper-card px-5 py-3 flex items-center justify-between bg-card-soft">
+    <span class="font-mono text-xs text-ink-soft">已按账户筛选 · 仅显示 1 个账户</span>
+    <a th:href="@{/entry(period=${period.id},mine=${mineOnly})}" class="font-mono text-[11px] text-brass-deep no-underline">↺ 清除筛选,显示全部</a>
+  </section>
+
+  <section class="mb-10">
+    <div class="flex items-baseline justify-between mb-4 rule-x pt-4">
+      <h2 class="font-display text-xl font-medium" th:text="${mineOnly ? me.displayName + ' 主理' : '全家账户'}">全家账户</h2>
+      <span class="font-mono text-[10px] tracking-[0.16em] text-ink-subtle uppercase"
+            th:text="${#lists.size(rows)} + ' 个账户 · 折叠行'">11 个账户 · 折叠行</span>
+    </div>
+
+    <th:block th:each="row : ${rows}">
+      <div th:replace="~{entry/_row :: row(${row})}"></div>
+    </th:block>
+
+    <div th:if="${#lists.isEmpty(rows)}" class="paper-card p-8 text-center text-ink-soft">
+      当前周期还没有账户待展示。
+    </div>
+  </section>
+
+  <section class="border-t-4 border-double border-ink pt-6">
+    <div class="flex items-center justify-between flex-wrap gap-4">
+      <div>
+        <div class="eyebrow mb-1">最后一步</div>
+        <h3 class="font-display text-2xl font-medium">提交本期</h3>
+        <p class="text-sm text-ink-soft mt-1 max-w-xl">所有应填账户完成后,全员提交会自动关闭周期并触发指标校验。</p>
+      </div>
+      <form th:action="@{/entry/{id}/complete(id=${period.id})}" method="post">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+        <button class="btn-ink">✓ 我已记账完毕 · SIGN OFF</button>
+      </form>
+    </div>
+  </section>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('编辑账户 · 家庭账房')}"></head>
+<body class="min-h-screen relative">
+
+<div class="fixed top-0 left-0 right-0 h-1 bg-ink z-40"></div>
+<header th:replace="~{fragments/nav :: nav('accounts', ${me}, ${nav})}"></header>
+
+<main class="max-w-[760px] mx-auto px-6 lg:px-10 py-12 relative z-10">
+  <section class="mb-8">
+    <div class="eyebrow mb-2">编 · 辑 · 账 · 户</div>
+    <h1 class="font-display text-4xl font-medium tracking-tight">
+      <span th:text="${account.displayName}">招行储蓄卡-工资</span>
+      <span class="font-mono text-base text-brass-deep ml-2"
+            th:text="'#' + ${account.id} + ' · ' + ${account.type.label} + ' · ' + ${account.currency}">#1 · 现金 · CNY</span>
+    </h1>
+    <p class="text-ink-soft text-sm mt-3">修改账户的基础信息。改动会写入审计日志,但不影响历史快照与流水。</p>
+  </section>
+
+  <form th:action="@{/accounts/{id}/edit(id=${account.id})}" method="post" class="paper-card p-8">
+    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+    <input type="hidden" name="templateId" th:value="${account.templateId}">
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <div class="md:col-span-2">
+        <label class="field-label">显示名 ·必填</label>
+        <input name="displayName" class="field-input" th:value="${account.displayName}" required>
+      </div>
+
+      <div>
+        <label class="field-label">类型</label>
+        <select name="type" class="field-input bg-transparent">
+          <option th:each="t : ${types}" th:value="${t}" th:selected="${t == account.type}"
+                  th:text="${t.label} + ' (' + ${t.name()} + ')'">现金 (CASH)</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="field-label">币种</label>
+        <select name="currency" class="field-input bg-transparent">
+          <option th:each="c : ${currencies}" th:value="${c}" th:selected="${c == account.currency}"
+                  th:text="${c == 'CNY' ? '人民币 (CNY)' : (c == 'USD' ? '美元 (USD)' : (c == 'HKD' ? '港币 (HKD)' : c))}">人民币 (CNY)</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="field-label">主理人</label>
+        <select name="primaryOwnerMemberId" class="field-input bg-transparent">
+          <option value="">共同(无单一主理)</option>
+          <option th:each="m : ${members}" th:value="${m.id}"
+                  th:selected="${m.id == account.primaryOwnerMemberId}"
+                  th:text="${m.displayName}">张伟</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="field-label">显示顺序</label>
+        <input name="displayOrder" type="number" class="field-input field-input-num" th:value="${account.displayOrder}">
+      </div>
+
+      <div class="md:col-span-2">
+        <label class="field-label">默认还款来源(LOAN 类型用)</label>
+        <select name="defaultPaymentSourceAccountId" class="field-input bg-transparent">
+          <option value="">不设置</option>
+          <option th:each="source : ${rows}"
+                  th:if="${source.account.id != account.id and source.account.type.name() != 'LOAN'}"
+                  th:value="${source.account.id}"
+                  th:selected="${source.account.id == account.defaultPaymentSourceAccountId}"
+                  th:text="${source.account.displayName}">招行储蓄卡-工资</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="flex justify-end gap-3 mt-8 pt-6 border-t border-rule">
+      <a th:href="@{/accounts}" class="btn-paper no-underline">取消</a>
+      <button class="btn-ink">保存对账户的修改</button>
+    </div>
+  </form>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

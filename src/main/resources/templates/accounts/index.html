@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('账户与模板 · 家庭账房')}"></head>
+<body class="min-h-screen relative">
+
+<div class="fixed top-0 left-0 right-0 h-1 bg-ink z-40"></div>
+<header th:replace="~{fragments/nav :: nav('accounts', ${me}, ${nav})}"></header>
+
+<main class="max-w-[1400px] mx-auto px-6 lg:px-10 py-10 relative z-10">
+  <section class="mb-8 flex items-end justify-between flex-wrap gap-6">
+    <div>
+      <div class="eyebrow mb-2">账 · 户 · 全 · 览</div>
+      <h1 class="font-display text-5xl font-medium tracking-tight">账户簿</h1>
+      <p class="text-ink-soft text-sm mt-3 max-w-xl">
+        一家共 <span th:text="${#lists.size(rows)}">11</span> 个账户。此处可增改归档、调整主理人与显示顺序;实际填报在
+        <a th:href="@{/entry}" class="brass-link">填报页</a>。
+      </p>
+    </div>
+    <a th:href="@{/accounts/new}" class="btn-ink no-underline">+ 添加账户(开向导)</a>
+  </section>
+
+  <section class="grid grid-cols-2 md:grid-cols-6 gap-px bg-rule mb-8">
+    <div th:each="s : ${summary}" class="bg-card p-4">
+      <div class="font-mono text-[10px] tracking-wider"
+           th:classappend="${s.type.name() == 'LOAN' ? ' text-rust' : ' text-ink-subtle'}"
+           th:text="${s.type}">CASH</div>
+      <div class="font-display text-xl tnum mt-1" th:classappend="${s.type.name() == 'LOAN' ? ' text-rust' : ''}" th:text="${s.count}">4</div>
+      <div class="font-mono text-xs text-ink-soft mt-1" th:text="${s.amountLabel}">¥304k</div>
+    </div>
+  </section>
+
+  <section class="flex items-center gap-3 mb-6 flex-wrap">
+    <span class="font-mono text-[10px] tracking-[0.16em] text-ink-soft uppercase">筛选 ·</span>
+    <span class="pill pill-ink">全部</span>
+    <span class="pill">CASH</span>
+    <span class="pill">STOCK</span>
+    <span class="pill">WEALTH</span>
+    <span class="pill">PROPERTY</span>
+    <span class="pill">LOAN</span>
+    <span class="ml-auto"></span>
+    <a th:href="@{/accounts(archived=${!includeArchived})}" class="btn-ghost no-underline"
+       th:text="${includeArchived ? '隐藏已归档' : '显示已归档'}">显示已归档</a>
+  </section>
+
+  <section class="paper-card overflow-hidden mb-10 hidden md:block">
+    <table class="ledger-table">
+      <thead>
+      <tr>
+        <th>顺序</th>
+        <th>名称</th>
+        <th>类型</th>
+        <th>币种</th>
+        <th>主理人</th>
+        <th>默认还款来源</th>
+        <th class="num">本期末余额</th>
+        <th class="num">操作</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="row : ${rows}" th:classappend="${row.archived ? ' opacity-50' : ''}">
+        <td class="font-mono text-ink-subtle text-xs" th:text="${#numbers.formatInteger(row.account.displayOrder, 3)} + ' ·☰'">001 ·☰</td>
+        <td><span class="font-display" th:text="${row.account.displayName}">招行储蓄卡-工资</span></td>
+        <td>
+          <span class="pill" th:classappend="${row.account.type.name() == 'LOAN' ? ' pill-rust' : (row.account.type.name() == 'WEALTH' ? ' pill-forest' : (row.account.type.name() == 'STOCK' ? ' pill-brass' : ''))}"
+                th:text="${row.account.type}">CASH</span>
+        </td>
+        <td class="font-mono text-xs" th:text="${row.account.currency}">CNY</td>
+        <td class="text-ink-soft" th:text="${row.ownerName}">张伟</td>
+        <td class="text-ink-subtle" th:text="${row.paymentSourceName}">—</td>
+        <td class="num" th:classappend="${row.account.type.name() == 'LOAN' ? ' num-neg' : ''}" th:text="${row.balanceLabel}">¥73,200</td>
+        <td class="text-right whitespace-nowrap">
+          <button class="font-mono text-base text-ink-soft hover:text-brass-deep px-1 align-middle" title="从此账户发起转账">↔</button>
+          <a th:href="@{/accounts/{id}/edit(id=${row.account.id})}" class="btn-ghost no-underline">编辑</a>
+          <form th:if="${!row.archived}" th:action="@{/accounts/{id}/archive(id=${row.account.id})}" method="post" class="inline">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <button class="btn-ghost">归档</button>
+          </form>
+          <form th:if="${row.archived}" th:action="@{/accounts/{id}/restore(id=${row.account.id})}" method="post" class="inline">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <button class="btn-ghost">恢复</button>
+          </form>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="md:hidden space-y-3 mb-10">
+    <div class="text-xs text-ink-subtle font-mono tracking-wider uppercase mb-3 flex items-center justify-between">
+      <span th:text="${#lists.size(rows)} + ' 个账户 · 卡片视图'">11 个账户 · 卡片视图</span>
+      <span>↑↓ 拖动调序</span>
+    </div>
+    <div th:each="row : ${rows}" class="paper-card p-4" th:style="${row.account.type.name() == 'LOAN' ? 'border-color: var(--rust-soft);' : ''}">
+      <div class="flex items-baseline justify-between gap-2 mb-2">
+        <div class="flex-1 min-w-0">
+          <div class="font-display text-base" th:text="${row.account.displayName}">招行储蓄卡-工资</div>
+          <div class="font-mono text-[10px] text-ink-subtle mt-0.5 tracking-wider" th:text="${#numbers.formatInteger(row.account.displayOrder, 3)} + ' · ' + ${row.ownerName}">001 · 张伟</div>
+        </div>
+        <span class="pill" th:classappend="${row.account.type.name() == 'LOAN' ? ' pill-rust' : (row.account.type.name() == 'WEALTH' ? ' pill-forest' : (row.account.type.name() == 'STOCK' ? ' pill-brass' : ''))}"
+              th:text="${row.account.type}">CASH</span>
+      </div>
+      <div class="flex items-baseline justify-between mt-3 pt-3 border-t border-rule-soft">
+        <span class="text-xs text-ink-soft" th:text="${row.account.type.name() == 'LOAN' ? '本期欠款' : '本期末'}">本期末</span>
+        <span class="font-mono text-base tnum" th:classappend="${row.account.type.name() == 'LOAN' ? ' num-neg' : ''}" th:text="${row.balanceLabel}">¥73,200</span>
+      </div>
+      <div class="flex gap-2 mt-3">
+        <a th:href="@{/accounts/{id}/edit(id=${row.account.id})}" class="btn-paper text-[10px] flex-1 justify-center text-center no-underline">编辑</a>
+        <button class="btn-ghost text-[10px]">↔</button>
+        <form th:if="${!row.archived}" th:action="@{/accounts/{id}/archive(id=${row.account.id})}" method="post">
+          <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+          <button class="btn-ghost text-[10px]">归档</button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <th:block th:if="${showWizard}" th:replace="~{accounts/_template-wizard :: wizard}"></th:block>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('家庭设置 · 管理 · 家庭账房')}"></head>
+<body class="min-h-screen relative">
+<div class="fixed top-0 left-0 right-0 h-1 bg-ink z-40"></div>
+<header th:replace="~{fragments/nav :: nav('admin', ${me}, ${nav})}"></header>
+
+<main class="max-w-[1400px] mx-auto px-6 lg:px-10 py-10 relative z-10 grid grid-cols-12 gap-8">
+  <aside th:replace="~{admin/_sidebar :: sidebar('family')}"></aside>
+
+  <section class="col-span-12 md:col-span-9">
+    <div class="mb-8">
+      <div class="eyebrow mb-2">家 · 庭 · 设 · 置</div>
+      <h1 class="font-display text-4xl font-medium">家庭基本信息</h1>
+      <p class="text-ink-soft text-sm mt-2">改动会立刻生效。切换周期类型需先关闭所有 OPEN 周期。</p>
+    </div>
+
+    <div th:if="${flash}" class="mb-4 border border-forest bg-forest/[0.05] px-4 py-2 text-sm" th:text="${flash}">已保存</div>
+
+    <form th:action="@{/admin/family}" method="post" class="bracket-card max-w-3xl space-y-7">
+      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+      <!-- 品牌 + Logo -->
+      <div class="grid grid-cols-12 gap-6 pb-2 border-b border-rule">
+        <div class="col-span-12 md:col-span-4">
+          <div class="eyebrow-ink mb-2">品 · 牌 · 标 · 识</div>
+          <div class="font-display text-sm text-ink-soft mb-3">显示于每页左上角</div>
+
+          <div id="logoPreview" class="aspect-square w-full max-w-[180px] border-2 border-dashed border-rule p-3 flex items-center justify-center bg-paper relative group">
+            <div th:if="${family.logoPath != null}" class="text-center">
+              <img th:src="@{|/uploads/${family.logoPath}|}" alt="logo" class="w-32 h-32 object-contain mx-auto"/>
+              <div class="font-mono text-[10px] text-ink-subtle tracking-wider mt-2">currently · webp</div>
+            </div>
+            <div th:if="${family.logoPath == null}" class="text-center">
+              <div class="w-20 h-20 mx-auto bg-ink text-paper rounded-full flex items-center justify-center font-display text-3xl mb-3" th:text="${#strings.substring(family.brandText,0,1)}">账</div>
+              <div class="font-mono text-[10px] text-ink-subtle tracking-wider">currently · text only</div>
+            </div>
+            <label class="absolute inset-0 bg-ink/70 opacity-0 hover:opacity-100 flex items-center justify-center cursor-pointer transition">
+              <span class="font-mono text-xs text-paper tracking-widest">↑ 上传图片</span>
+              <input type="file" id="logoFile" class="hidden" accept="image/jpeg,image/png,image/webp">
+            </label>
+          </div>
+
+          <p class="font-mono text-[10px] text-ink-subtle mt-3 leading-relaxed tracking-wider">
+            JPEG / PNG / WebP · 上限 5 MB<br/>
+            前端自动压缩为 256×256 WebP 后上传<br/>
+            ≈ 8-12 KB · 存于服务器本地
+          </p>
+
+          <div class="mt-3" th:if="${family.logoPath != null}">
+            <form th:action="@{/admin/family/logo/remove}" method="post">
+              <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+              <button class="btn-ghost" style="color:var(--rust)">移除 logo</button>
+            </form>
+          </div>
+        </div>
+
+        <div class="col-span-12 md:col-span-8 space-y-5">
+          <div>
+            <label class="field-label">家庭名 · DISPLAY NAME</label>
+            <input class="field-input" name="name" th:value="${family.name}" required>
+            <p class="font-mono text-[10px] text-ink-subtle mt-1 tracking-wider">导出文件名 · 标题</p>
+          </div>
+          <div>
+            <label class="field-label">品牌名 · BRAND TEXT</label>
+            <input class="field-input" name="brandText" th:value="${family.brandText}" required>
+            <p class="font-mono text-[10px] text-ink-subtle mt-1 tracking-wider">显示于每页左上角 · 不超过 30 字符</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-6">
+        <div>
+          <label class="field-label">本位币 · BASE CURRENCY</label>
+          <select class="field-input bg-transparent" name="baseCurrency">
+            <option value="CNY" th:selected="${family.baseCurrency == 'CNY'}">CNY · 人民币</option>
+            <option value="USD" th:selected="${family.baseCurrency == 'USD'}">USD</option>
+            <option value="HKD" th:selected="${family.baseCurrency == 'HKD'}">HKD</option>
+          </select>
+        </div>
+        <div>
+          <label class="field-label">周期类型 · PERIOD TYPE</label>
+          <select class="field-input bg-transparent" name="periodType">
+            <option value="MONTHLY" th:selected="${family.periodType.name() == 'MONTHLY'}">月度</option>
+            <option value="WEEKLY"  th:selected="${family.periodType.name() == 'WEEKLY'}">周度</option>
+          </select>
+          <p class="font-mono text-[10px] text-rust mt-1 tracking-wider">⚠ 切换前必须关闭 OPEN 周期</p>
+        </div>
+      </div>
+
+      <div class="rule-double pt-1"></div>
+      <div class="flex justify-end gap-3">
+        <a th:href="@{/admin}" class="btn-paper">放弃</a>
+        <button type="submit" class="btn-ink">保存修改</button>
+      </div>
+    </form>
+  </section>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+
+<script th:inline="javascript">
+// Logo 上传(前端 Canvas 压缩)
+const logoFile = document.getElementById('logoFile');
+if (logoFile) {
+  logoFile.addEventListener('change', async () => {
+    const file = logoFile.files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { alert('原图 > 5MB'); return; }
+    const img = new Image();
+    img.src = URL.createObjectURL(file);
+    await img.decode();
+    const max = 256;
+    const r = Math.min(max / img.width, max / img.height, 1);
+    const c = document.createElement('canvas');
+    c.width  = Math.round(img.width  * r);
+    c.height = Math.round(img.height * r);
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+    const blob = await new Promise(res => c.toBlob(res, 'image/webp', 0.82));
+    if (!blob) { alert('浏览器不支持 WebP 编码,请换 Chrome/Edge'); return; }
+    const fd = new FormData();
+    fd.append('logo', blob, 'logo.webp');
+    const csrf = document.querySelector('meta[name="_csrf"]').content;
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
+    const resp = await fetch(/*[[@{/admin/family/logo}]]*/'/admin/family/logo', {
+      method: 'POST', body: fd, headers: { [csrfHeader]: csrf }
+    });
+    if (resp.ok) location.reload();
+    else alert('上传失败:' + resp.status + ' · ' + await resp.text());
+  });
+}
+</script>
+</body>
+</html>

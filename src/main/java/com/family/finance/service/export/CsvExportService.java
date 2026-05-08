@@ -1,0 +1,211 @@
+package com.family.finance.service.export;
+
+import com.family.finance.domain.account.Account;
+import com.family.finance.domain.family.Family;
+import com.family.finance.domain.flow.CashFlow;
+import com.family.finance.domain.fx.FxRate;
+import com.family.finance.domain.member.Member;
+import com.family.finance.domain.period.Period;
+import com.family.finance.domain.snapshot.PeriodSnapshot;
+import com.family.finance.domain.transfer.Transfer;
+import com.family.finance.repository.AccountMapper;
+import com.family.finance.repository.CashFlowMapper;
+import com.family.finance.repository.FamilyMapper;
+import com.family.finance.repository.FxMapper;
+import com.family.finance.repository.MemberMapper;
+import com.family.finance.repository.PeriodMapper;
+import com.family.finance.repository.SnapshotMapper;
+import com.family.finance.repository.TransferMapper;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
+
+/**
+ * PRD FR-16:一键 CSV 导出。
+ * 打包 8 张表 + README.txt 为 ZIP;每个 CSV 用 UTF-8 BOM 让 Excel 识别中文。
+ */
+@Service
+@RequiredArgsConstructor
+public class CsvExportService {
+    private static final byte[] UTF8_BOM = {(byte) 0xEF, (byte) 0xBB, (byte) 0xBF};
+    private static final DateTimeFormatter STAMP = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+    private final FamilyMapper familyMapper;
+    private final MemberMapper memberMapper;
+    private final AccountMapper accountMapper;
+    private final PeriodMapper periodMapper;
+    private final SnapshotMapper snapshotMapper;
+    private final CashFlowMapper cashFlowMapper;
+    private final TransferMapper transferMapper;
+    private final FxMapper fxMapper;
+
+    public void writeZip(long familyId, OutputStream out) throws IOException {
+        try (ZipOutputStream zip = new ZipOutputStream(out)) {
+            Family family = familyMapper.findById(familyId)
+                    .orElseThrow(() -> new IllegalArgumentException("家庭不存在: " + familyId));
+
+            writeEntry(zip, "families.csv", writer -> {
+                line(writer, "id", "name", "brand_text", "logo_path", "base_currency", "period_type", "created_at", "updated_at");
+                line(writer,
+                        s(family.getId()), e(family.getName()), e(family.getBrandText()), e(family.getLogoPath()),
+                        e(family.getBaseCurrency()), s(family.getPeriodType()),
+                        ts(family.getCreatedAt()), ts(family.getUpdatedAt()));
+            });
+
+            List<Member> members = memberMapper.findActiveByFamily(familyId);
+            writeEntry(zip, "members.csv", writer -> {
+                line(writer, "id", "family_id", "username", "display_name", "role_label",
+                        "must_change_pw", "archived_at", "last_login_at", "created_at");
+                for (Member m : members) {
+                    line(writer,
+                            s(m.getId()), s(m.getFamilyId()), e(m.getUsername()), e(m.getDisplayName()),
+                            e(m.getRoleLabel()), s(m.isMustChangePw()),
+                            ts(m.getArchivedAt()), ts(m.getLastLoginAt()), ts(m.getCreatedAt()));
+                }
+            });
+
+            List<Account> accounts = accountMapper.findAllByFamily(familyId);
+            writeEntry(zip, "accounts.csv", writer -> {
+                line(writer, "id", "family_id", "template_id", "display_name", "type", "currency",
+                        "primary_owner_member_id", "default_payment_source_account_id",
+                        "display_order", "archived_at", "created_at");
+                for (Account a : accounts) {
+                    line(writer,
+                            s(a.getId()), s(a.getFamilyId()), s(a.getTemplateId()),
+                            e(a.getDisplayName()), s(a.getType()), e(a.getCurrency()),
+                            s(a.getPrimaryOwnerMemberId()), s(a.getDefaultPaymentSourceAccountId()),
+                            s(a.getDisplayOrder()), ts(a.getArchivedAt()), ts(a.getCreatedAt()));
+                }
+            });
+
+            List<Period> periods = periodMapper.findAllByFamily(familyId);
+            writeEntry(zip, "periods.csv", writer -> {
+                line(writer, "id", "family_id", "period_type", "period_start", "period_end",
+                        "status", "closed_at", "created_at");
+                for (Period p : periods) {
+                    line(writer,
+                            s(p.getId()), s(p.getFamilyId()), s(p.getPeriodType()),
+                            s(p.getPeriodStart()), s(p.getPeriodEnd()), s(p.getStatus()),
+                            ts(p.getClosedAt()), ts(p.getCreatedAt()));
+                }
+            });
+
+            List<PeriodSnapshot> snapshots = snapshotMapper.findAllByFamily(familyId);
+            writeEntry(zip, "snapshots.csv", writer -> {
+                line(writer, "id", "period_id", "account_id", "end_balance",
+                        "submitted_by", "submitted_at", "note");
+                for (PeriodSnapshot ss : snapshots) {
+                    line(writer,
+                            s(ss.getId()), s(ss.getPeriodId()), s(ss.getAccountId()),
+                            s(ss.getEndBalance()), s(ss.getSubmittedBy()),
+                            ts(ss.getSubmittedAt()), e(ss.getNote()));
+                }
+            });
+
+            List<CashFlow> flows = cashFlowMapper.findAllByFamily(familyId);
+            writeEntry(zip, "cash_flows.csv", writer -> {
+                line(writer, "id", "period_id", "account_id", "kind", "category_code",
+                        "amount", "occurred_at", "note", "submitted_by", "submitted_at");
+                for (CashFlow cf : flows) {
+                    line(writer,
+                            s(cf.getId()), s(cf.getPeriodId()), s(cf.getAccountId()),
+                            s(cf.getKind()), e(cf.getCategoryCode()), s(cf.getAmount()),
+                            s(cf.getOccurredAt()), e(cf.getNote()),
+                            s(cf.getSubmittedBy()), ts(cf.getSubmittedAt()));
+                }
+            });
+
+            List<Transfer> transfers = transferMapper.findAllByFamily(familyId);
+            writeEntry(zip, "transfers.csv", writer -> {
+                line(writer, "id", "period_id", "from_account_id", "to_account_id", "amount",
+                        "occurred_at", "note", "submitted_by", "submitted_at", "is_draft");
+                for (Transfer t : transfers) {
+                    line(writer,
+                            s(t.getId()), s(t.getPeriodId()), s(t.getFromAccountId()), s(t.getToAccountId()),
+                            s(t.getAmount()), s(t.getOccurredAt()), e(t.getNote()),
+                            s(t.getSubmittedBy()), ts(t.getSubmittedAt()), s(t.isDraft()));
+                }
+            });
+
+            List<FxRate> fx = fxMapper.findAllByFamily(familyId);
+            writeEntry(zip, "fx_rates.csv", writer -> {
+                line(writer, "id", "family_id", "base_currency", "quote_currency",
+                        "period_id", "rate", "source", "fetched_at");
+                for (FxRate r : fx) {
+                    line(writer,
+                            s(r.getId()), s(r.getFamilyId()), e(r.getBaseCurrency()), e(r.getQuoteCurrency()),
+                            s(r.getPeriodId()), s(r.getRate()), e(r.getSource()), ts(r.getFetchedAt()));
+                }
+            });
+
+            writeEntry(zip, "README.txt", writer -> {
+                writer.write("家庭账房 v0.1 数据导出\n");
+                writer.write("导出时间: " + STAMP.format(LocalDateTime.now()) + "\n");
+                writer.write("家庭: " + family.getName() + " (id=" + family.getId() + ")\n\n");
+                writer.write("8 张 CSV 表格使用 UTF-8 编码,带 BOM,Excel 可直接打开。\n");
+                writer.write("文件清单:\n");
+                writer.write("  families.csv     家庭基础信息\n");
+                writer.write("  members.csv      成员(不含密码哈希)\n");
+                writer.write("  accounts.csv     账户(含已归档)\n");
+                writer.write("  periods.csv      所有周期\n");
+                writer.write("  snapshots.csv    period_snapshot 月末余额\n");
+                writer.write("  cash_flows.csv   收入/支出流水\n");
+                writer.write("  transfers.csv    跨账户转账(含草稿)\n");
+                writer.write("  fx_rates.csv     汇率快照\n");
+            });
+        }
+    }
+
+    @FunctionalInterface
+    private interface Block {
+        void write(Writer writer) throws IOException;
+    }
+
+    private void writeEntry(ZipOutputStream zip, String name, Block block) throws IOException {
+        zip.putNextEntry(new ZipEntry(name));
+        zip.write(UTF8_BOM);
+        Writer writer = new OutputStreamWriter(zip, StandardCharsets.UTF_8);
+        block.write(writer);
+        writer.flush();
+        zip.closeEntry();
+    }
+
+    private static void line(Writer writer, Object... cells) throws IOException {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < cells.length; i++) {
+            if (i > 0) sb.append(',');
+            sb.append(cells[i] == null ? "" : cells[i]);
+        }
+        sb.append("\r\n");
+        writer.write(sb.toString());
+    }
+
+    /** 包含逗号/引号/换行的字段加引号转义,纯文本字段直出。 */
+    private static String e(Object value) {
+        if (value == null) return "";
+        String s = value.toString();
+        if (s.indexOf(',') < 0 && s.indexOf('"') < 0 && s.indexOf('\n') < 0 && s.indexOf('\r') < 0) {
+            return s;
+        }
+        return '"' + s.replace("\"", "\"\"") + '"';
+    }
+
+    /** 数值/枚举/日期等无逗号风险字段的简单 toString。 */
+    private static String s(Object value) {
+        return value == null ? "" : value.toString();
+    }
+
+    private static String ts(LocalDateTime t) {
+        return t == null ? "" : STAMP.format(t);
+    }
+}
