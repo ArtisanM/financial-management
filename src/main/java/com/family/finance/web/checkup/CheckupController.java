@@ -5,6 +5,8 @@ import com.family.finance.domain.account.Account;
 import com.family.finance.repository.AccountMapper;
 import com.family.finance.service.NavService;
 import com.family.finance.service.ProductCategoryService;
+import com.family.finance.service.checkup.AccountDiagnose;
+import com.family.finance.service.checkup.AccountDiagnoseService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
@@ -38,6 +40,7 @@ public class CheckupController {
     private final NavService navService;
     private final AccountMapper accountMapper;
     private final ProductCategoryService categoryService;
+    private final AccountDiagnoseService accountDiagnoseService;
 
     @GetMapping("/checkup")
     public String checkup(@AuthenticationPrincipal MemberPrincipal me,
@@ -53,17 +56,19 @@ public class CheckupController {
             return "checkup/placeholder-family";
         }
 
-        // 账户维度 · 阶段 1 占位
+        // 账户维度 · 阶段 2 实页 · FR-40b
         Optional<Account> account = accountMapper.findById(accountId)
                 .filter(a -> a.getFamilyId().equals(me.getFamilyId()));
         if (account.isEmpty()) {
             return "redirect:/checkup";
         }
 
+        AccountDiagnose diagnose = accountDiagnoseService.diagnose(me.getFamilyId(), accountId);
         model.addAttribute("scope", "ACCOUNT");
         model.addAttribute("account", account.get());
         model.addAttribute("category",
                 categoryService.findByCode(account.get().getProductCategoryCode()).orElse(null));
-        return "checkup/placeholder-account";
+        model.addAttribute("diagnose", diagnose);
+        return "checkup/account";
     }
 }

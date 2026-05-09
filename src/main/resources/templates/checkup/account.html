@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('账户体检 · 家庭账房')}"></head>
+<body class="min-h-screen relative">
+<div class="fixed top-0 left-0 right-0 h-1 bg-ink z-40"></div>
+<header th:replace="~{fragments/nav :: nav('checkup', ${me}, ${nav})}"></header>
+
+<main class="max-w-[1400px] mx-auto px-6 lg:px-10 py-10 relative z-10">
+
+  <div class="flex items-baseline gap-3 mb-3 font-mono text-[11px] tracking-wider text-ink-subtle">
+    <a th:href="@{/checkup}" class="hover:text-ink no-underline">/ 资产体检</a>
+    <span>›</span>
+    <span class="text-ink">账户维度</span>
+  </div>
+
+  <!-- 顶部账户标签栏 -->
+  <section class="paper-card p-6 mb-8">
+    <div class="flex items-baseline gap-4 flex-wrap">
+      <a th:href="@{/checkup}" class="font-mono text-[10px] tracking-[0.18em] uppercase text-ink-subtle hover:text-ink no-underline">← 全家维度</a>
+      <h1 class="font-display text-3xl md:text-4xl font-medium tracking-tight"
+          th:text="${account.displayName}">账户名</h1>
+      <div class="flex items-center gap-2 flex-wrap">
+        <span class="pill" th:text="${account.type.label} + ' (' + ${account.type.name()} + ')'">现金 (CASH)</span>
+        <span class="pill" th:if="${diagnose.category != null}"
+              th:text="'📊 ' + ${diagnose.category.displayName}">📊 类目</span>
+        <span class="pill" th:if="${diagnose.effectiveRiskLevel != null and diagnose.effectiveRiskLevel > 0}"
+              style="background:rgba(47,93,80,.08);border-color:var(--forest);color:var(--forest)"
+              th:text="${'⚠ 风险 ' + diagnose.riskStars() + (diagnose.riskOverridden ? ' ✎' : '')}">⚠ 风险 ★</span>
+      </div>
+    </div>
+    <p class="text-sm text-ink-soft mt-3" th:if="${diagnose.monthsHeld != null}">
+      持有月数 <span class="font-mono text-ink" th:text="${diagnose.monthsHeld}">12</span>
+      · 当前余额 <span class="font-mono text-ink tnum"
+                       th:text="${account.currency + ' ' + (diagnose.currentBalance != null ? #numbers.formatDecimal(diagnose.currentBalance, 1, 2) : '—')}">CNY 0.00</span>
+      · 较上期 <span class="font-mono tnum"
+                    th:classappend="${diagnose.monthDelta != null and diagnose.monthDelta.signum() > 0 ? ' num-pos' : (diagnose.monthDelta != null and diagnose.monthDelta.signum() < 0 ? ' num-neg' : '')}"
+                    th:text="${diagnose.monthDeltaPctLabel()}">+0.0%</span>
+    </p>
+    <p class="text-sm text-ink-subtle mt-2" th:if="${diagnose.monthsHeld == null}">
+      暂无该账户的历史数据 · 请先在「填报」录入至少一期月末余额
+    </p>
+  </section>
+
+  <!-- STOCK / WEALTH · 4 张投资卡 -->
+  <th:block th:if="${diagnose.investment}">
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-px bg-rule mb-8">
+      <!-- 卡 1 · 收益表现 -->
+      <div class="bg-card p-6">
+        <h3 class="font-display text-xl font-medium mb-4 flex items-baseline gap-3">
+          收益表现 <span class="font-mono text-[10px] tracking-[0.16em] uppercase text-ink-subtle">RETURN</span>
+        </h3>
+        <div class="grid grid-cols-2 gap-x-6 gap-y-4">
+          <div>
+            <div class="kpi-eyebrow">累计损益</div>
+            <div class="font-display text-2xl tnum mt-1"
+                 th:classappend="${diagnose.cumulativePnl != null and diagnose.cumulativePnl.signum() > 0 ? ' num-pos' : (diagnose.cumulativePnl != null and diagnose.cumulativePnl.signum() < 0 ? ' num-neg' : '')}"
+                 th:text="${diagnose.cumulativePnl != null ? (diagnose.cumulativePnl.signum() >= 0 ? '+' : '') + #numbers.formatDecimal(diagnose.cumulativePnl, 1, 2) : '—'}">+¥0.00</div>
+            <div class="font-mono text-[10px] text-ink-soft">已剔除外部资金进出</div>
+          </div>
+          <div>
+            <div class="kpi-eyebrow">当前价值</div>
+            <div class="font-display text-2xl tnum mt-1"
+                 th:text="${diagnose.currentBalance != null ? #numbers.formatDecimal(diagnose.currentBalance, 1, 2) : '—'}">¥0.00</div>
+            <div class="font-mono text-[10px] text-ink-soft"
+                 th:text="${'累计净流入 ' + (diagnose.netPrincipalInjected != null ? #numbers.formatDecimal(diagnose.netPrincipalInjected, 1, 2) : '—')}">累计净流入 0</div>
+          </div>
+          <div>
+            <div class="kpi-eyebrow">年化 XIRR</div>
+            <div class="font-display text-2xl tnum mt-1"
+                 th:classappend="${diagnose.annualizedReturn != null and diagnose.annualizedReturn.signum() > 0 ? ' num-pos' : (diagnose.annualizedReturn != null and diagnose.annualizedReturn.signum() < 0 ? ' num-neg' : '')}"
+                 th:text="${diagnose.annualizedReturnPctLabel()}">—</div>
+            <div class="font-mono text-[10px] text-ink-soft">资金加权 · 区间 12 月</div>
+          </div>
+          <div>
+            <div class="kpi-eyebrow">持有月数</div>
+            <div class="font-display text-2xl tnum mt-1"
+                 th:text="${diagnose.monthsHeld != null ? diagnose.monthsHeld : '—'}">—</div>
+            <div class="font-mono text-[10px] text-ink-soft">已录入快照数</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 卡 2 · 风险刻度 -->
+      <div class="bg-card p-6">
+        <h3 class="font-display text-xl font-medium mb-4 flex items-baseline gap-3">
+          风险刻度 <span class="font-mono text-[10px] tracking-[0.16em] uppercase text-ink-subtle">RISK</span>
+        </h3>
+        <div class="grid grid-cols-2 gap-x-6 gap-y-4">
+          <div>
+            <div class="kpi-eyebrow">最大回撤</div>
+            <div class="font-display text-2xl tnum mt-1"
+                 th:classappend="${diagnose.drawdown != null and diagnose.drawdown.hasDrawdown() ? ' num-neg' : ''}"
+                 th:text="${diagnose.drawdown != null ? diagnose.drawdown.drawdownPct() : '—'}">—</div>
+            <div class="font-mono text-[10px] text-ink-soft"
+                 th:if="${diagnose.drawdown != null and diagnose.drawdown.troughMonth != null}"
+                 th:text="${'于 ' + #temporals.format(diagnose.drawdown.troughMonth, 'yyyy-MM') + ' 触底'}">—</div>
+            <div class="font-mono text-[10px] text-ink-soft"
+                 th:unless="${diagnose.drawdown != null and diagnose.drawdown.troughMonth != null}">样本期内无回撤</div>
+          </div>
+          <div>
+            <div class="kpi-eyebrow">类目风险等级</div>
+            <div class="font-display text-2xl tnum mt-1" style="color:var(--forest)"
+                 th:text="${diagnose.riskStars()}">—</div>
+            <div class="font-mono text-[10px] text-ink-soft"
+                 th:text="${diagnose.effectiveRiskLevel != null ? '★ × ' + diagnose.effectiveRiskLevel + (diagnose.riskOverridden ? ' · 已手工覆盖' : '') : '类目未配置风险'}">—</div>
+          </div>
+          <div>
+            <div class="kpi-eyebrow">回撤高点</div>
+            <div class="font-display text-base tnum mt-2 text-ink-soft"
+                 th:text="${diagnose.drawdown != null and diagnose.drawdown.peakMonth != null ? #temporals.format(diagnose.drawdown.peakMonth, 'yyyy-MM') : '—'}">—</div>
+          </div>
+          <div>
+            <div class="kpi-eyebrow">回撤低点</div>
+            <div class="font-display text-base tnum mt-2 text-ink-soft"
+                 th:text="${diagnose.drawdown != null and diagnose.drawdown.troughMonth != null ? #temporals.format(diagnose.drawdown.troughMonth, 'yyyy-MM') : '—'}">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 卡 3 · 基准对照 -->
+      <div class="bg-card p-6">
+        <h3 class="font-display text-xl font-medium mb-4 flex items-baseline gap-3">
+          基准对照 <span class="font-mono text-[10px] tracking-[0.16em] uppercase text-ink-subtle">BENCHMARK</span>
+        </h3>
+        <th:block th:if="${diagnose.benchmark.status.name() == 'COMPARED'}">
+          <div class="grid grid-cols-3 gap-3 mb-3">
+            <div>
+              <div class="font-mono text-[10px] text-ink-subtle">本账户年化</div>
+              <div class="font-display text-xl tnum mt-0.5"
+                   th:classappend="${diagnose.benchmark.diffPct.signum() >= 0 ? ' num-pos' : ' num-neg'}"
+                   th:text="${diagnose.benchmark.accountPct + '%'}">9.2%</div>
+            </div>
+            <div>
+              <div class="font-mono text-[10px] text-ink-subtle">基准年化</div>
+              <div class="font-display text-xl tnum mt-0.5" style="color:var(--brass-deep)"
+                   th:text="${diagnose.benchmark.benchmarkPct + '%'}">10.5%</div>
+            </div>
+            <div>
+              <div class="font-mono text-[10px] text-ink-subtle">差额</div>
+              <div class="font-display text-xl tnum mt-0.5"
+                   th:classappend="${diagnose.benchmark.diffPct.signum() >= 0 ? ' num-pos' : ' num-neg'}"
+                   th:text="${(diagnose.benchmark.diffPct.signum() >= 0 ? '+' : '') + diagnose.benchmark.diffPct + 'pp'}">-1.3pp</div>
+              <div class="font-mono text-[10px] text-ink-soft" th:text="${diagnose.benchmark.summary()}">—</div>
+            </div>
+          </div>
+          <p class="text-xs text-ink-soft" th:if="${diagnose.category != null}"
+             th:text="${'类目 ' + diagnose.category.displayName + ' · 基准 ' + diagnose.category.benchmarkLabel}">类目 · 基准</p>
+        </th:block>
+        <p class="text-sm text-ink-soft" th:unless="${diagnose.benchmark.status.name() == 'COMPARED'}"
+           th:text="${diagnose.benchmark.summary() == '无基准' ? '此类目未设定稳定基准(如现金/房产),不做对照' : '需要至少 12 期才能给出年化与基准的对照'}">—</p>
+      </div>
+
+      <!-- 卡 4 · 现金流 -->
+      <div class="bg-card p-6">
+        <h3 class="font-display text-xl font-medium mb-4 flex items-baseline gap-3">
+          现金流 <span class="font-mono text-[10px] tracking-[0.16em] uppercase text-ink-subtle">CASH FLOW</span>
+        </h3>
+        <div class="grid grid-cols-2 gap-x-6 gap-y-4">
+          <div>
+            <div class="kpi-eyebrow">累计入账</div>
+            <div class="font-display text-xl tnum num-pos mt-1"
+                 th:text="${'+' + #numbers.formatDecimal(diagnose.cumulativeIncome, 1, 2)}">+¥0.00</div>
+          </div>
+          <div>
+            <div class="kpi-eyebrow">累计出账</div>
+            <div class="font-display text-xl tnum num-neg mt-1"
+                 th:text="${'-' + #numbers.formatDecimal(diagnose.cumulativeExpense, 1, 2)}">-¥0.00</div>
+          </div>
+          <div>
+            <div class="kpi-eyebrow">累计转入</div>
+            <div class="font-display text-xl tnum mt-1"
+                 th:text="${#numbers.formatDecimal(diagnose.cumulativeTransferIn, 1, 2)}">¥0.00</div>
+          </div>
+          <div>
+            <div class="kpi-eyebrow">累计转出</div>
+            <div class="font-display text-xl tnum mt-1"
+                 th:text="${#numbers.formatDecimal(diagnose.cumulativeTransferOut, 1, 2)}">¥0.00</div>
+          </div>
+        </div>
+        <div class="border-t border-rule-soft mt-4 pt-3">
+          <div class="flex items-baseline justify-between">
+            <span class="font-mono text-[11px] tracking-wider text-ink-subtle">净本金投入</span>
+            <span class="font-mono text-base tnum"
+                  th:classappend="${diagnose.netPrincipalInjected.signum() >= 0 ? '' : ' num-neg'}"
+                  th:text="${(diagnose.netPrincipalInjected.signum() >= 0 ? '+' : '') + #numbers.formatDecimal(diagnose.netPrincipalInjected, 1, 2)}">0</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </th:block>
+
+  <!-- CASH · 储蓄诊断卡 -->
+  <th:block th:if="${diagnose.cash}">
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-px bg-rule mb-8">
+      <div class="bg-card p-6">
+        <h3 class="font-display text-xl font-medium mb-4 flex items-baseline gap-3">
+          余额 <span class="font-mono text-[10px] tracking-[0.16em] uppercase text-ink-subtle">BALANCE</span>
+        </h3>
+        <div class="grid grid-cols-2 gap-x-6 gap-y-4">
+          <div>
+            <div class="kpi-eyebrow">当前余额</div>
+            <div class="font-display text-2xl tnum mt-1"
+                 th:text="${diagnose.currentBalance != null ? #numbers.formatDecimal(diagnose.currentBalance, 1, 2) : '—'}">¥0.00</div>
+            <div class="font-mono text-[10px] text-ink-soft" th:text="${account.currency}">CNY</div>
+          </div>
+          <div>
+            <div class="kpi-eyebrow">较上期</div>
+            <div class="font-display text-2xl tnum mt-1"
+                 th:classappend="${diagnose.monthDelta != null and diagnose.monthDelta.signum() > 0 ? ' num-pos' : (diagnose.monthDelta != null and diagnose.monthDelta.signum() < 0 ? ' num-neg' : '')}"
+                 th:text="${diagnose.monthDeltaPctLabel()}">+0.0%</div>
+            <div class="font-mono text-[10px] text-ink-soft"
+                 th:text="${diagnose.monthDelta != null ? (diagnose.monthDelta.signum() >= 0 ? '+' : '') + #numbers.formatDecimal(diagnose.monthDelta, 1, 2) : '—'}">—</div>
+          </div>
+        </div>
+      </div>
+      <div class="bg-card p-6">
+        <h3 class="font-display text-xl font-medium mb-4 flex items-baseline gap-3">
+          流动性 <span class="font-mono text-[10px] tracking-[0.16em] uppercase text-ink-subtle">LIQUIDITY</span>
+        </h3>
+        <div class="space-y-3">
+          <div>
+            <div class="kpi-eyebrow">累计入账</div>
+            <div class="font-display text-xl tnum num-pos mt-1"
+                 th:text="${'+' + #numbers.formatDecimal(diagnose.cumulativeIncome, 1, 2)}">+¥0.00</div>
+          </div>
+          <div>
+            <div class="kpi-eyebrow">累计出账</div>
+            <div class="font-display text-xl tnum num-neg mt-1"
+                 th:text="${'-' + #numbers.formatDecimal(diagnose.cumulativeExpense, 1, 2)}">-¥0.00</div>
+          </div>
+        </div>
+        <p class="text-xs text-ink-soft mt-4">v0.2 阶段 3 将在「全家体检」中合并所有 CASH/WEALTH 流动资产,给出紧急储备月数。</p>
+      </div>
+    </section>
+  </th:block>
+
+  <!-- LOAN · 负债诊断卡 -->
+  <th:block th:if="${diagnose.loan}">
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-px bg-rule mb-8">
+      <div class="bg-card p-6">
+        <h3 class="font-display text-xl font-medium mb-4 flex items-baseline gap-3">
+          欠款余额 <span class="font-mono text-[10px] tracking-[0.16em] uppercase text-ink-subtle">PRINCIPAL</span>
+        </h3>
+        <div class="kpi-eyebrow">当前欠款</div>
+        <div class="font-display text-3xl tnum num-neg mt-1"
+             th:text="${diagnose.currentBalance != null ? #numbers.formatDecimal(diagnose.currentBalance, 1, 2) : '—'}">¥0.00</div>
+        <div class="font-mono text-[10px] text-ink-soft mt-1" th:text="${account.currency}">CNY</div>
+        <p class="text-xs text-ink-subtle mt-4" th:if="${account.defaultPaymentSourceAccountId != null}">
+          默认还款来源已配置(在账户编辑页可改)
+        </p>
+      </div>
+      <div class="bg-card p-6">
+        <h3 class="font-display text-xl font-medium mb-4 flex items-baseline gap-3">
+          还款进度 <span class="font-mono text-[10px] tracking-[0.16em] uppercase text-ink-subtle">PAYDOWN</span>
+        </h3>
+        <div class="grid grid-cols-2 gap-x-6 gap-y-4">
+          <div>
+            <div class="kpi-eyebrow">累计还款(转入)</div>
+            <div class="font-display text-xl tnum num-pos mt-1"
+                 th:text="${'+' + #numbers.formatDecimal(diagnose.cumulativeTransferIn, 1, 2)}">+¥0.00</div>
+            <div class="font-mono text-[10px] text-ink-soft">来自其他账户的转账</div>
+          </div>
+          <div>
+            <div class="kpi-eyebrow">本期变动</div>
+            <div class="font-display text-xl tnum mt-1"
+                 th:classappend="${diagnose.monthDelta != null and diagnose.monthDelta.signum() > 0 ? ' num-pos' : (diagnose.monthDelta != null and diagnose.monthDelta.signum() < 0 ? ' num-neg' : '')}"
+                 th:text="${diagnose.monthDelta != null ? (diagnose.monthDelta.signum() >= 0 ? '+' : '') + #numbers.formatDecimal(diagnose.monthDelta, 1, 2) : '—'}">—</div>
+            <div class="font-mono text-[10px] text-ink-soft">欠款余额方向(LOAN 通常 ≤ 0)</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </th:block>
+
+  <!-- PROPERTY / OTHER · 简卡 -->
+  <th:block th:if="${diagnose.property or (account.type.name() == 'OTHER')}">
+    <section class="paper-card p-6 mb-8">
+      <h3 class="font-display text-xl font-medium mb-4 flex items-baseline gap-3">
+        估值 <span class="font-mono text-[10px] tracking-[0.16em] uppercase text-ink-subtle">VALUATION</span>
+      </h3>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div>
+          <div class="kpi-eyebrow">当前估值</div>
+          <div class="font-display text-2xl tnum mt-1"
+               th:text="${diagnose.currentBalance != null ? #numbers.formatDecimal(diagnose.currentBalance, 1, 2) : '—'}">¥0.00</div>
+          <div class="font-mono text-[10px] text-ink-soft" th:text="${account.currency}">CNY</div>
+        </div>
+        <div>
+          <div class="kpi-eyebrow">较上期</div>
+          <div class="font-display text-2xl tnum mt-1"
+               th:classappend="${diagnose.monthDelta != null and diagnose.monthDelta.signum() > 0 ? ' num-pos' : (diagnose.monthDelta != null and diagnose.monthDelta.signum() < 0 ? ' num-neg' : '')}"
+               th:text="${diagnose.monthDeltaPctLabel()}">—</div>
+        </div>
+        <div>
+          <div class="kpi-eyebrow">已录入月数</div>
+          <div class="font-display text-2xl tnum mt-1"
+               th:text="${diagnose.monthsHeld != null ? diagnose.monthsHeld : '—'}">—</div>
+        </div>
+      </div>
+      <p class="text-xs text-ink-soft mt-4">房产 / 其他类账户的估值由人工填报,不做收益率分析。</p>
+    </section>
+  </th:block>
+
+  <!-- 余额走势 sparkline 区(所有类型通用)-->
+  <section class="paper-card p-6 mb-8" th:if="${!#lists.isEmpty(diagnose.sparkline)}">
+    <h3 class="font-display text-lg font-medium mb-3 flex items-baseline gap-3">
+      余额走势 <span class="font-mono text-[10px] tracking-[0.16em] uppercase text-ink-subtle">TREND · 12M</span>
+    </h3>
+    <div style="height:200px"><canvas id="balanceTrend"></canvas></div>
+  </section>
+
+  <!-- 阶段 3 占位提示 -->
+  <section class="paper-card p-5 bg-card-soft text-sm text-ink-soft" style="border-left: 3px solid var(--brass-deep)">
+    <div class="font-mono text-[10px] tracking-[0.18em] uppercase text-brass-deep mb-1">阶段 3 即将上线</div>
+    <p>智能建议(集中度告警 / 跑赢基准 / 流动性提醒等 11 条规则)+ AI 文案润色将在 v0.2 阶段 3 上线。届时本页将出现 1–3 张「来自账房的提醒」便签卡。</p>
+  </section>
+
+  <script th:inline="javascript">
+    (() => {
+      const sparkData = /*[[${diagnose.sparkline}]]*/ [];
+      const c = document.getElementById('balanceTrend');
+      if (!c || sparkData.length === 0) return;
+      const labels = sparkData.map(p => p.month);
+      const values = sparkData.map(p => p.endBalance == null ? null : Number(p.endBalance));
+      new Chart(c, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: '余额', data: values,
+            borderColor: '#7a5a39', backgroundColor: 'rgba(122,90,57,.08)',
+            tension: .35, fill: true, pointRadius: 3, pointBackgroundColor: '#7a5a39'
+          }]
+        },
+        options: {
+          maintainAspectRatio: false, plugins: { legend: { display: false } },
+          scales: { y: { ticks: { callback: v => v >= 10000 ? (v / 10000).toFixed(1) + '万' : v.toLocaleString() } } }
+        }
+      });
+    })();
+  </script>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>
