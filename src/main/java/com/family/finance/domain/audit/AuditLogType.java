@@ -28,5 +28,7 @@ public enum AuditLogType {
     EXPORT,
     /** v0.2 · LLM 文案润色全部 client 失败,降级到 raw 文案 */
     LLM_DEGRADED,
+    /** v0.2 · 2026-05-10 修订 · LLM 综合诊断输出被 OutputValidator 拒绝(禁词 / 真名泄露 / 长度) */
+    LLM_REJECTED,
     SYSTEM
 }

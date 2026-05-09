@@ -2,7 +2,7 @@
 <html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
 <body>
 <!-- 单张 advice 卡片 fragment · v0.2 FR-40c -->
-<article th:fragment="card(advice, polished)" class="paper-card p-5 advice-card"
+<article th:fragment="card(advice)" class="paper-card p-5 advice-card"
          th:attr="data-rule=${advice.ruleId()},data-severity=${advice.severity().name()},data-account=${advice.accountId()}"
          th:style="${
             advice.severity().name() == 'DANGER' ? 'border-left: 4px solid var(--rust); background: linear-gradient(180deg, rgba(159,74,58,.05) 0%, var(--card) 60%);' :
@@ -23,27 +23,12 @@
               advice.severity().name() == 'WARN'   ? '🔔  ' :
               advice.severity().name() == 'OK'     ? '✓  ' : 'ℹ️  ') + advice.category()
           }">⚠️  集中度告警</span>
-    <div class="flex items-baseline gap-2">
-      <!-- AI 角标:文案被 LLM 润色后才显示 -->
-      <span th:if="${polished == true}" class="inline-flex items-center gap-0.5"
-            title="文案由 LLM 润色 · 数字 100% 由规则引擎计算">
-        <span style="font-size:10px;">✨</span>
-        <span class="font-mono text-[8px] tracking-[0.18em] uppercase text-brass-deep" style="opacity:.7">AI</span>
-      </span>
-      <span class="font-mono text-[9px] uppercase text-ink-subtle" th:text="${advice.ruleId()}">RET-3</span>
-    </div>
+    <span class="font-mono text-[9px] uppercase text-ink-subtle" th:text="${advice.ruleId()}">RET-3</span>
   </div>
-  <h4 class="font-display text-lg font-medium mb-2" th:text="${advice.title()}">建议标题</h4>
-  <p class="text-sm text-ink-soft leading-relaxed mb-3" th:text="${advice.body()}">建议正文</p>
+  <h4 class="font-display text-lg font-medium mb-2" th:text="${advice.rawTitle()}">建议标题</h4>
+  <p class="text-sm text-ink-soft leading-relaxed mb-3" th:text="${advice.rawBody()}">建议正文</p>
 
   <div class="flex items-center gap-2 mt-3 pt-3 border-t border-rule-soft">
-    <!-- AI 润色按钮(未润色时显示)-->
-    <button th:if="${polished != true}" type="button"
-            class="text-[11px] font-mono px-2.5 py-1 border border-brass-deep text-brass-deep hover:bg-brass-deep hover:text-paper transition"
-            th:hx-post="@{|/checkup/advice/${advice.ruleId()}/polish|} + (${advice.accountId()} != null ? '?account=' + ${advice.accountId()} : '')"
-            hx-target="closest .advice-card"
-            hx-swap="outerHTML"
-            hx-headers='{"X-XSRF-TOKEN": "__CSRF__"}'>✨ AI 润色</button>
     <a th:if="${advice.cta() != null}"
        th:href="${advice.accountId() != null ? '/checkup?account=' + advice.accountId() : '/checkup'}"
        class="text-[11px] font-mono px-2.5 py-1 border border-ink bg-ink text-paper no-underline"
@@ -54,10 +39,7 @@
   </div>
 </article>
 
-<!-- empty 占位:规则已不命中时返回 -->
+<!-- empty 占位 -->
 <div th:fragment="empty"></div>
-
-<!-- htmxCard · POST 端点用,从 model 取 ad + polished,再转 card -->
-<div th:fragment="htmxCard" th:replace="~{checkup/_advice-card :: card(${ad}, ${polished})}"></div>
 </body>
 </html>

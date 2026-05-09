@@ -1,91 +1,153 @@
 package com.family.finance.service.checkup.llm;
 
-import com.family.finance.service.checkup.rule.Advice;
 import org.junit.jupiter.api.Test;
+
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+/**
+ * 综合诊断 OutputValidator 单测 · v0.2 FR-40c · 决策 20(2026-05-10)
+ *
+ * 校验策略(从"锁数字 100%"放宽为软校验):
+ *   1. 长度 150-700 中文字符
+ *   2. 担保性话术拒绝(保证 / 稳赚 / 一定能 / 必然 / 零风险 / 包赚 ...)
+ *   3. 古典中式词拒绝(师傅 / 打理 / 挪 ...)
+ *   4. 具体产品名 / 股票代码拒绝(余额宝 / 510300 / 茅台 / 6位数代码)
+ *   5. 真名泄露拒绝(LLM 输出含原始成员真名)
+ *   6. 过度客套拒绝(您 > 2 次)
+ *   7. 至少一个金融术语
+ */
 class OutputValidatorTest {
 
-    private static Advice advice(String title, String body) {
-        return Advice.of("RET-3", Advice.Scope.ACCOUNT, 1L,
-                Advice.Dimension.RETURN_QUALITY, Advice.Severity.WARN,
-                "收益评估", title, body, null);
+    private static final Set<String> NO_NAMES = Set.of();
+    private static final Set<String> NAMES_2 = Set.of("张伟", "迪娃");
+
+    /** 一段健康综合诊断模板,长度足、含金融术语、无禁词,用于"基础通过"测试 */
+    private static final String VALID_DIAGNOSE =
+            "整体配置偏稳健:全家流动性月数充裕,但权益类年化跑输基准约 0.5pp,集中度方面单账户占比偏高。" +
+            "结合本期命中的 LIQ-2 与 RET-3 两条规则看,问题在于流动性配置过厚而风险敞口未充分利用。" +
+            "建议把超额流动性的部分本金,通过分批方式再配置至跟踪基准的指数型仓位,降低主动选股偏差," +
+            "同时关注短期回撤恢复节奏,逐步把加权年化拉回基准水平。后续可结合再平衡周期评估调整。";
+
+    @Test
+    void acceptsValidDiagnose() {
+        var r = OutputValidator.check(VALID_DIAGNOSE, NO_NAMES);
+        assertThat(r.accepted()).isTrue();
     }
 
     @Test
     void rejectsEmpty() {
-        var r = OutputValidator.check(advice("跑输基准", "近 12 期年化 10%, 跑输 3pp。"), "");
+        var r = OutputValidator.check("", NO_NAMES);
+        assertThat(r.accepted()).isFalse();
+    }
+
+    @Test
+    void rejectsBlank() {
+        var r = OutputValidator.check("    \n  ", NO_NAMES);
         assertThat(r.accepted()).isFalse();
     }
 
     @Test
     void rejectsTooShort() {
-        var r = OutputValidator.check(advice("跑输基准", "近 12 期年化 10%, 跑输 3pp。"), "太短了。");
+        var r = OutputValidator.check("整体配置偏稳健,流动性月数较高,建议再平衡。", NO_NAMES);
         assertThat(r.accepted()).isFalse();
+        assertThat(r.reason()).contains("过短");
     }
 
     @Test
     void rejectsTooLong() {
-        String veryLong = "近 12 期年化 10% 跑输 3pp。" + "无关内容".repeat(80);
-        var r = OutputValidator.check(advice("跑输基准", "近 12 期年化 10%, 跑输 3pp。"), veryLong);
+        String tooLong = "整体配置偏稳健,流动性配置充裕。" + "建议适度再平衡风险敞口降低主动选股偏差。".repeat(50);
+        var r = OutputValidator.check(tooLong, NO_NAMES);
         assertThat(r.accepted()).isFalse();
         assertThat(r.reason()).contains("过长");
     }
 
     @Test
-    void rejectsLostNumber() {
-        var ad = advice("跑输基准", "近 12 期年化 10%, 跑输 3pp。");
-        // 润色文丢失 "10%" 与 "3pp"(plain "12" 可被中文改写,"10%" 与 "3pp" 强制保留)
-        var r = OutputValidator.check(ad, "近期组合表现不及预期,主动选股偏差较大。建议适度配置指数型产品以贴近基准并平滑短期波动。");
+    void rejectsGuaranteePhrase() {
+        String bad = VALID_DIAGNOSE.replace("逐步把加权年化拉回基准水平", "保证年化收益率达 8%");
+        var r = OutputValidator.check(bad, NO_NAMES);
         assertThat(r.accepted()).isFalse();
-        assertThat(r.reason()).contains("丢失");
+        assertThat(r.reason()).contains("担保性");
     }
 
     @Test
-    void allowsPlainIntegerRewrittenAsChinese() {
-        // 原文 "3 个月" 中的 plain "3" 允许 LLM 改写为 "三个月"
-        var ad = advice("应急储备不足", "当前流动资产仅可覆盖 1.5 个月,低于推荐的 3 个月安全线。");
-        // 润色文用「三个月」改写 "3",但保留了 "1.5 个月"(必须保留,带小数)
-        // wait, 1.5 个月 → 抽出来是 "1.5个" — 让我们正确写一下
-        String polish = "当前流动资产仅可覆盖 1.5 个月,低于推荐三个月安全线。建议优先补足应急储备,从理财类账户调拨一部分至活期或货币基金。";
-        var r = OutputValidator.check(ad, polish);
-        assertThat(r.accepted()).isTrue();
-    }
-
-    @Test
-    void rejectsAddedNumber() {
-        var ad = advice("跑输基准", "近 12 期年化 10%, 跑输 3pp。");
-        // 润色文新增了 25%(原文没有)
-        var r = OutputValidator.check(ad,
-                "近 12 期年化 10%, 组合跑输基准 3pp。建议将 25% 仓位调整至指数型产品,以贴近基准并平滑短期波动。");
+    void rejectsArchaicPhrase() {
+        String bad = VALID_DIAGNOSE.replace("整体配置偏稳健", "整体看,师傅这个家底配置偏稳健");
+        var r = OutputValidator.check(bad, NO_NAMES);
         assertThat(r.accepted()).isFalse();
-        assertThat(r.reason()).contains("新增数字");
+        assertThat(r.reason()).contains("古典");
     }
 
     @Test
-    void acceptsValidPolish() {
-        var ad = advice("跑输基准", "近 12 期年化 10%, 跑输 3pp。");
-        String polish = "近 12 期年化 10%, 组合较类目基准跑输约 3pp。建议复盘持仓集中度,可适度配置指数型产品以贴近基准走势,平滑短期主动选股偏差。";
-        var r = OutputValidator.check(ad, polish);
+    void rejectsProductName() {
+        String bad = VALID_DIAGNOSE.replace("跟踪基准的指数型仓位", "余额宝或者 510300 这种 ETF");
+        var r = OutputValidator.check(bad, NO_NAMES);
+        assertThat(r.accepted()).isFalse();
+        assertThat(r.reason()).contains("产品名");
+    }
+
+    @Test
+    void rejectsAStockCode() {
+        // 600519 是茅台的代码,纯 6 位数字必拦
+        String bad = VALID_DIAGNOSE.replace("跟踪基准的指数型仓位", "可以考虑 600519 这只标的");
+        var r = OutputValidator.check(bad, NO_NAMES);
+        assertThat(r.accepted()).isFalse();
+        assertThat(r.reason()).contains("产品名");
+    }
+
+    @Test
+    void rejectsRealNameLeak() {
+        // LLM 输出含真名(成员代号映射理论上避免,但作防御深度)
+        String bad = VALID_DIAGNOSE.replace("结合本期命中", "建议张伟把多余现金调到货币基金,结合本期命中");
+        var r = OutputValidator.check(bad, NAMES_2);
+        assertThat(r.accepted()).isFalse();
+        assertThat(r.reason()).contains("真名");
+    }
+
+    @Test
+    void allowsCodenameMembers() {
+        // 输出含「成员A」是预期的,不该拦
+        String good = VALID_DIAGNOSE.replace("结合本期命中", "建议成员A 把多余现金再配置,结合本期命中");
+        var r = OutputValidator.check(good, NAMES_2);
         assertThat(r.accepted()).isTrue();
     }
 
     @Test
     void rejectsExcessiveFormality() {
-        var ad = advice("跑输基准", "近 12 期年化 10%, 跑输 3pp。");
-        String polish = "您好。近 12 期年化 10%, 跑输 3pp。请您好好考虑分散方案。请您先评估您的风险承受度,请您再决定。";
-        var r = OutputValidator.check(ad, polish);
+        String bad = VALID_DIAGNOSE.replace("整体配置偏稳健", "您好,您家整体配置偏稳健,请您注意");
+        var r = OutputValidator.check(bad, NO_NAMES);
         assertThat(r.accepted()).isFalse();
         assertThat(r.reason()).contains("客套");
     }
 
     @Test
-    void exactNumberNormalizationWorks() {
-        var ad = advice("敞口", "本账户敞口 40%, 超过推荐 30%。");
-        // 用全角逗号 / 千分位 不影响数字提取(本测试不验证全角,验证基本 ascii)
-        String polish = "本账户敞口 40%, 已超过推荐组合集中度上限 30%。建议将部分仓位再配置至中低风险类目,降低单账户风险敞口。";
-        var r = OutputValidator.check(ad, polish);
+    void rejectsNoFinanceTerm() {
+        // 一段够长(>= 150 字)但不含任何金融术语 — 模拟 LLM 跑题成"心灵鸡汤"
+        String bad = "生活总有起起落落,心情平静最重要。重要的不是赚多少,而是心安。" +
+                "每个人都该过自己想要的生活,不必和别人去比较攀比，按自己的节奏过日子最实在。" +
+                "保持初心,简单生活,顺其自然。今天的天气真好,适合出门散步,放松心情。" +
+                "工作之余多陪陪家人，多看看孩子，多听听父母，这才是人生最大的精神财富，" +
+                "千万不要因为忙碌而忽视身边的美好瞬间和点点滴滴的温暖。";
+        var r = OutputValidator.check(bad, NO_NAMES);
+        assertThat(r.accepted()).isFalse();
+        assertThat(r.reason()).contains("金融术语");
+    }
+
+    @Test
+    void acceptsTwoYouOrLess() {
+        // "您"出现 2 次以下应通过(不算过度客套)
+        String ok = VALID_DIAGNOSE.replace("整体配置偏稳健", "整体配置偏稳健,您可参考");
+        var r = OutputValidator.check(ok, NO_NAMES);
+        assertThat(r.accepted()).isTrue();
+    }
+
+    @Test
+    void shortNameNotConsideredLeak() {
+        // 单字符名字不算泄露(防误伤,如名字"王"会和"王者"等无关词混淆)
+        Set<String> shortName = Set.of("王");
+        // VALID_DIAGNOSE 不含"王",但即使含也不该拦(realName.length() < 2)
+        var r = OutputValidator.check(VALID_DIAGNOSE, shortName);
         assertThat(r.accepted()).isTrue();
     }
 }

@@ -3,6 +3,7 @@ package com.family.finance.service.checkup.llm;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -21,6 +22,7 @@ import java.util.Map;
  * Bearer:env DEEPSEEK_API_KEY
  */
 @Component
+@Order(2)  // DeepSeek 备用,优先级 2(Qwen 失败时 fallback)
 @Slf4j
 public class DeepSeekLlmClient implements LlmClient {
 
@@ -40,7 +42,8 @@ public class DeepSeekLlmClient implements LlmClient {
         this.apiKey = apiKey == null ? "" : apiKey.trim();
         this.restTemplate = builder
                 .setConnectTimeout(Duration.ofSeconds(5))
-                .setReadTimeout(Duration.ofSeconds(15))
+                // 综合诊断长 prompt,DeepSeek 较慢,加宽到 25s
+                .setReadTimeout(Duration.ofSeconds(25))
                 .build();
     }
 
@@ -58,7 +61,7 @@ public class DeepSeekLlmClient implements LlmClient {
     }
 
     @Override
-    public String polish(String systemPrompt, String userPrompt) {
+    public String chat(String systemPrompt, String userPrompt) {
         if (apiKey.isBlank()) throw new IllegalStateException("DeepSeek API key 未配置");
 
         HttpHeaders h = new HttpHeaders();
@@ -70,8 +73,9 @@ public class DeepSeekLlmClient implements LlmClient {
                         Map.of("role", "system", "content", systemPrompt),
                         Map.of("role", "user", "content", userPrompt)
                 ),
-                "temperature", 0.15,
-                "max_tokens", 320
+                // 综合诊断需要 LLM 有更多发挥(2026-05-10 从 0.15 调到 0.5)
+                "temperature", 0.5,
+                "max_tokens", 750
         );
 
         try {

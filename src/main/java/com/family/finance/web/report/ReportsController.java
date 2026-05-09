@@ -19,6 +19,8 @@ import com.family.finance.repository.FxMapper;
 import com.family.finance.repository.PeriodMapper;
 import com.family.finance.service.FamilyService;
 import com.family.finance.service.NavService;
+import com.family.finance.service.checkup.FamilyDiagnose;
+import com.family.finance.service.checkup.FamilyDiagnoseService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
@@ -48,6 +50,7 @@ public class ReportsController {
     private final AccountMapper accountMapper;
     private final FxMapper fxMapper;
     private final NavService navService;
+    private final FamilyDiagnoseService familyDiagnoseService;
 
     @GetMapping("/reports")
     public String reports(@AuthenticationPrincipal MemberPrincipal me,
@@ -139,6 +142,18 @@ public class ReportsController {
         model.addAttribute("decompPrincipal", decomposition.stream().map(DecompositionPoint::cumulativeNetInflow).toList());
         model.addAttribute("decompPnl", decomposition.stream().map(DecompositionPoint::cumulativePnl).toList());
         model.addAttribute("debtValues", debtTrend.stream().map(TrendPoint::value).toList());
+
+        // v0.2 FR-40e · 风险等级分布(用于 reports 风险敞口环形图)
+        FamilyDiagnose familyDiagnose = familyDiagnoseService.diagnose(me.getFamilyId());
+        model.addAttribute("riskDistribution", familyDiagnose.riskDistribution());
+        model.addAttribute("riskLabels", familyDiagnose.riskDistribution().stream()
+                .map(FamilyDiagnose.RiskBucket::label).toList());
+        model.addAttribute("riskValues", familyDiagnose.riskDistribution().stream()
+                .map(FamilyDiagnose.RiskBucket::amount).toList());
+        model.addAttribute("riskRatios", familyDiagnose.riskDistribution().stream()
+                .map(b -> b.ratio() == null ? BigDecimal.ZERO
+                        : b.ratio().multiply(new BigDecimal("100")).setScale(1, RoundingMode.HALF_EVEN))
+                .toList());
     }
 
     private List<Map<String, Object>> sankeyNodes(FactSlice slice) {

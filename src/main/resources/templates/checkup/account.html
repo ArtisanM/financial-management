@@ -321,7 +321,7 @@
     </div>
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
       <th:block th:each="ad : ${advice}">
-        <div th:replace="~{checkup/_advice-card :: card(advice=${ad}, polished=false)}"></div>
+        <div th:replace="~{checkup/_advice-card :: card(advice=${ad})}"></div>
       </th:block>
     </div>
   </section>
@@ -331,6 +331,19 @@
            style="border-left: 3px solid var(--forest)">
     <div class="font-mono text-[10px] tracking-[0.18em] uppercase text-forest mb-1">本账户体检通过</div>
     <p>当前账户级规则均未命中。继续按当前节奏即可。</p>
+  </section>
+
+  <!-- AI 综合智能诊断 · FR-40c 决策 20(2026-05-10) · 单账户视角 -->
+  <section class="mb-8">
+    <div class="flex items-baseline justify-between mb-3 flex-wrap gap-2">
+      <div>
+        <div class="eyebrow mb-1">资 · 产 · 顾 · 问 · 视 · 角</div>
+        <h3 class="font-display text-xl font-medium">AI 综合诊断 · 单账户</h3>
+      </div>
+      <span class="font-mono text-[10px] tracking-[0.18em] uppercase text-ink-subtle">本账户在全家配置中的位置 + 跨规则建议</span>
+    </div>
+    <div th:with="aiDiagnoseUrl=@{/checkup/diagnose(account=${account.id})}"
+         th:replace="~{checkup/_ai-diagnose :: placeholder}"></div>
   </section>
 
   <script th:inline="javascript">

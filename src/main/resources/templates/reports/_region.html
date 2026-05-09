@@ -88,6 +88,43 @@
     </div>
   </section>
 
+  <!-- v0.2 FR-40e · 风险敞口分布(全家级,与「资产体检」用同一数据源)-->
+  <section class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-12" id="risk-section">
+    <div class="paper-card p-6">
+      <div class="eyebrow mb-1">第 五 表 · 半</div>
+      <h3 class="font-display text-xl font-medium">风险等级分布</h3>
+      <div class="rule-x pt-2 mb-3"></div>
+      <p class="text-xs text-ink-soft mb-3">
+        按 product_category.risk_level 聚合(★1 极低 → ★6 极高),数据口径与「资产体检」全家诊断一致。
+      </p>
+      <div style="height: 280px;"><canvas id="riskDistChart"></canvas></div>
+    </div>
+    <div class="paper-card p-6">
+      <div class="eyebrow mb-1">第 五 表 · 半</div>
+      <h3 class="font-display text-xl font-medium">风险敞口明细</h3>
+      <div class="rule-x pt-2 mb-3"></div>
+      <table class="ledger-table">
+        <thead><tr><th>风险等级</th><th class="num">金额(本位币)</th><th class="num">占比</th></tr></thead>
+        <tbody>
+        <tr th:each="b,it : ${riskDistribution}">
+          <td>
+            <span style="color:var(--forest)" class="font-mono mr-2" th:text="${b.stars()}">★</span>
+            <span class="text-ink-soft" th:text="${b.label}">中</span>
+          </td>
+          <td class="num font-mono tnum" th:text="${'¥' + #numbers.formatDecimal(b.amount, 1, 0)}">¥0</td>
+          <td class="num font-mono tnum" th:text="${riskRatios[__${it.index}__] + '%'}">0%</td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(riskDistribution)}">
+          <td colspan="3" class="text-center text-ink-subtle">暂无数据(请先完成本月填报)</td>
+        </tr>
+        </tbody>
+      </table>
+      <div class="mt-4 pt-3 border-t border-rule-soft">
+        <a th:href="@{/checkup}" class="font-mono text-[10px] tracking-wider text-brass-deep hover:underline no-underline">→ 进入资产体检看完整风险诊断</a>
+      </div>
+    </div>
+  </section>
+
   <section class="mb-12">
     <div class="flex items-end justify-between mb-3">
       <div><div class="eyebrow mb-1">第 六 表</div><h3 class="font-display text-2xl font-medium">账户级收益率</h3></div>
@@ -136,7 +173,10 @@
         debt: [[${debtValues}]],
         sankeyNodes: [[${sankeyNodes}]],
         sankeyLinks: [[${sankeyLinks}]],
-        currency: [[${currency}]]
+        currency: [[${currency}]],
+        riskLabels: [[${riskLabels}]],
+        riskValues: [[${riskValues}]],
+        riskRatios: [[${riskRatios}]]
       };
       const ccySym = data.currency === 'USD' ? '$' : (data.currency === 'HKD' ? 'HK$' : '¥');
       const fmtMoney = (v) => {
@@ -247,6 +287,45 @@
         },
         plugins: [ChartDataLabels]
       });
+
+      // FR-40e · 风险等级分布环形图(2026-05-10)
+      // 颜色梯度:浅绿(★ 极低) → 中黄 → 朱红(★★★★★★ 极高)
+      const riskColors = ['#9bb09a', '#7ea08a', '#a89a55', '#c1873b', '#a55540', '#8a3220'];
+      const riskDist = document.getElementById('riskDistChart');
+      if (riskDist && data.riskValues && data.riskValues.length > 0) {
+        const colors = data.riskLabels.map((_, i) => riskColors[Math.min(i, riskColors.length - 1)]);
+        window.reportCharts.riskDist = new Chart(riskDist, {
+          type: 'doughnut',
+          data: {
+            labels: data.riskLabels,
+            datasets: [{
+              data: data.riskValues,
+              backgroundColor: colors,
+              borderColor: '#fffaf0',
+              borderWidth: 2
+            }]
+          },
+          options: {
+            maintainAspectRatio: false,
+            cutout: '55%',
+            layout: {padding: {top: 8, bottom: 8}},
+            plugins: {
+              legend: {position: 'right', labels: {font: {size: 11}, color: '#3a302a', padding: 8}},
+              title: {display: true, text: '风险等级分布 · ' + data.currency, padding: {bottom: 8}, font: {size: 12, weight: '500'}, color: '#3a302a'},
+              tooltip: {callbacks: {label: (ctx) => ctx.label + ': ' + fmtMoney(ctx.parsed) + ' · ' + (data.riskRatios[ctx.dataIndex] || 0) + '%'}},
+              datalabels: {
+                color: '#fffaf0',
+                font: {size: 10, weight: '600'},
+                formatter: (v, ctx) => {
+                  const r = data.riskRatios[ctx.dataIndex] || 0;
+                  return r > 5 ? r + '%' : '';
+                }
+              }
+            }
+          },
+          plugins: [ChartDataLabels]
+        });
+      }
     })();
   </script>
 </div>

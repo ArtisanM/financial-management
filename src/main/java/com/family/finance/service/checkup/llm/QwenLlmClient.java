@@ -3,6 +3,7 @@ package com.family.finance.service.checkup.llm;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -15,14 +16,16 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 阿里 Qwen-Turbo 客户端 (OpenAI 兼容) · v0.2 FR-40c · 决策 6
+ * 阿里 Qwen-Plus 客户端 (OpenAI 兼容) · v0.2 FR-40c · 决策 6 + 决策 20
  *
  * 端点:https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions
- * Bearer:env DASHSCOPE_API_KEY
+ * 模型:qwen-plus(2026-05-10 从 qwen-turbo 升级,综合诊断需要更强模型)
+ * Bearer:env FINANCE_LLM_QWEN_API_KEY
  *
  * 简单 circuit breaker:连续 3 次失败 → 60 秒拒绝调用。
  */
 @Component
+@Order(1)  // Qwen 主用,优先级 1(数字小 → 优先)
 @Slf4j
 public class QwenLlmClient implements LlmClient {
 
@@ -42,7 +45,8 @@ public class QwenLlmClient implements LlmClient {
         this.apiKey = apiKey == null ? "" : apiKey.trim();
         this.restTemplate = builder
                 .setConnectTimeout(Duration.ofSeconds(5))
-                .setReadTimeout(Duration.ofSeconds(15))
+                // 综合诊断 token 长(输入 1500-2500 / 输出 ~750),qwen-plus p95 约 3-5s,加宽到 25s
+                .setReadTimeout(Duration.ofSeconds(25))
                 .build();
     }
 
@@ -60,7 +64,7 @@ public class QwenLlmClient implements LlmClient {
     }
 
     @Override
-    public String polish(String systemPrompt, String userPrompt) {
+    public String chat(String systemPrompt, String userPrompt) {
         if (apiKey.isBlank()) throw new IllegalStateException("Qwen API key 未配置");
 
         HttpHeaders h = new HttpHeaders();
@@ -72,8 +76,10 @@ public class QwenLlmClient implements LlmClient {
                         Map.of("role", "system", "content", systemPrompt),
                         Map.of("role", "user", "content", userPrompt)
                 ),
-                "temperature", 0.15,
-                "max_tokens", 320
+                // 综合诊断需要 LLM 有更多发挥(2026-05-10 从 0.15 调到 0.5)
+                "temperature", 0.5,
+                // 综合诊断 200-500 字,留 750 max(决策 20)
+                "max_tokens", 750
         );
 
         try {

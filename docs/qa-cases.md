@@ -351,11 +351,29 @@ v0.1 78 条用例继续 PASS;v0.2 阶段 1 新增 10 条全 PASS;无回归。
 
 v0.1 + v0.2 共 143 条 curl + grep 黑盒用例全部通过,0 回归。
 
-含:
-- v02-FR38-1/2/3 dashboard KPI 卡 deep-link 到 /checkup 锚点(allocation / risk / liquidity / return)
-- v02-LLM-LIVE-1 LLM 真实调用(Qwen-Plus,验证 ✨AI 角标渲染 + 数字保真)
-- v02-SOFT-DEL-1~8 软删 endpoint 全链路(包括 OPEN 反向冲销 + CLOSED 拒写 + 不存在 id 拦截)
-- v02-LEDGER-1~6 ledger.csv 导出全链路
+### v0.2 · 决策 20 升级后的最终全量自动化测试结果(2026-05-10 · qwen-plus 真机)
+
+```
+═══════════════════════════════════════
+ 总结: PASS=149  FAIL=0  SKIP=1
+═══════════════════════════════════════
+```
+
+新增内容(从 143 → 149):
+- **FR-40c 综合诊断升级(决策 20)**:旧 v02-ADV-8/9/10 per-advice polish endpoint 删除,
+  替换为 v02-DIAG-1~6(GET /checkup/diagnose 全家 + 账户 + 跨家庭降级 + CASH 账户)
+- **v02-ADV-6/7 重写**:从"AI 润色按钮"改为"AI 综合诊断 placeholder + hx-trigger=load 自动加载"
+- **FR-40e 报表风险等级分布**:v02-FR40E-1/2/3(reports 含「风险等级分布」标题 + #riskDistChart canvas + 风险敞口明细 + 资产体检入口)
+- **v02-LLM-LIVE-1**:LLM 真实调用嗅探(vendor=qwen 综合诊断长文已返回 / 数据脱敏正常)
+
+### v0.2 · 单元测试(JUnit 5)— 决策 20 后
+
+```
+Tests run: 76, Failures: 0, Errors: 0, Skipped: 0
+```
+
+OutputValidatorTest 从 8 个(锁数字模式)→ **15 个**(综合诊断校验:长度 / 担保词 / 古典词 / 产品代码 / 真名泄露 / 客套上限 / 金融术语必现 / 接受合法长文 / 代号 OK)。
+其它 calc/rule 测试不变,合计 76 个。
 
 ### v0.2 · 单元测试(JUnit 5)
 
