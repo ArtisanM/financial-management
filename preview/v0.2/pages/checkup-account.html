@@ -97,9 +97,9 @@
       </div>
     </section>
 
-    <!-- FR-40c 账户级智能建议(3 张便签) -->
+    <!-- FR-40c 账户级智能建议(3 张便签 · 现代投顾语调 + AI 润色)-->
     <section class="mb-8">
-      <div class="flex items-baseline justify-between mb-3">
+      <div class="flex items-baseline justify-between mb-3 flex-wrap gap-2">
         <div>
           <div class="eyebrow mb-1">来 · 自 · 账 · 房 · 的 · 三 · 条 · 提 · 醒</div>
           <h3 class="font-display text-xl font-medium">这个账户值得做的事</h3>
@@ -114,16 +114,25 @@
                  style="border-left: 4px solid var(--rust); background: linear-gradient(180deg, rgba(159,74,58,.05) 0%, var(--card) 60%);">
           <div class="flex items-baseline justify-between mb-3">
             <span class="font-mono text-[10px] tracking-[0.18em] uppercase font-medium" style="color:var(--rust)">⚠️  集 中 度 告 警</span>
-            <span class="font-mono text-[9px] uppercase text-ink-subtle">RISK-1</span>
+            <div class="flex items-baseline gap-2">
+              <span class="inline-flex items-center gap-0.5" title="文案由 DeepSeek AI 润色 · 数字由规则引擎计算">
+                <span style="font-size:10px;">✨</span>
+                <span class="font-mono text-[8px] tracking-[0.18em] uppercase" style="color:var(--rust);opacity:.7">AI</span>
+              </span>
+              <span class="font-mono text-[9px] uppercase text-ink-subtle">RISK-1</span>
+            </div>
           </div>
-          <h4 class="font-display text-lg font-medium mb-2">单账户占比偏高</h4>
+          <h4 class="font-display text-lg font-medium mb-2">单账户敞口超限</h4>
           <p class="text-sm text-ink-soft leading-relaxed mb-3">
-            本账户占总资产 <span class="font-medium text-ink">42%</span>(阈值 30%),且风险等级 ★★★★★。
-            一个账户波动会显著影响家庭净资产。
+            单账户敞口 <span class="font-medium text-ink tnum">42%</span>,
+            超过推荐集中度上限(30%)且风险等级 ★★★★★。
           </p>
           <div class="border-t border-rule-soft pt-3">
             <div class="font-mono text-[10px] tracking-wider text-ink-subtle mb-1.5">💡 建议</div>
-            <p class="text-sm">考虑把 <span class="font-medium">¥80k</span> 转到债券/货币基金,把占比降到 30% 以下。</p>
+            <p class="text-sm">
+              建议将 <span class="font-medium text-ink tnum">¥80,000</span> 再配置至债券基金,
+              预计组合波动率 σ 由 <span class="text-rust">11.2%</span> 降至 <span class="num-pos">8.4%</span>。
+            </p>
           </div>
           <div class="flex gap-2 mt-3 pt-3 border-t border-rule-soft">
             <button class="text-[11px] font-mono px-2.5 py-1 border border-ink bg-ink text-paper">→ 划转</button>
@@ -136,41 +145,72 @@
                  style="border-left: 4px solid var(--brass-deep); background: linear-gradient(180deg, rgba(122,90,57,.04) 0%, var(--card) 60%);">
           <div class="flex items-baseline justify-between mb-3">
             <span class="font-mono text-[10px] tracking-[0.18em] uppercase font-medium" style="color:var(--brass-deep)">🔔  收 益 评 估</span>
-            <span class="font-mono text-[9px] uppercase text-ink-subtle">RET-3</span>
+            <div class="flex items-baseline gap-2">
+              <span class="inline-flex items-center gap-0.5" title="文案由 DeepSeek AI 润色">
+                <span style="font-size:10px;">✨</span>
+                <span class="font-mono text-[8px] tracking-[0.18em] uppercase" style="color:var(--brass-deep);opacity:.7">AI</span>
+              </span>
+              <span class="font-mono text-[9px] uppercase text-ink-subtle">RET-3</span>
+            </div>
           </div>
-          <h4 class="font-display text-lg font-medium mb-2">略跑输 QQQ 基准</h4>
+          <h4 class="font-display text-lg font-medium mb-2">跑输基准 QQQ</h4>
           <p class="text-sm text-ink-soft leading-relaxed mb-3">
-            本账户近 12 月年化 <span class="font-medium text-ink">9.2%</span>,
-            QQQ 同期 <span class="text-ink">10.5%</span>,差距 <span class="text-rust font-medium">−1.3pct</span>。
+            近 12 月年化 <span class="font-medium text-ink tnum">9.2%</span>,
+            跑输基准 QQQ(<span class="text-ink tnum">10.5%</span>)
+            <span class="text-rust font-medium tnum">1.3 个百分点</span>,跟踪误差较大。
           </p>
           <div class="border-t border-rule-soft pt-3">
             <div class="font-mono text-[10px] tracking-wider text-ink-subtle mb-1.5">💡 建议</div>
-            <p class="text-sm">考虑用一部分仓位买 QQQ ETF 直接跟踪基准,减少选股带来的偏差。</p>
+            <p class="text-sm">
+              考虑配置 <span class="font-medium text-ink">30%</span> 仓位至 QQQ ETF 直接跟踪基准,
+              降低主动选股偏差。
+            </p>
           </div>
           <div class="flex gap-2 mt-3 pt-3 border-t border-rule-soft">
             <button class="text-[11px] font-mono px-2.5 py-1 text-ink-subtle hover:text-ink">✕ 不适用</button>
           </div>
         </article>
 
-        <!-- 建议 3 · OK 表现良好 -->
+        <!-- 建议 3 · OK Sharpe 良好 -->
         <article class="paper-card p-5"
                  style="border-left: 4px solid var(--forest); background: linear-gradient(180deg, rgba(47,93,80,.04) 0%, var(--card) 60%);">
           <div class="flex items-baseline justify-between mb-3">
             <span class="font-mono text-[10px] tracking-[0.18em] uppercase font-medium" style="color:var(--forest)">✓  风 险 调 整 收 益</span>
-            <span class="font-mono text-[9px] uppercase text-ink-subtle">RET-2</span>
+            <div class="flex items-baseline gap-2">
+              <span class="inline-flex items-center gap-0.5" title="文案由 DeepSeek AI 润色">
+                <span style="font-size:10px;">✨</span>
+                <span class="font-mono text-[8px] tracking-[0.18em] uppercase" style="color:var(--forest);opacity:.7">AI</span>
+              </span>
+              <span class="font-mono text-[9px] uppercase text-ink-subtle">RET-2</span>
+            </div>
           </div>
-          <h4 class="font-display text-lg font-medium mb-2">Sharpe 评分良好</h4>
+          <h4 class="font-display text-lg font-medium mb-2">风险调整收益优秀</h4>
           <p class="text-sm text-ink-soft leading-relaxed mb-3">
-            年化 <span class="font-medium text-ink">9.2%</span> + Sharpe <span class="font-medium text-ink">0.81</span>(>0.8)— 风险调整收益不错。
+            近 24 月年化 <span class="font-medium text-ink tnum">9.2%</span> +
+            Sharpe <span class="font-medium text-ink tnum">0.81</span>,
+            在中高风险区间内表现优秀。
           </p>
           <div class="border-t border-rule-soft pt-3">
             <div class="font-mono text-[10px] tracking-wider text-ink-subtle mb-1.5">💡 建议</div>
-            <p class="text-sm">维持当前选股结构,但按建议 1 把仓位适度降低。</p>
+            <p class="text-sm">
+              当前仓位结构合理,建议维持。注意基准最大回撤
+              <span class="text-rust font-medium">−12%</span> 的下行风险准备。
+            </p>
           </div>
           <div class="flex gap-2 mt-3 pt-3 border-t border-rule-soft">
             <button class="text-[11px] font-mono px-2.5 py-1 text-ink-subtle hover:text-ink">✕ 不适用</button>
           </div>
         </article>
+      </div>
+
+      <!-- AI 文案层底部说明 -->
+      <div class="mt-3 paper-card px-4 py-2.5 flex items-center gap-2 flex-wrap text-[11px] font-mono"
+           style="background:var(--card-soft); border-left: 3px solid var(--brass-deep)">
+        <span class="text-brass-deep">✨ 文 · 案 · AI · 润 · 色</span>
+        <span class="text-ink-subtle">·</span>
+        <span class="text-ink-soft">数字 100% 由规则引擎实时计算 · LLM 仅在硬事实约束内组装语言</span>
+        <span class="text-ink-subtle ml-auto">·</span>
+        <a href="ai-advice-design.html" class="text-brass-deep hover:underline">→ 看 AI 介入边界设计</a>
       </div>
     </section>
 
