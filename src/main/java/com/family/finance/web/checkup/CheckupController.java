@@ -2,11 +2,19 @@ package com.family.finance.web.checkup;
 
 import com.family.finance.auth.MemberPrincipal;
 import com.family.finance.domain.account.Account;
+import com.family.finance.factview.AccountPeriodFact;
+import com.family.finance.factview.FactSlice;
+import com.family.finance.factview.FactViewService;
 import com.family.finance.repository.AccountMapper;
 import com.family.finance.service.NavService;
 import com.family.finance.service.ProductCategoryService;
 import com.family.finance.service.checkup.AccountDiagnose;
 import com.family.finance.service.checkup.AccountDiagnoseService;
+import com.family.finance.service.checkup.FamilyDiagnose;
+import com.family.finance.service.checkup.FamilyDiagnoseService;
+import com.family.finance.service.checkup.rule.Advice;
+import com.family.finance.service.checkup.rule.AdviceEngine;
+import com.family.finance.service.checkup.rule.RuleContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
@@ -14,24 +22,19 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 /**
  * v0.2 资产体检模块 · 入口 controller(FR-40)
  *
- * <p>当前是 <strong>阶段 1 占位</strong>:
  * <ul>
- *   <li>{@code GET /checkup} → 全家维度占位页</li>
- *   <li>{@code GET /checkup?account=X} → 账户维度占位页</li>
+ *   <li>{@code GET /checkup} → 全家维度(FR-40a)+ 6 条家庭级规则</li>
+ *   <li>{@code GET /checkup?account=X} → 账户维度(FR-40b)+ 10 条账户级规则</li>
  * </ul>
- *
- * 后续阶段:
- * <ul>
- *   <li>阶段 2:account 维度 + FR-40b 类型差异化诊断</li>
- *   <li>阶段 3:family 维度 + FR-40a 全家诊断 + FR-40c 智能建议 + LLM 文案润色</li>
- * </ul>
- *
- * 详见 PRD § FR-40 / TDD § 决策 1
  */
 @Controller
 @RequiredArgsConstructor
@@ -41,6 +44,9 @@ public class CheckupController {
     private final AccountMapper accountMapper;
     private final ProductCategoryService categoryService;
     private final AccountDiagnoseService accountDiagnoseService;
+    private final FamilyDiagnoseService familyDiagnoseService;
+    private final AdviceEngine adviceEngine;
+    private final FactViewService factViewService;
 
     @GetMapping("/checkup")
     public String checkup(@AuthenticationPrincipal MemberPrincipal me,
@@ -50,13 +56,21 @@ public class CheckupController {
         model.addAttribute("nav", navService.load(me));
         model.addAttribute("active", "checkup");
 
+        BigDecimal avgMonthlyExpense = computeAvgMonthlyExpense(me.getFamilyId());
+
         if (accountId == null) {
-            // 全家维度 · 阶段 1 占位
+            FamilyDiagnose diagnose = familyDiagnoseService.diagnose(me.getFamilyId());
+            // 收集所有账户的 diagnose,供家庭级规则使用
+            List<AccountDiagnose> accounts = collectAllAccountDiagnoses(me.getFamilyId());
+            RuleContext ctx = RuleContext.forFamily(diagnose, accounts, avgMonthlyExpense);
+            List<Advice> advice = adviceEngine.evaluate(ctx);
+
             model.addAttribute("scope", "FAMILY");
-            return "checkup/placeholder-family";
+            model.addAttribute("diagnose", diagnose);
+            model.addAttribute("advice", advice);
+            return "checkup/family";
         }
 
-        // 账户维度 · 阶段 2 实页 · FR-40b
         Optional<Account> account = accountMapper.findById(accountId)
                 .filter(a -> a.getFamilyId().equals(me.getFamilyId()));
         if (account.isEmpty()) {
@@ -64,11 +78,41 @@ public class CheckupController {
         }
 
         AccountDiagnose diagnose = accountDiagnoseService.diagnose(me.getFamilyId(), accountId);
+        FamilyDiagnose family = familyDiagnoseService.diagnose(me.getFamilyId());
+        RuleContext ctx = RuleContext.forAccount(diagnose, family, List.of(diagnose), avgMonthlyExpense);
+        List<Advice> advice = adviceEngine.evaluate(ctx);
+
         model.addAttribute("scope", "ACCOUNT");
         model.addAttribute("account", account.get());
         model.addAttribute("category",
                 categoryService.findByCode(account.get().getProductCategoryCode()).orElse(null));
         model.addAttribute("diagnose", diagnose);
+        model.addAttribute("advice", advice);
         return "checkup/account";
+    }
+
+    private List<AccountDiagnose> collectAllAccountDiagnoses(long familyId) {
+        List<Account> accounts = accountMapper.findActiveByFamily(familyId);
+        List<AccountDiagnose> out = new ArrayList<>();
+        for (Account a : accounts) {
+            try {
+                out.add(accountDiagnoseService.diagnose(familyId, a.getId()));
+            } catch (Exception ignored) {
+                // 单账户诊断失败不阻塞家庭级
+            }
+        }
+        return out;
+    }
+
+    /** 家庭近 12 月月均 EXPENSE(本位币),用于流动性规则 */
+    private BigDecimal computeAvgMonthlyExpense(long familyId) {
+        FactSlice slice = factViewService.loadDefault(familyId);
+        if (slice.periodIds().isEmpty()) return BigDecimal.ZERO;
+        BigDecimal total = slice.rows().stream()
+                .map(AccountPeriodFact::expenseBase)
+                .filter(java.util.Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        int n = Math.max(1, slice.periodIds().size());
+        return total.divide(BigDecimal.valueOf(n), 2, RoundingMode.HALF_EVEN);
     }
 }

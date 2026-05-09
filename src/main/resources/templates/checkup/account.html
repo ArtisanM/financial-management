@@ -309,10 +309,28 @@
     <div style="height:200px"><canvas id="balanceTrend"></canvas></div>
   </section>
 
-  <!-- 阶段 3 占位提示 -->
-  <section class="paper-card p-5 bg-card-soft text-sm text-ink-soft" style="border-left: 3px solid var(--brass-deep)">
-    <div class="font-mono text-[10px] tracking-[0.18em] uppercase text-brass-deep mb-1">阶段 3 即将上线</div>
-    <p>智能建议(集中度告警 / 跑赢基准 / 流动性提醒等 11 条规则)+ AI 文案润色将在 v0.2 阶段 3 上线。届时本页将出现 1–3 张「来自账房的提醒」便签卡。</p>
+  <!-- 智能建议 · FR-40c · 10 条账户级规则命中后显示 -->
+  <section class="mb-8" th:if="${!#lists.isEmpty(advice)}">
+    <div class="flex items-baseline justify-between mb-3 flex-wrap gap-2">
+      <div>
+        <div class="eyebrow mb-1">来 · 自 · 账 · 房 · 的 · 提 · 醒</div>
+        <h3 class="font-display text-xl font-medium">这个账户值得做的事</h3>
+      </div>
+      <span class="font-mono text-[10px] tracking-[0.18em] uppercase text-ink-subtle"
+            th:text="|账户级 · 命中 ${#lists.size(advice)} 条|">账户级 · 命中 0 条</span>
+    </div>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
+      <th:block th:each="ad : ${advice}">
+        <div th:replace="~{checkup/_advice-card :: card(advice=${ad}, polished=false)}"></div>
+      </th:block>
+    </div>
+  </section>
+
+  <section class="paper-card p-5 bg-card-soft text-sm text-ink-soft"
+           th:if="${#lists.isEmpty(advice)}"
+           style="border-left: 3px solid var(--forest)">
+    <div class="font-mono text-[10px] tracking-[0.18em] uppercase text-forest mb-1">本账户体检通过</div>
+    <p>当前账户级规则均未命中。继续按当前节奏即可。</p>
   </section>
 
   <script th:inline="javascript">

@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('全家体检 · 家庭账房')}"></head>
+<body class="min-h-screen relative">
+<div class="fixed top-0 left-0 right-0 h-1 bg-ink z-40"></div>
+<header th:replace="~{fragments/nav :: nav('checkup', ${me}, ${nav})}"></header>
+
+<main class="max-w-[1400px] mx-auto px-6 lg:px-10 py-10 relative z-10">
+
+  <section class="mb-8">
+    <div class="eyebrow mb-2">资 · 产 · 体 · 检 · 全 · 家</div>
+    <h1 class="font-display text-5xl font-medium tracking-tight">家庭资产 · 体检报告</h1>
+    <p class="text-ink-soft text-sm mt-3 max-w-2xl">
+      4 个核心维度:流动性 / 风险与配置 / 收益质量 / 负债健康。点击账户列表行可下钻到「账户级体检」。
+    </p>
+  </section>
+
+  <!-- 顶部 KPI 横条 -->
+  <section class="grid grid-cols-2 lg:grid-cols-5 gap-px bg-rule mb-8">
+    <div class="kpi-card">
+      <span class="kpi-eyebrow">净资产</span>
+      <div class="kpi-value tnum"
+           th:text="${diagnose.kpi.netWorth != null ? '¥' + #numbers.formatDecimal(diagnose.kpi.netWorth, 1, 0) : '—'}">¥0</div>
+      <div class="kpi-delta"
+           th:classappend="${diagnose.kpi.netWorthDelta != null and diagnose.kpi.netWorthDelta.signum() > 0 ? ' num-pos' : (diagnose.kpi.netWorthDelta != null and diagnose.kpi.netWorthDelta.signum() < 0 ? ' num-neg' : '')}"
+           th:text="${diagnose.kpi.netWorthDelta != null ? (diagnose.kpi.netWorthDelta.signum() >= 0 ? '+' : '') + #numbers.formatDecimal(diagnose.kpi.netWorthDelta, 1, 0) : '较上期 —'}">较上期 —</div>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-eyebrow">总资产</span>
+      <div class="kpi-value tnum"
+           th:text="${diagnose.kpi.totalAssets != null ? '¥' + #numbers.formatDecimal(diagnose.kpi.totalAssets, 1, 0) : '—'}">¥0</div>
+      <div class="kpi-delta">不含 LOAN</div>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-eyebrow">总负债</span>
+      <div class="kpi-value tnum num-neg"
+           th:text="${diagnose.kpi.totalLiabilities != null ? '¥' + #numbers.formatDecimal(diagnose.kpi.totalLiabilities, 1, 0) : '—'}">¥0</div>
+      <div class="kpi-delta">仅 LOAN</div>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-eyebrow">家庭年化</span>
+      <div class="kpi-value tnum"
+           th:classappend="${diagnose.familyXirr != null and diagnose.familyXirr.signum() > 0 ? ' num-pos' : (diagnose.familyXirr != null and diagnose.familyXirr.signum() < 0 ? ' num-neg' : '')}"
+           th:text="${diagnose.familyXirrPctLabel()}">—</div>
+      <div class="kpi-delta">资金加权 XIRR</div>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-eyebrow">紧急储备</span>
+      <div class="kpi-value tnum" th:text="${diagnose.emergencyMonthsLabel()}">—</div>
+      <div class="kpi-delta">流动资产 / 月均支出</div>
+    </div>
+  </section>
+
+  <!-- 4 张体检卡 -->
+  <section class="grid grid-cols-1 lg:grid-cols-2 gap-px bg-rule mb-8">
+
+    <!-- 卡 1 · 资产配置 -->
+    <div class="bg-card p-6">
+      <h3 class="font-display text-xl font-medium mb-4 flex items-baseline gap-3">
+        资产配置 <span class="font-mono text-[10px] tracking-[0.16em] uppercase text-ink-subtle">ALLOCATION</span>
+      </h3>
+      <div style="height:240px"><canvas id="allocChart"></canvas></div>
+      <div class="mt-4 space-y-1.5 text-xs">
+        <div th:each="s : ${diagnose.allocation}" class="flex items-center justify-between">
+          <span class="font-mono text-ink-soft" th:text="${s.label.replace(#strings.toString('\n'), ' ')}">类型</span>
+          <span class="font-mono tnum"
+                th:text="${'¥' + #numbers.formatDecimal(s.value, 1, 0) + ' · ' + #numbers.formatDecimal(s.ratio.multiply(new java.math.BigDecimal(100)), 1, 1) + '%'}">¥0 · 0%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 卡 2 · 风险分布 -->
+    <div class="bg-card p-6">
+      <h3 class="font-display text-xl font-medium mb-4 flex items-baseline gap-3">
+        风险敞口 <span class="font-mono text-[10px] tracking-[0.16em] uppercase text-ink-subtle">RISK DISTRIBUTION</span>
+      </h3>
+      <div style="height:240px"><canvas id="riskChart"></canvas></div>
+      <div class="mt-4 space-y-1.5 text-xs">
+        <div th:each="b : ${diagnose.riskDistribution}" class="flex items-center justify-between">
+          <span class="font-mono text-ink-soft">
+            <span style="color:var(--forest)" th:text="${b.stars()}">—</span>
+            <span class="ml-2" th:text="${b.label}">中</span>
+          </span>
+          <span class="font-mono tnum"
+                th:text="${'¥' + #numbers.formatDecimal(b.amount, 1, 0) + ' · ' + #numbers.formatDecimal(b.ratio.multiply(new java.math.BigDecimal(100)), 1, 1) + '%'}">¥0 · 0%</span>
+        </div>
+      </div>
+      <p class="text-[10px] text-ink-subtle mt-3" th:if="${#lists.isEmpty(diagnose.riskDistribution)}">
+        暂无风险分布数据(请先完成本月填报)
+      </p>
+    </div>
+
+    <!-- 卡 3 · 流动性 -->
+    <div class="bg-card p-6">
+      <h3 class="font-display text-xl font-medium mb-4 flex items-baseline gap-3">
+        流动性 <span class="font-mono text-[10px] tracking-[0.16em] uppercase text-ink-subtle">LIQUIDITY</span>
+      </h3>
+      <div class="grid grid-cols-2 gap-x-6 gap-y-4">
+        <div>
+          <div class="kpi-eyebrow">流动资产</div>
+          <div class="font-display text-2xl tnum mt-1"
+               th:text="${diagnose.liquidAssets != null ? '¥' + #numbers.formatDecimal(diagnose.liquidAssets, 1, 0) : '—'}">¥0</div>
+          <div class="font-mono text-[10px] text-ink-soft">仅 CASH</div>
+        </div>
+        <div>
+          <div class="kpi-eyebrow">紧急储备月数</div>
+          <div class="font-display text-2xl tnum mt-1" th:text="${diagnose.emergencyMonthsLabel()}">—</div>
+          <div class="font-mono text-[10px] text-ink-soft">流动资产 / 月均支出</div>
+        </div>
+      </div>
+      <div class="border-t border-rule-soft mt-4 pt-3 text-xs text-ink-soft">
+        建议:紧急储备应 ≥ 3 个月家庭支出。WEALTH 类账户(理财/货币基金)是 SEMI_LIQUID,不计入紧急储备月数。
+      </div>
+    </div>
+
+    <!-- 卡 4 · 收益质量 -->
+    <div class="bg-card p-6">
+      <h3 class="font-display text-xl font-medium mb-4 flex items-baseline gap-3">
+        收益质量 <span class="font-mono text-[10px] tracking-[0.16em] uppercase text-ink-subtle">RETURN</span>
+      </h3>
+      <div class="grid grid-cols-2 gap-x-6 gap-y-4">
+        <div>
+          <div class="kpi-eyebrow">家庭 XIRR</div>
+          <div class="font-display text-2xl tnum mt-1"
+               th:classappend="${diagnose.familyXirr != null and diagnose.familyXirr.signum() > 0 ? ' num-pos' : (diagnose.familyXirr != null and diagnose.familyXirr.signum() < 0 ? ' num-neg' : '')}"
+               th:text="${diagnose.familyXirrPctLabel()}">—</div>
+          <div class="font-mono text-[10px] text-ink-soft">资金加权年化</div>
+        </div>
+        <div>
+          <div class="kpi-eyebrow">家庭 TWR</div>
+          <div class="font-display text-2xl tnum mt-1"
+               th:classappend="${diagnose.familyTwr != null and diagnose.familyTwr.signum() > 0 ? ' num-pos' : (diagnose.familyTwr != null and diagnose.familyTwr.signum() < 0 ? ' num-neg' : '')}"
+               th:text="${diagnose.familyTwrPctLabel()}">—</div>
+          <div class="font-mono text-[10px] text-ink-soft">时间加权年化</div>
+        </div>
+        <div class="col-span-2">
+          <div class="kpi-eyebrow">本年累计损益</div>
+          <div class="font-display text-2xl tnum mt-1"
+               th:classappend="${diagnose.cumulativeYtdPnl != null and diagnose.cumulativeYtdPnl.signum() > 0 ? ' num-pos' : (diagnose.cumulativeYtdPnl != null and diagnose.cumulativeYtdPnl.signum() < 0 ? ' num-neg' : '')}"
+               th:text="${diagnose.cumulativeYtdPnl != null ? ((diagnose.cumulativeYtdPnl.signum() >= 0 ? '+' : '') + '¥' + #numbers.formatDecimal(diagnose.cumulativeYtdPnl.abs(), 1, 0)) : '—'}">+¥0</div>
+          <div class="font-mono text-[10px] text-ink-soft">已剔除外部资金 + 转账</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 智能建议 · FR-40c · 6 条家庭级规则命中后显示 -->
+  <section class="mb-8" th:if="${!#lists.isEmpty(advice)}">
+    <div class="flex items-baseline justify-between mb-3 flex-wrap gap-2">
+      <div>
+        <div class="eyebrow mb-1">来 · 自 · 账 · 房 · 的 · 提 · 醒</div>
+        <h3 class="font-display text-xl font-medium">值得做的事</h3>
+      </div>
+      <span class="font-mono text-[10px] tracking-[0.18em] uppercase text-ink-subtle"
+            th:text="|家庭级 · 命中 ${#lists.size(advice)} 条|">家庭级 · 命中 0 条</span>
+    </div>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
+      <th:block th:each="ad : ${advice}">
+        <div th:replace="~{checkup/_advice-card :: card(advice=${ad}, polished=false)}"></div>
+      </th:block>
+    </div>
+    <div class="mt-3 paper-card px-4 py-2.5 flex items-center gap-2 flex-wrap text-[11px] font-mono"
+         style="background:var(--card-soft); border-left: 3px solid var(--brass-deep)">
+      <span class="text-brass-deep">✨ 文 · 案 · AI · 润 · 色</span>
+      <span class="text-ink-subtle">·</span>
+      <span class="text-ink-soft">数字由规则引擎实时计算 · LLM 仅在硬事实约束内组装语言</span>
+    </div>
+  </section>
+
+  <section class="paper-card p-5 bg-card-soft text-sm text-ink-soft mb-8"
+           th:if="${#lists.isEmpty(advice)}"
+           style="border-left: 3px solid var(--forest)">
+    <div class="font-mono text-[10px] tracking-[0.18em] uppercase text-forest mb-1">健康状态良好</div>
+    <p>当前 6 条家庭级规则均未命中,组合在「流动性 / 风险与配置 / 收益质量」维度都处于推荐区间。继续保持。</p>
+  </section>
+
+  <!-- 进入账户级体检的入口 -->
+  <section class="paper-card p-5">
+    <div class="flex items-baseline justify-between mb-3">
+      <h2 class="font-display text-xl font-medium">单账户深入体检</h2>
+      <span class="font-mono text-[10px] text-ink-subtle"
+            th:text="${diagnose.accountCount + ' 个账户'}">11 个账户</span>
+    </div>
+    <a th:href="@{/accounts}" class="btn-paper text-[11px] no-underline">→ 选择账户</a>
+    <p class="text-xs text-ink-soft mt-3">在 dashboard 或账户列表点击行可直接进入账户级体检页。</p>
+  </section>
+
+  <script th:inline="javascript">
+    (() => {
+      const allocLabels = /*[[${diagnose.allocation}]]*/ [];
+      const riskBuckets = /*[[${diagnose.riskDistribution}]]*/ [];
+      // 资产配置 doughnut
+      const ac = document.getElementById('allocChart');
+      if (ac && allocLabels.length) {
+        new Chart(ac, {
+          type: 'doughnut',
+          data: {
+            labels: allocLabels.map(s => (s.label || '').replace('\n', ' ')),
+            datasets: [{
+              data: allocLabels.map(s => Number(s.value)),
+              backgroundColor: ['#a77b35','#2f5d50','#6f7f98','#8f6048','#333333','#7a4f6b']
+            }]
+          },
+          options: {
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'right', labels: { boxWidth: 12, font: { size: 11 } } } }
+          }
+        });
+      }
+      // 风险分布 bar
+      const rc = document.getElementById('riskChart');
+      if (rc && riskBuckets.length) {
+        new Chart(rc, {
+          type: 'bar',
+          data: {
+            labels: riskBuckets.map(b => b.label),
+            datasets: [{
+              label: '金额',
+              data: riskBuckets.map(b => Number(b.amount)),
+              backgroundColor: riskBuckets.map(b => {
+                const lvl = Number(b.level);
+                if (lvl <= 1) return '#2f5d50';
+                if (lvl <= 3) return '#a77b35';
+                return '#9f4a3a';
+              })
+            }]
+          },
+          options: {
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              y: { ticks: { callback: v => v >= 10000 ? (v/10000).toFixed(1)+'万' : v.toLocaleString() } }
+            }
+          }
+        });
+      }
+    })();
+  </script>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

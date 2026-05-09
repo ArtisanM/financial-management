@@ -26,5 +26,7 @@ public enum AuditLogType {
     METRICS_RECOMPUTE,
     /** CSV 一键导出 */
     EXPORT,
+    /** v0.2 · LLM 文案润色全部 client 失败,降级到 raw 文案 */
+    LLM_DEGRADED,
     SYSTEM
 }
