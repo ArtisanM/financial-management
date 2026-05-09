@@ -355,11 +355,11 @@ v0.1 + v0.2 共 143 条 curl + grep 黑盒用例全部通过,0 回归。
 
 ```
 ═══════════════════════════════════════
- 总结: PASS=149  FAIL=0  SKIP=1
+ 总结: PASS=152  FAIL=0  SKIP=1
 ═══════════════════════════════════════
 ```
 
-新增内容(从 143 → 149):
+新增内容(从 143 → 152):
 - **FR-40c 综合诊断升级(决策 20)**:旧 v02-ADV-8/9/10 per-advice polish endpoint 删除,
   替换为 v02-DIAG-1~6(GET /checkup/diagnose 全家 + 账户 + 跨家庭降级 + CASH 账户)
 - **v02-ADV-6/7 重写**:从"AI 润色按钮"改为"AI 综合诊断 placeholder + hx-trigger=load 自动加载"
