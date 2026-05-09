@@ -122,6 +122,28 @@ public class EntryController {
         return rowFragment(me, row, periodId, model);
     }
 
+    /** v0.2 FR-32 · 软删现金流 */
+    @PostMapping("/entry/cash-flow/{id}/delete")
+    public String deleteCashFlow(@AuthenticationPrincipal MemberPrincipal me,
+                                 @PathVariable("id") long cashFlowId,
+                                 HttpServletResponse response,
+                                 Model model) {
+        EntryRow row = entryService.softDeleteCashFlow(me.getFamilyId(), me.getMemberId(), cashFlowId);
+        response.setHeader("HX-Trigger", "refresh-row-" + row.account().getId());
+        return rowFragment(me, row, row.currentSnapshot() == null ? null : row.currentSnapshot().getPeriodId(), model);
+    }
+
+    /** v0.2 FR-32 · 软删转账 */
+    @PostMapping("/entry/transfer/{id}/delete")
+    public String deleteTransfer(@AuthenticationPrincipal MemberPrincipal me,
+                                 @PathVariable("id") long transferId,
+                                 HttpServletResponse response,
+                                 Model model) {
+        EntryRow row = entryService.softDeleteTransfer(me.getFamilyId(), me.getMemberId(), transferId);
+        response.setHeader("HX-Trigger", "refresh-row-" + row.account().getId());
+        return rowFragment(me, row, row.currentSnapshot() == null ? null : row.currentSnapshot().getPeriodId(), model);
+    }
+
     @PostMapping("/entry/transfer/quick")
     public String quickTransfer(@AuthenticationPrincipal MemberPrincipal me,
                                 @RequestParam long fromAccountId,

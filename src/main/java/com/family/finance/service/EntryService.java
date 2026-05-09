@@ -169,6 +169,42 @@ public class EntryService {
         return rowFor(familyId, memberId, periodId, accountId);
     }
 
+    /** v0.2 FR-32 · 软删现金流(同时反向冲销余额) */
+    @Transactional
+    public EntryRow softDeleteCashFlow(long familyId, long memberId, long cashFlowId) {
+        CashFlow cf = cashFlowMapper.findById(cashFlowId)
+                .orElseThrow(() -> new IllegalArgumentException("现金流不存在: " + cashFlowId));
+        Period period = requireOpenPeriod(familyId, cf.getPeriodId());
+        Account account = requireAccount(familyId, cf.getAccountId());
+        // 反向冲销:INCOME 删 → balance -amount;EXPENSE 删 → balance +amount
+        BigDecimal delta = cf.getKind() == CashFlowKind.INCOME ? cf.getAmount().negate() : cf.getAmount();
+        applyDeltaToBalance(period, account, memberId, delta,
+                "✕ 撤销 " + cf.getKind() + " " + money(cf.getAmount()));
+        cashFlowMapper.softDelete(cashFlowId);
+        auditLogService.record(familyId, memberId, AuditLogType.CASH_FLOW_WRITE, "cash_flow", cashFlowId,
+                "软删现金流 " + cf.getKind() + " " + money(cf.getAmount()));
+        return rowFor(familyId, memberId, period.getId(), cf.getAccountId());
+    }
+
+    /** v0.2 FR-32 · 软删转账(同时反向冲销 from + to 两端余额) */
+    @Transactional
+    public EntryRow softDeleteTransfer(long familyId, long memberId, long transferId) {
+        Transfer t = transferMapper.findById(transferId)
+                .orElseThrow(() -> new IllegalArgumentException("转账不存在: " + transferId));
+        Period period = requireOpenPeriod(familyId, t.getPeriodId());
+        Account from = requireAccount(familyId, t.getFromAccountId());
+        Account to = requireAccount(familyId, t.getToAccountId());
+        // 反向:from +amount,to -amount
+        applyDeltaToBalance(period, from, memberId, t.getAmount(),
+                "✕ 撤销划出到 " + to.getDisplayName() + " " + money(t.getAmount()));
+        applyDeltaToBalance(period, to, memberId, t.getAmount().negate(),
+                "✕ 撤销来自 " + from.getDisplayName() + " " + money(t.getAmount()));
+        transferMapper.softDelete(transferId);
+        auditLogService.record(familyId, memberId, AuditLogType.TRANSFER_CREATE, "transfer", transferId,
+                "软删转账 " + from.getDisplayName() + " → " + to.getDisplayName() + " " + money(t.getAmount()));
+        return rowFor(familyId, memberId, period.getId(), t.getFromAccountId());
+    }
+
     @Transactional
     public EntryRow addTransfer(long familyId,
                                 long memberId,

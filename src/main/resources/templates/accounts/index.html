@@ -82,6 +82,8 @@
         <td class="num" th:classappend="${row.account.type.name() == 'LOAN' ? ' num-neg' : ''}" th:text="${row.balanceLabel}">¥73,200</td>
         <td class="text-right whitespace-nowrap">
           <button class="font-mono text-base text-ink-soft hover:text-brass-deep px-1 align-middle" title="从本账户发起一笔'账户间划转'">↔</button>
+          <a th:href="@{/checkup(account=${row.account.id})}" class="btn-ghost no-underline" title="进入资产体检">📊 体检</a>
+          <a th:href="@{/accounts/{id}/ledger.csv(id=${row.account.id})}" class="btn-ghost no-underline" title="导出账本 CSV">⬇ 账本</a>
           <a th:href="@{/accounts/{id}/edit(id=${row.account.id})}" class="btn-ghost no-underline">编辑</a>
           <form th:if="${!row.archived}" th:action="@{/accounts/{id}/archive(id=${row.account.id})}" method="post" class="inline">
             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">

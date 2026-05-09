@@ -6,6 +6,8 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Options;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
+import java.util.Optional;
 
 import java.util.List;
 
@@ -44,4 +46,22 @@ public interface CashFlowMapper {
             """)
     @Options(useGeneratedKeys = true, keyProperty = "id")
     int insert(CashFlow cashFlow);
+
+    /** v0.2 FR-32 · 按 id 取一行(含已删的);用于软删校验家庭归属与周期 */
+    @Select("""
+            SELECT id, period_id, account_id, kind, category_code, amount,
+                   occurred_at, note, submitted_by, submitted_at
+              FROM cash_flow
+             WHERE id = #{id}
+            """)
+    Optional<CashFlow> findById(@Param("id") long id);
+
+    /** v0.2 FR-32 · 软删:UPDATE deleted_at = NOW(3) */
+    @Update("""
+            UPDATE cash_flow
+               SET deleted_at = NOW(3)
+             WHERE id = #{id}
+               AND deleted_at IS NULL
+            """)
+    int softDelete(@Param("id") long id);
 }

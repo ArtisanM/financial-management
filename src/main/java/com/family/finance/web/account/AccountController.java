@@ -8,6 +8,8 @@ import com.family.finance.service.AccountService;
 import com.family.finance.service.AccountTemplateService;
 import com.family.finance.service.NavService;
 import com.family.finance.service.ProductCategoryService;
+import com.family.finance.service.export.LedgerExporter;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -30,6 +32,7 @@ public class AccountController {
     private final MemberMapper memberMapper;
     private final NavService navService;
     private final ProductCategoryService productCategoryService;
+    private final LedgerExporter ledgerExporter;
 
     @GetMapping
     public String index(@AuthenticationPrincipal MemberPrincipal me,
@@ -98,6 +101,20 @@ public class AccountController {
                           @PathVariable("id") long accountId) {
         accountService.restore(me, accountId);
         return "redirect:/accounts?archived=true";
+    }
+
+    /** v0.2 FR-31 · 单账户账本 CSV 导出 */
+    @GetMapping("/{id}/ledger.csv")
+    public void exportLedger(@AuthenticationPrincipal MemberPrincipal me,
+                             @PathVariable("id") long accountId,
+                             HttpServletResponse response) throws java.io.IOException {
+        Account account = accountService.require(me.getFamilyId(), accountId);
+        response.setContentType("text/csv; charset=UTF-8");
+        String safeName = account.getDisplayName().replaceAll("[\\\\/:*?\"<>|]", "_");
+        response.setHeader("Content-Disposition",
+                "attachment; filename*=UTF-8''" + java.net.URLEncoder.encode(safeName + "-ledger.csv",
+                        java.nio.charset.StandardCharsets.UTF_8));
+        ledgerExporter.writeAccountLedger(me.getFamilyId(), accountId, response.getOutputStream());
     }
 
     private void addModel(MemberPrincipal me, Model model, boolean includeArchived, boolean showWizard) {

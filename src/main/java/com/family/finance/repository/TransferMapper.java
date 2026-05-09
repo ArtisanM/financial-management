@@ -98,4 +98,13 @@ public interface TransferMapper {
              WHERE id = #{id}
             """)
     int updateAmountAndDraft(Transfer transfer);
+
+    /** v0.2 FR-32 · 软删:UPDATE deleted_at = NOW(3) */
+    @Update("""
+            UPDATE transfer
+               SET deleted_at = NOW(3)
+             WHERE id = #{id}
+               AND deleted_at IS NULL
+            """)
+    int softDelete(@Param("id") long id);
 }
