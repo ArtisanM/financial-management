@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>资产体检 · 家庭维度 · v0.2</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,ital,wght@9..144,0,300..700;9..144,1,300..600&family=JetBrains+Mono:wght@300;400;500&family=Noto+Serif+SC:wght@300;400;500;600&family=Source+Serif+4:opsz,wght@8..60,300;8..60,400;8..60,500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/style.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script>
+    tailwind.config = { theme: { extend: { colors: { paper: 'var(--paper)', 'paper-soft': 'var(--paper-soft)', 'paper-deep': 'var(--paper-deep)', card: 'var(--card)', 'card-soft': 'var(--card-soft)', ink: { DEFAULT: 'var(--ink)', soft: 'var(--ink-soft)', subtle: 'var(--ink-subtle)' }, rule: { DEFAULT: 'var(--rule)', soft: 'var(--rule-soft)' }, brass: { DEFAULT: 'var(--brass)', deep: 'var(--brass-deep)', soft: 'var(--brass-soft)' }, forest: 'var(--forest)', rust: 'var(--rust)' }, fontFamily: { display: ['Fraunces', 'Noto Serif SC', 'serif'], serif: ['"Source Serif 4"', 'Noto Serif SC', 'serif'], mono: ['JetBrains Mono', 'monospace'] } } } }
+  </script>
+</head>
+<body class="min-h-screen relative">
+
+  <div class="fixed top-0 left-0 right-0 h-1 bg-ink z-40"></div>
+
+  <!-- 顶部 nav (含「资产体检」激活态) -->
+  <header class="sticky top-1 bg-paper/95 backdrop-blur border-b border-rule z-30">
+    <div class="max-w-[1400px] mx-auto px-6 lg:px-10 flex items-center justify-between h-16">
+      <div class="flex items-center gap-12">
+        <a href="../index.html" class="flex items-baseline gap-2 no-underline">
+          <span class="font-display text-xl font-medium">账房</span>
+          <span class="font-mono text-[10px] tracking-[0.2em] text-ink-subtle">№ 张</span>
+        </a>
+        <nav class="hidden md:flex items-center gap-7 font-mono text-[11px] tracking-[0.14em] uppercase">
+          <a href="../../v0.1/pages/dashboard.html" class="text-ink-soft hover:text-ink no-underline">仪表盘</a>
+          <a href="../../v0.1/pages/entry-desktop.html" class="text-ink-soft hover:text-ink no-underline">填报</a>
+          <a href="../../v0.1/pages/my-todos.html" class="text-ink-soft hover:text-ink no-underline">待办</a>
+          <a href="../../v0.1/pages/accounts.html" class="text-ink-soft hover:text-ink no-underline">账户</a>
+          <a href="../../v0.1/pages/reports.html" class="text-ink-soft hover:text-ink no-underline">报表</a>
+          <a href="checkup-family.html" class="text-ink no-underline border-b-2 border-brass pb-[18px]">资产体检</a>
+          <a href="../../v0.1/pages/admin.html" class="text-ink-soft hover:text-ink no-underline">管理</a>
+        </nav>
+      </div>
+      <div class="flex items-center gap-4">
+        <span class="pill" style="background:rgba(47,93,80,.12);color:var(--forest);border-color:var(--forest)">2026 · 05 · OPEN</span>
+        <span class="font-mono text-[11px] text-ink-soft hidden md:inline">迪娃</span>
+        <div class="w-8 h-8 rounded-full bg-ink text-paper flex items-center justify-center font-display text-sm">迪</div>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-[1400px] mx-auto px-6 lg:px-10 py-10 relative z-10">
+
+    <!-- 标题段 -->
+    <div class="mb-10">
+      <div class="flex items-baseline gap-3 mb-3 font-mono text-[11px] tracking-wider text-ink-subtle">
+        <span>/ 资 · 产 · 体 · 检</span>
+        <span>·</span>
+        <span class="text-ink">家 · 庭 · 维 · 度</span>
+      </div>
+      <h1 class="font-display text-4xl md:text-5xl font-medium tracking-tight mb-2">
+        家底盘点 ·
+        <span class="italic font-light text-brass-deep">每月一日,定一定数</span>
+      </h1>
+      <div class="flex items-baseline gap-3 flex-wrap">
+        <p class="font-serif text-base text-ink-soft max-w-2xl leading-relaxed">
+          配置 · 风险 · 流动性 · 收益 — 全家整体诊断,以及每个账户的体检入口。
+        </p>
+        <!-- 视角切换器 -->
+        <div class="ml-auto flex items-center gap-2 font-mono text-[11px]">
+          <span class="text-ink-subtle">视角:</span>
+          <span class="pill" style="background:var(--ink);color:var(--paper);border-color:var(--ink)">全家</span>
+          <span class="text-ink-subtle">/</span>
+          <select class="border border-rule bg-card px-2 py-1 text-xs font-mono">
+            <option>选账户切换…</option>
+            <option>招行储蓄卡-工资</option>
+            <option>蚂蚁财富-基金</option>
+            <option>富途证券-美股</option>
+            <option>余额宝</option>
+            <option>房贷-招行</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5 张顶部 KPI -->
+    <section class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-px bg-rule mb-10">
+      <a href="#" class="kpi-card hover:bg-card-soft transition cursor-pointer no-underline group">
+        <div class="kpi-eyebrow flex items-baseline justify-between">
+          <span>净资产</span>
+          <span class="text-[8px] opacity-0 group-hover:opacity-100 transition">→ 详细</span>
+        </div>
+        <div class="font-display text-3xl tnum mt-1 num-pos">¥1.85M</div>
+        <div class="font-mono text-[10px] num-pos mt-1">↑ +¥42k 较上期</div>
+      </a>
+      <div class="kpi-card">
+        <span class="kpi-eyebrow">总资产</span>
+        <div class="font-display text-3xl tnum mt-1">¥2.63M</div>
+        <div class="font-mono text-[10px] text-ink-soft mt-1">CASH+STOCK+WEALTH</div>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-eyebrow">总负债</span>
+        <div class="font-display text-3xl tnum mt-1 num-neg">¥780k</div>
+        <div class="font-mono text-[10px] text-ink-soft mt-1">负债率 29.6%</div>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-eyebrow">家庭加权年化</span>
+        <div class="font-display text-3xl tnum mt-1 num-pos">6.4%</div>
+        <div class="font-mono text-[10px] num-pos mt-1">vs 综合基准 5.8% ↑</div>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-eyebrow">风险综合</span>
+        <div class="font-display text-3xl tnum mt-1" style="color:var(--brass-deep)">中等</div>
+        <div class="font-mono text-[10px] text-ink-soft mt-1">★★★ / 6 加权</div>
+      </div>
+    </section>
+
+    <!-- FR-40c 智能建议堆叠(全家级)— 最显眼,先看到结论 -->
+    <section class="mb-10">
+      <div class="flex items-baseline justify-between mb-4">
+        <div>
+          <div class="eyebrow mb-1">来 · 自 · 账 · 房 · 的 · 五 · 条 · 提 · 醒</div>
+          <h2 class="font-display text-2xl font-medium">本月家底值得关注的事</h2>
+        </div>
+        <span class="font-mono text-[10px] tracking-[0.18em] uppercase text-ink-subtle">
+          15 条规则 · 实时计算 · 命中 5 条
+        </span>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-3 mb-2">
+
+        <!-- 建议 1: WARN 风险偏激进 -->
+        <article class="paper-card p-5 relative"
+                 style="border-left: 4px solid var(--brass-deep); background: linear-gradient(180deg, rgba(122,90,57,.04) 0%, var(--card) 60%);">
+          <div class="flex items-baseline justify-between mb-3">
+            <span class="font-mono text-[10px] tracking-[0.18em] uppercase font-medium" style="color:var(--brass-deep)">
+              🔔  风 险 评 估
+            </span>
+            <span class="font-mono text-[9px] tracking-[0.12em] uppercase text-ink-subtle">FAM-RISK-1</span>
+          </div>
+          <h4 class="font-display text-lg font-medium mb-2">整体偏激进</h4>
+          <p class="text-sm text-ink-soft leading-relaxed mb-3">
+            高风险资产(★★★★★)占总资产
+            <span class="font-medium text-ink tnum">63%</span>(阈值 60%)。
+            主要集中在富途证券-美股 + 蚂蚁财富 A 股。
+          </p>
+          <div class="border-t border-rule-soft pt-3">
+            <div class="font-mono text-[10px] tracking-wider text-ink-subtle mb-1.5">💡 建议</div>
+            <p class="text-sm">
+              考虑把 <span class="font-medium text-ink tnum">¥150k</span> 从美股转到债券基金,
+              整体波动 σ 预计从 <span class="text-rust">11.2%</span> 降到 <span class="num-pos">8.4%</span>。
+            </p>
+          </div>
+          <div class="flex gap-2 mt-3 pt-3 border-t border-rule-soft">
+            <button class="text-[11px] font-mono px-2.5 py-1 border border-brass-deep text-brass-deep hover:bg-brass-soft/30">→ 看资产配置</button>
+            <button class="text-[11px] font-mono px-2.5 py-1 text-ink-subtle hover:text-ink">✕ 这条不适用</button>
+          </div>
+        </article>
+
+        <!-- 建议 2: WARN 集中度告警 -->
+        <article class="paper-card p-5 relative"
+                 style="border-left: 4px solid var(--brass-deep); background: linear-gradient(180deg, rgba(122,90,57,.04) 0%, var(--card) 60%);">
+          <div class="flex items-baseline justify-between mb-3">
+            <span class="font-mono text-[10px] tracking-[0.18em] uppercase font-medium" style="color:var(--brass-deep)">
+              🔔  集 中 度 告 警
+            </span>
+            <span class="font-mono text-[9px] tracking-[0.12em] uppercase text-ink-subtle">FAM-CON-1</span>
+          </div>
+          <h4 class="font-display text-lg font-medium mb-2">单账户占比过高</h4>
+          <p class="text-sm text-ink-soft leading-relaxed mb-3">
+            富途证券-美股 占总资产
+            <span class="font-medium text-ink tnum">42%</span>(阈值 40%)。
+            一个账户波动会显著影响家庭净资产。
+          </p>
+          <div class="border-t border-rule-soft pt-3">
+            <div class="font-mono text-[10px] tracking-wider text-ink-subtle mb-1.5">💡 建议</div>
+            <p class="text-sm">
+              在每月新增投入时,优先<span class="text-ink">补低占比账户</span>(蚂蚁财富、债券基金),自然降低富途占比。
+            </p>
+          </div>
+          <div class="flex gap-2 mt-3 pt-3 border-t border-rule-soft">
+            <button class="text-[11px] font-mono px-2.5 py-1 border border-brass-deep text-brass-deep hover:bg-brass-soft/30">→ 看富途账户</button>
+            <button class="text-[11px] font-mono px-2.5 py-1 text-ink-subtle hover:text-ink">✕ 这条不适用</button>
+          </div>
+        </article>
+
+        <!-- 建议 3: OK 跑赢基准 -->
+        <article class="paper-card p-5 relative"
+                 style="border-left: 4px solid var(--forest); background: linear-gradient(180deg, rgba(47,93,80,.04) 0%, var(--card) 60%);">
+          <div class="flex items-baseline justify-between mb-3">
+            <span class="font-mono text-[10px] tracking-[0.18em] uppercase font-medium" style="color:var(--forest)">
+              ✓  收 益 表 现
+            </span>
+            <span class="font-mono text-[9px] tracking-[0.12em] uppercase text-ink-subtle">FAM-ALC-2</span>
+          </div>
+          <h4 class="font-display text-lg font-medium mb-2">家庭整体跑赢基准</h4>
+          <p class="text-sm text-ink-soft leading-relaxed mb-3">
+            家庭加权年化 <span class="font-medium text-ink tnum">6.4%</span>,
+            高于综合基准 <span class="text-ink">5.8%</span> 0.6 个百分点。
+            主要由富途美股(年化 9.2%)拉动。
+          </p>
+          <div class="border-t border-rule-soft pt-3">
+            <div class="font-mono text-[10px] tracking-wider text-ink-subtle mb-1.5">💡 建议</div>
+            <p class="text-sm">
+              当前结构合理,继续维持。注意美股的最大回撤 −12% 风险,做好下跌承受准备。
+            </p>
+          </div>
+          <div class="flex gap-2 mt-3 pt-3 border-t border-rule-soft">
+            <button class="text-[11px] font-mono px-2.5 py-1 text-ink-subtle hover:text-ink">✕ 这条不适用</button>
+          </div>
+        </article>
+      </div>
+
+      <!-- 折叠的次要建议 -->
+      <details class="mt-2">
+        <summary class="cursor-pointer font-mono text-[11px] tracking-[0.14em] uppercase text-ink-subtle hover:text-ink py-2 select-none">
+          ▶ 还有 2 条次要提醒(INFO 级)
+        </summary>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 mt-3">
+          <article class="paper-card p-4 text-sm" style="border-left: 3px solid var(--ink-subtle)">
+            <div class="flex items-baseline gap-2 mb-1">
+              <span class="font-mono text-[9px] tracking-[0.18em] uppercase text-ink-subtle">💡 流动性</span>
+              <span class="font-mono text-[8px] text-ink-subtle">FAM-LIQ-info</span>
+            </div>
+            <p class="text-ink-soft leading-relaxed">紧急储备 14.2 月,健康(≥6 即合格)。可考虑把多余的现金挪到货币基金,每年多挣 ¥1,225。</p>
+          </article>
+          <article class="paper-card p-4 text-sm" style="border-left: 3px solid var(--ink-subtle)">
+            <div class="flex items-baseline gap-2 mb-1">
+              <span class="font-mono text-[9px] tracking-[0.18em] uppercase text-ink-subtle">💡 还款进度</span>
+              <span class="font-mono text-[8px] text-ink-subtle">PRG-info</span>
+            </div>
+            <p class="text-ink-soft leading-relaxed">房贷-招行 还款进度 22%,按当前节奏 2034-03 还清。无需调整。</p>
+          </article>
+        </div>
+      </details>
+    </section>
+
+    <!-- FR-40a 4 张诊断卡(2x2 grid) -->
+    <section class="mb-10">
+      <div class="eyebrow mb-4">家 · 庭 · 体 · 检 · 报 · 告</div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-px bg-rule">
+
+        <!-- 配置诊断 -->
+        <div class="bg-card p-6">
+          <div class="flex items-baseline justify-between mb-4">
+            <h3 class="font-display text-xl font-medium">配置诊断</h3>
+            <span class="font-mono text-[10px] tracking-[0.16em] uppercase text-ink-subtle">ALLOCATION</span>
+          </div>
+          <div class="grid grid-cols-2 gap-4 items-center">
+            <div style="height:200px"><canvas id="allocationChart"></canvas></div>
+            <div class="space-y-2 text-sm">
+              <div class="flex items-center gap-2"><span class="w-3 h-3 inline-block" style="background:#7a5a39"></span><span class="text-ink-soft">CASH 现金 32%</span></div>
+              <div class="flex items-center gap-2"><span class="w-3 h-3 inline-block" style="background:#9f4a3a"></span><span class="text-ink-soft">STOCK 股票 28%</span></div>
+              <div class="flex items-center gap-2"><span class="w-3 h-3 inline-block" style="background:#c4943e"></span><span class="text-ink-soft">WEALTH 理财 20%</span></div>
+              <div class="flex items-center gap-2"><span class="w-3 h-3 inline-block" style="background:#2f5d50"></span><span class="text-ink-soft">PROPERTY 房产 14%</span></div>
+              <div class="flex items-center gap-2"><span class="w-3 h-3 inline-block" style="background:rgba(159,74,58,.5)"></span><span class="text-ink-soft">LOAN 负债 -29.6%</span></div>
+            </div>
+          </div>
+          <div class="mt-4 pt-3 border-t border-rule-soft text-sm">
+            <span class="font-mono text-[10px] tracking-wider uppercase text-brass-deep">对比建议</span>
+            <p class="text-ink-soft mt-1">股票 28% 偏低(同年龄段建议 35-50%),可适度加配。</p>
+          </div>
+        </div>
+
+        <!-- 风险分布 -->
+        <div class="bg-card p-6">
+          <div class="flex items-baseline justify-between mb-4">
+            <h3 class="font-display text-xl font-medium">风险分布</h3>
+            <span class="font-mono text-[10px] tracking-[0.16em] uppercase text-ink-subtle">RISK · ★1-6</span>
+          </div>
+          <div class="grid grid-cols-2 gap-4 items-center">
+            <div style="height:200px"><canvas id="riskChart"></canvas></div>
+            <div class="space-y-1.5 text-sm">
+              <div class="flex items-center gap-2"><span class="w-3 h-3 inline-block" style="background:#5a8a4a"></span><span class="text-ink-soft">★ 极低 8%</span></div>
+              <div class="flex items-center gap-2"><span class="w-3 h-3 inline-block" style="background:#7da75e"></span><span class="text-ink-soft">★★ 低 18%</span></div>
+              <div class="flex items-center gap-2"><span class="w-3 h-3 inline-block" style="background:#c4943e"></span><span class="text-ink-soft">★★★ 中低 11%</span></div>
+              <div class="flex items-center gap-2"><span class="w-3 h-3 inline-block" style="background:#d6a04a"></span><span class="text-ink-soft">★★★★ 中 0%</span></div>
+              <div class="flex items-center gap-2"><span class="w-3 h-3 inline-block" style="background:#9f4a3a"></span><span class="text-ink-soft">★★★★★ 中高 63%</span></div>
+              <div class="flex items-center gap-2"><span class="w-3 h-3 inline-block" style="background:#5a2424"></span><span class="text-ink-soft">★★★★★★ 极高 0%</span></div>
+            </div>
+          </div>
+          <div class="mt-4 pt-3 border-t border-rule-soft text-sm">
+            <span class="font-mono text-[10px] tracking-wider uppercase text-rust">⚠ 偏激进</span>
+            <p class="text-ink-soft mt-1">★★★★★ 占 63% 已超阈值 60%,见上方智能建议 FAM-RISK-1。</p>
+          </div>
+        </div>
+
+        <!-- 流动性诊断 -->
+        <div class="bg-card p-6">
+          <div class="flex items-baseline justify-between mb-4">
+            <h3 class="font-display text-xl font-medium">流动性诊断</h3>
+            <span class="font-mono text-[10px] tracking-[0.16em] uppercase text-ink-subtle">LIQUIDITY</span>
+          </div>
+          <div class="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <div class="font-mono text-[10px] uppercase tracking-wider text-ink-subtle">紧急储备月数</div>
+              <div class="font-display text-3xl tnum mt-1 num-pos">14.2</div>
+              <div class="font-mono text-[10px] num-pos mt-1">健康线 ≥ 6 月 ✓</div>
+            </div>
+            <div>
+              <div class="font-mono text-[10px] uppercase tracking-wider text-ink-subtle">现金占总资产</div>
+              <div class="font-display text-3xl tnum mt-1">32%</div>
+              <div class="font-mono text-[10px] text-ink-soft mt-1">健康范围 15-30%</div>
+            </div>
+          </div>
+          <div class="border-t border-rule-soft pt-3">
+            <div class="font-mono text-[10px] uppercase tracking-wider text-ink-subtle mb-2">月均消费 vs 现金储备</div>
+            <div style="height:90px"><canvas id="liquidityChart"></canvas></div>
+          </div>
+          <div class="mt-3 pt-3 border-t border-rule-soft text-sm">
+            <span class="font-mono text-[10px] tracking-wider uppercase" style="color:var(--brass-deep)">💡 INFO</span>
+            <p class="text-ink-soft mt-1">现金略多 — 14.2 月支出额度,可考虑 4 月以上挪到货币基金。</p>
+          </div>
+        </div>
+
+        <!-- 收益诊断 -->
+        <div class="bg-card p-6">
+          <div class="flex items-baseline justify-between mb-4">
+            <h3 class="font-display text-xl font-medium">收益诊断</h3>
+            <span class="font-mono text-[10px] tracking-[0.16em] uppercase text-ink-subtle">RETURN</span>
+          </div>
+          <div class="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <div class="font-mono text-[10px] uppercase tracking-wider text-ink-subtle">家庭加权年化</div>
+              <div class="font-display text-3xl tnum mt-1 num-pos">6.4%</div>
+              <div class="font-mono text-[10px] text-ink-soft mt-1">XIRR 资金加权</div>
+            </div>
+            <div>
+              <div class="font-mono text-[10px] uppercase tracking-wider text-ink-subtle">综合基准</div>
+              <div class="font-display text-3xl tnum mt-1" style="color:var(--brass-deep)">5.8%</div>
+              <div class="font-mono text-[10px] text-ink-soft mt-1">按类目 benchmark 加权</div>
+            </div>
+          </div>
+          <div class="border-t border-rule-soft pt-3">
+            <div class="font-mono text-[10px] uppercase tracking-wider text-ink-subtle mb-2">家庭净值 vs 综合基准(归一 1.000)</div>
+            <div style="height:90px"><canvas id="returnChart"></canvas></div>
+            <div class="flex items-center gap-3 mt-2 font-mono text-[10px]">
+              <span><span class="inline-block w-3 h-[2px] mr-1" style="background:var(--ink)"></span>家庭</span>
+              <span><span class="inline-block w-3 h-[2px] mr-1" style="background:var(--brass-deep)"></span>基准</span>
+              <span class="ml-auto num-pos">+0.6pct ↑ 跑赢</span>
+            </div>
+          </div>
+          <div class="mt-3 pt-3 border-t border-rule-soft text-sm">
+            <span class="font-mono text-[10px] tracking-wider uppercase" style="color:var(--forest)">✓ 表现良好</span>
+            <p class="text-ink-soft mt-1">连续 12 月跑赢综合基准,主要贡献来自富途美股(+9.2%)。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 账户列表(每行带健康度 + 类目 + 进入按钮) -->
+    <section class="mb-12">
+      <div class="flex items-baseline justify-between mb-4">
+        <div>
+          <div class="eyebrow mb-1">账 · 户 · 一 · 览 · 健 · 康 · 度 · 排 · 序</div>
+          <h2 class="font-display text-2xl font-medium">逐个看账户</h2>
+        </div>
+        <span class="font-mono text-[10px] tracking-[0.18em] uppercase text-ink-subtle">点击进入账户体检</span>
+      </div>
+
+      <div class="paper-card overflow-hidden">
+        <table class="w-full text-sm">
+          <thead class="bg-card-soft border-b border-rule">
+            <tr class="text-left">
+              <th class="px-5 py-3 font-mono text-[10px] tracking-wider uppercase text-ink-subtle">账户</th>
+              <th class="px-5 py-3 font-mono text-[10px] tracking-wider uppercase text-ink-subtle">类目</th>
+              <th class="px-5 py-3 font-mono text-[10px] tracking-wider uppercase text-ink-subtle">风险</th>
+              <th class="px-5 py-3 font-mono text-[10px] tracking-wider uppercase text-ink-subtle text-right">余额</th>
+              <th class="px-5 py-3 font-mono text-[10px] tracking-wider uppercase text-ink-subtle text-right">年化</th>
+              <th class="px-5 py-3 font-mono text-[10px] tracking-wider uppercase text-ink-subtle text-center">健康度</th>
+              <th class="px-5 py-3 w-24"></th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-rule-soft">
+            <tr class="hover:bg-card-soft cursor-pointer" onclick="window.location='checkup-account.html?account=2'">
+              <td class="px-5 py-4">
+                <div class="font-display text-base">富途证券-美股</div>
+                <div class="font-mono text-[10px] text-ink-subtle mt-0.5">主理 · 迪娃</div>
+              </td>
+              <td class="px-5 py-4"><span class="pill" style="background:rgba(159,74,58,.10);color:var(--rust);border-color:var(--rust)">美股 / QQQ</span></td>
+              <td class="px-5 py-4"><span class="font-mono text-xs">★★★★★<span class="opacity-30">★</span></span></td>
+              <td class="px-5 py-4 text-right tnum font-mono text-base">¥438k</td>
+              <td class="px-5 py-4 text-right num-pos tnum">+9.2%</td>
+              <td class="px-5 py-4 text-center">
+                <span class="inline-flex items-center justify-center w-12 h-12 rounded-full font-display text-base"
+                      style="background:rgba(214,160,74,.18);color:var(--brass-deep)">78</span>
+              </td>
+              <td class="px-5 py-4 text-right">
+                <span class="font-mono text-[11px] tracking-wider text-brass-deep">→ 体检</span>
+              </td>
+            </tr>
+            <tr class="hover:bg-card-soft cursor-pointer" onclick="window.location='checkup-account.html?account=3'">
+              <td class="px-5 py-4">
+                <div class="font-display text-base">蚂蚁财富-基金</div>
+                <div class="font-mono text-[10px] text-ink-subtle mt-0.5">主理 · 张伟</div>
+              </td>
+              <td class="px-5 py-4"><span class="pill" style="background:rgba(159,74,58,.10);color:var(--rust);border-color:var(--rust)">A 股基金</span></td>
+              <td class="px-5 py-4"><span class="font-mono text-xs">★★★★★<span class="opacity-30">★</span></span></td>
+              <td class="px-5 py-4 text-right tnum font-mono text-base">¥220k</td>
+              <td class="px-5 py-4 text-right num-pos tnum">+6.8%</td>
+              <td class="px-5 py-4 text-center">
+                <span class="inline-flex items-center justify-center w-12 h-12 rounded-full font-display text-base"
+                      style="background:rgba(214,160,74,.18);color:var(--brass-deep)">82</span>
+              </td>
+              <td class="px-5 py-4 text-right">
+                <span class="font-mono text-[11px] tracking-wider text-brass-deep">→ 体检</span>
+              </td>
+            </tr>
+            <tr class="hover:bg-card-soft cursor-pointer" onclick="window.location='checkup-account.html?account=1'">
+              <td class="px-5 py-4">
+                <div class="font-display text-base">招行储蓄卡-工资</div>
+                <div class="font-mono text-[10px] text-ink-subtle mt-0.5">主理 · 张伟</div>
+              </td>
+              <td class="px-5 py-4"><span class="pill">货币活期</span></td>
+              <td class="px-5 py-4"><span class="font-mono text-xs">★<span class="opacity-30">★★★★★</span></span></td>
+              <td class="px-5 py-4 text-right tnum font-mono text-base">¥73.2k</td>
+              <td class="px-5 py-4 text-right tnum text-ink-soft">+0.4%</td>
+              <td class="px-5 py-4 text-center">
+                <span class="inline-flex items-center justify-center w-12 h-12 rounded-full font-display text-base"
+                      style="background:rgba(47,93,80,.16);color:var(--forest)">92</span>
+              </td>
+              <td class="px-5 py-4 text-right">
+                <span class="font-mono text-[11px] tracking-wider text-brass-deep">→ 体检</span>
+              </td>
+            </tr>
+            <tr class="hover:bg-card-soft cursor-pointer" onclick="window.location='checkup-account.html?account=4'">
+              <td class="px-5 py-4">
+                <div class="font-display text-base">余额宝</div>
+                <div class="font-mono text-[10px] text-ink-subtle mt-0.5">主理 · 迪娃</div>
+              </td>
+              <td class="px-5 py-4"><span class="pill" style="background:rgba(122,90,57,.08);color:var(--brass-deep);border-color:var(--brass-deep)">货币基金</span></td>
+              <td class="px-5 py-4"><span class="font-mono text-xs">★<span class="opacity-30">★★★★★</span></span></td>
+              <td class="px-5 py-4 text-right tnum font-mono text-base">¥85k</td>
+              <td class="px-5 py-4 text-right num-pos tnum">+2.1%</td>
+              <td class="px-5 py-4 text-center">
+                <span class="inline-flex items-center justify-center w-12 h-12 rounded-full font-display text-base"
+                      style="background:rgba(47,93,80,.16);color:var(--forest)">95</span>
+              </td>
+              <td class="px-5 py-4 text-right">
+                <span class="font-mono text-[11px] tracking-wider text-brass-deep">→ 体检</span>
+              </td>
+            </tr>
+            <tr class="hover:bg-card-soft cursor-pointer" onclick="window.location='checkup-account.html?account=5'"
+                style="background: rgba(159,74,58,.03)">
+              <td class="px-5 py-4">
+                <div class="font-display text-base">房贷-招行</div>
+                <div class="font-mono text-[10px] text-ink-subtle mt-0.5">主理 · 张伟 · LOAN</div>
+              </td>
+              <td class="px-5 py-4"><span class="pill pill-rust">负债账户</span></td>
+              <td class="px-5 py-4"><span class="font-mono text-xs text-ink-subtle">—</span></td>
+              <td class="px-5 py-4 text-right tnum font-mono text-base num-neg">−¥780k</td>
+              <td class="px-5 py-4 text-right tnum text-ink-soft">进度 22%</td>
+              <td class="px-5 py-4 text-center">
+                <span class="inline-flex items-center justify-center w-12 h-12 rounded-full font-display text-sm font-mono"
+                      style="background:rgba(159,74,58,.10);color:var(--rust)">N/A</span>
+              </td>
+              <td class="px-5 py-4 text-right">
+                <span class="font-mono text-[11px] tracking-wider text-brass-deep">→ 进度</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="text-right mt-3 font-mono text-[10px] text-ink-subtle">
+        健康度评分: 100 减去 命中规则的扣分(DANGER −25 / WARN −10 / INFO −3)
+      </div>
+    </section>
+
+    <!-- 操作底栏 -->
+    <section class="border-t-2 border-double border-ink pt-6 flex items-center justify-between flex-wrap gap-4">
+      <a href="../../v0.1/pages/dashboard.html" class="btn-paper no-underline">← 返回仪表盘</a>
+      <div class="flex gap-2">
+        <a href="../../v0.1/pages/accounts.html" class="btn-paper no-underline">看账户列表</a>
+        <a href="../../v0.1/pages/reports.html" class="btn-paper no-underline">看完整报表</a>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="border-t border-rule mt-12 py-6 px-8 text-center relative z-10">
+    <div class="font-mono text-[10px] tracking-[0.18em] text-ink-subtle">
+      家庭账房 · v0.2 · 资产体检 · 仅限家庭内部使用
+    </div>
+  </footer>
+
+  <script>
+    // 配置环形图(类型分布)
+    new Chart(document.getElementById('allocationChart'), {
+      type: 'doughnut',
+      data: {
+        labels: ['CASH', 'STOCK', 'WEALTH', 'PROPERTY'],
+        datasets: [{
+          data: [32, 28, 20, 14],
+          backgroundColor: ['#7a5a39', '#9f4a3a', '#c4943e', '#2f5d50'],
+          borderColor: '#fdf8ef',
+          borderWidth: 2
+        }]
+      },
+      options: { maintainAspectRatio: false, plugins: { legend: { display: false } }, cutout: '60%' }
+    });
+
+    // 风险分布环形图
+    new Chart(document.getElementById('riskChart'), {
+      type: 'doughnut',
+      data: {
+        labels: ['★', '★★', '★★★', '★★★★', '★★★★★', '★★★★★★'],
+        datasets: [{
+          data: [8, 18, 11, 0, 63, 0],
+          backgroundColor: ['#5a8a4a', '#7da75e', '#c4943e', '#d6a04a', '#9f4a3a', '#5a2424'],
+          borderColor: '#fdf8ef',
+          borderWidth: 2
+        }]
+      },
+      options: { maintainAspectRatio: false, plugins: { legend: { display: false } }, cutout: '60%' }
+    });
+
+    // 流动性 mini 柱(月均消费 vs 现金储备)
+    new Chart(document.getElementById('liquidityChart'), {
+      type: 'bar',
+      data: {
+        labels: ['月均消费', '现金储备'],
+        datasets: [{
+          data: [21800, 310000],
+          backgroundColor: ['#9f4a3a', '#2f5d50']
+        }]
+      },
+      options: {
+        maintainAspectRatio: false,
+        indexAxis: 'y',
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => '¥' + c.parsed.x.toLocaleString() } } },
+        scales: { x: { ticks: { callback: v => v >= 10000 ? '¥' + (v/10000).toFixed(0) + '万' : '¥' + v, font: { size: 9 } } }, y: { ticks: { font: { size: 10 } } } }
+      }
+    });
+
+    // 收益诊断 mini 双线(家庭净值 vs 综合基准)
+    new Chart(document.getElementById('returnChart'), {
+      type: 'line',
+      data: {
+        labels: ['M-12','M-11','M-10','M-9','M-8','M-7','M-6','M-5','M-4','M-3','M-2','M-1','M'],
+        datasets: [
+          { label: '家庭', data: [1.000, 1.012, 1.005, 1.030, 1.045, 1.038, 1.052, 1.060, 1.048, 1.058, 1.064, 1.070, 1.064], borderColor: '#1a1714', tension: .35, pointRadius: 0, borderWidth: 2 },
+          { label: '基准', data: [1.000, 1.008, 1.003, 1.020, 1.030, 1.025, 1.035, 1.045, 1.040, 1.048, 1.052, 1.056, 1.058], borderColor: '#7a5a39', tension: .35, pointRadius: 0, borderWidth: 1.5, borderDash: [4,3] }
+        ]
+      },
+      options: {
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => c.dataset.label + ': ' + c.parsed.y.toFixed(3) } } },
+        scales: { x: { ticks: { display: false } }, y: { ticks: { font: { size: 9 } } } }
+      }
+    });
+  </script>
+
+</body>
+</html>
