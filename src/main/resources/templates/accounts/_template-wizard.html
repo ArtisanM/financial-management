@@ -61,6 +61,15 @@
           <label class="field-label">显示顺序</label>
           <input name="displayOrder" class="field-input field-input-num" placeholder="末尾自动">
         </div>
+        <!-- v0.2 FR-40d · 产品类目(留空则按 type 默认)-->
+        <div>
+          <label class="field-label">产品类目 <span class="text-ink-subtle font-mono text-[10px]">v0.2</span></label>
+          <select name="productCategoryCode" class="field-input bg-transparent">
+            <option value="">按账户类型默认</option>
+            <option th:each="c : ${allCategories}" th:value="${c.code}"
+                    th:text="${c.displayName} + (c.benchmarkPct != null ? ' (基准 ' + c.benchmarkPct + '%)' : '')">A 股 / A 股基金 (基准 8.0%)</option>
+          </select>
+        </div>
         <div class="md:col-span-2">
           <label class="field-label">LOAN 默认还款来源</label>
           <select name="defaultPaymentSourceAccountId" class="field-input bg-transparent">

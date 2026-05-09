@@ -127,14 +127,16 @@
     </div>
     <div class="paper-card overflow-hidden">
       <table class="ledger-table">
-        <thead><tr><th>账户</th><th>类型</th><th class="num">当前价值</th><th class="num">收益率</th><th>近况</th></tr></thead>
+        <thead><tr><th>账户</th><th>类型</th><th class="num">当前价值</th><th class="num">收益率</th><th>近况</th><th class="text-right pr-3">体检</th></tr></thead>
         <tbody>
-        <tr th:each="account : ${accountRows}">
+        <tr th:each="account : ${accountRows}" class="hover:bg-card-soft cursor-pointer transition"
+            th:onclick="|window.location='/checkup?account=${account.accountId}'|">
           <td><span class="font-display" th:text="${account.accountName}">账户</span></td>
           <td><span class="pill" th:text="${account.accountType.label} + ' (' + ${account.accountType.name()} + ')'">现金 (CASH)</span></td>
           <td class="num" th:text="${account.currentValue == null ? '—' : account.currentValue}">0</td>
           <td class="num" th:text="${account.xirr == null ? '—' : (#numbers.formatDecimal(account.xirr * 100, 1, 2) + '%')}">—</td>
           <td><svg class="sparkline-pos" width="80" height="22" viewBox="0 0 80 22"><polyline fill="none" stroke="currentColor" stroke-width="1.5" points="0,18 10,15 20,16 30,11 40,13 50,8 60,10 70,6 80,4"/></svg></td>
+          <td class="text-right pr-3"><span class="font-mono text-[10px] tracking-wider text-brass-deep">→ 体检</span></td>
         </tr>
         </tbody>
       </table>

@@ -58,6 +58,39 @@
         <input name="displayOrder" type="number" class="field-input field-input-num" th:value="${account.displayOrder}">
       </div>
 
+      <!-- v0.2 FR-40d · 产品类目 -->
+      <div>
+        <label class="field-label">产品类目 <span class="text-ink-subtle font-mono text-[10px]">v0.2 新增</span></label>
+        <select name="productCategoryCode" class="field-input bg-transparent">
+          <option th:each="c : ${applicableCategories}"
+                  th:value="${c.code}"
+                  th:selected="${c.code == account.productCategoryCode}"
+                  th:text="${c.displayName} + (c.benchmarkPct != null ? ' (基准 ' + c.benchmarkPct + '%)' : '')">货币基金 (基准 2.0%)</option>
+        </select>
+        <div class="font-mono text-[10px] text-ink-subtle mt-1" th:if="${currentCategory != null}">
+          当前:<span th:text="${currentCategory.displayName}">货币基金</span>
+          <span th:if="${currentCategory.benchmarkPct != null}"
+                th:text="' · 风险 ' + ${currentCategory.riskStars()} + ' · 长期年化 ' + ${currentCategory.benchmarkPct} + '%'">· 风险 ★ · 长期年化 2.0%</span>
+        </div>
+      </div>
+
+      <!-- v0.2 FR-40d · 风险等级覆盖(可选) -->
+      <div>
+        <label class="field-label">风险等级覆盖 <span class="text-ink-subtle font-mono text-[10px]">可选</span></label>
+        <select name="riskLevelOverride" class="field-input bg-transparent">
+          <option value="">沿用类目默认</option>
+          <option value="1" th:selected="${account.riskLevelOverride == 1}">★ 极低</option>
+          <option value="2" th:selected="${account.riskLevelOverride == 2}">★★ 低</option>
+          <option value="3" th:selected="${account.riskLevelOverride == 3}">★★★ 中低</option>
+          <option value="4" th:selected="${account.riskLevelOverride == 4}">★★★★ 中</option>
+          <option value="5" th:selected="${account.riskLevelOverride == 5}">★★★★★ 中高</option>
+          <option value="6" th:selected="${account.riskLevelOverride == 6}">★★★★★★ 极高</option>
+        </select>
+        <div class="font-mono text-[10px] text-ink-subtle mt-1">
+          通常沿用类目默认即可;只在你具体持仓与类目典型风险偏离明显时覆盖
+        </div>
+      </div>
+
       <div class="md:col-span-2">
         <label class="field-label">默认还款来源(LOAN 类型用)</label>
         <select name="defaultPaymentSourceAccountId" class="field-input bg-transparent">

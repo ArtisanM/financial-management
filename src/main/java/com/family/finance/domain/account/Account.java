@@ -25,6 +25,11 @@ public class Account {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
+    /** v0.2 · 产品类目 code(关联 product_category.code)· FR-40d */
+    private String productCategoryCode;
+    /** v0.2 · 用户覆盖类目默认风险等级(NULL = 沿用类目)· FR-40d */
+    private Integer riskLevelOverride;
+
     public boolean isArchived() {
         return archivedAt != null;
     }

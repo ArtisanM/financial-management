@@ -7,6 +7,7 @@ import com.family.finance.repository.MemberMapper;
 import com.family.finance.service.AccountService;
 import com.family.finance.service.AccountTemplateService;
 import com.family.finance.service.NavService;
+import com.family.finance.service.ProductCategoryService;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -28,6 +29,7 @@ public class AccountController {
     private final AccountTemplateService accountTemplateService;
     private final MemberMapper memberMapper;
     private final NavService navService;
+    private final ProductCategoryService productCategoryService;
 
     @GetMapping
     public String index(@AuthenticationPrincipal MemberPrincipal me,
@@ -108,6 +110,7 @@ public class AccountController {
         model.addAttribute("types", AccountType.values());
         model.addAttribute("currencies", new String[]{"CNY", "USD", "HKD"});
         model.addAttribute("form", new AccountForm());
+        model.addAttribute("allCategories", productCategoryService.listAll());
         model.addAttribute("includeArchived", includeArchived);
         model.addAttribute("showWizard", showWizard);
     }
@@ -120,6 +123,10 @@ public class AccountController {
         model.addAttribute("members", memberMapper.findActiveByFamily(me.getFamilyId()));
         model.addAttribute("types", AccountType.values());
         model.addAttribute("currencies", new String[]{"CNY", "USD", "HKD"});
+        model.addAttribute("applicableCategories",
+                productCategoryService.findApplicableFor(account.getType()));
+        model.addAttribute("currentCategory",
+                productCategoryService.findByCode(account.getProductCategoryCode()).orElse(null));
     }
 
     @Data
@@ -131,6 +138,10 @@ public class AccountController {
         private Long primaryOwnerMemberId;
         private Long defaultPaymentSourceAccountId;
         private Integer displayOrder;
+        /** v0.2 · 产品类目 code(FR-40d)*/
+        private String productCategoryCode;
+        /** v0.2 · 风险等级覆盖(NULL = 沿用类目)· FR-40d */
+        private Integer riskLevelOverride;
 
         Account toAccount() {
             return Account.builder()
@@ -141,6 +152,8 @@ public class AccountController {
                     .primaryOwnerMemberId(primaryOwnerMemberId)
                     .defaultPaymentSourceAccountId(defaultPaymentSourceAccountId)
                     .displayOrder(displayOrder)
+                    .productCategoryCode(productCategoryCode)
+                    .riskLevelOverride(riskLevelOverride)
                     .build();
         }
     }

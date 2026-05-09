@@ -20,6 +20,7 @@ public interface TransferMapper {
               FROM transfer
              WHERE period_id = #{periodId}
                AND (from_account_id = #{accountId} OR to_account_id = #{accountId})
+               AND deleted_at IS NULL
              ORDER BY submitted_at, id
             """)
     List<Transfer> findByPeriodAndAccount(@Param("periodId") long periodId,
@@ -30,6 +31,7 @@ public interface TransferMapper {
                    occurred_at, note, submitted_by, submitted_at, is_draft AS draft
               FROM transfer
              WHERE id = #{id}
+               AND deleted_at IS NULL
             """)
     Optional<Transfer> findById(@Param("id") long id);
 
@@ -39,6 +41,7 @@ public interface TransferMapper {
               FROM transfer t
               JOIN period p ON p.id = t.period_id
              WHERE p.family_id = #{familyId}
+               AND t.deleted_at IS NULL
              ORDER BY t.period_id, t.id
             """)
     List<Transfer> findAllByFamily(@Param("familyId") long familyId);
@@ -50,6 +53,7 @@ public interface TransferMapper {
              WHERE period_id = #{periodId}
                AND (from_account_id = #{accountId} OR to_account_id = #{accountId})
                AND is_draft = 0
+               AND deleted_at IS NULL
              ORDER BY submitted_at, id
             """)
     List<Transfer> findCommittedByPeriodAndAccount(@Param("periodId") long periodId,
@@ -63,6 +67,7 @@ public interface TransferMapper {
                AND to_account_id = #{toAccountId}
                AND amount = #{amount}
                AND is_draft = 0
+               AND deleted_at IS NULL
                AND submitted_at >= NOW(3) - INTERVAL 24 HOUR
             """)
     int countRecentDuplicate(@Param("periodId") long periodId,

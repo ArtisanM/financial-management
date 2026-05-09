@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('产品类目 · 管理 · 家庭账房')}"></head>
+<body class="min-h-screen relative">
+<div class="fixed top-0 left-0 right-0 h-1 bg-ink z-40"></div>
+<header th:replace="~{fragments/nav :: nav('admin', ${me}, ${nav})}"></header>
+<main class="max-w-[1400px] mx-auto px-6 lg:px-10 py-10 relative z-10 grid grid-cols-12 gap-8">
+  <aside th:replace="~{admin/_sidebar :: sidebar('product-categories')}"></aside>
+  <section class="col-span-12 md:col-span-9">
+    <div class="mb-8 flex items-end justify-between flex-wrap gap-4">
+      <div>
+        <div class="eyebrow mb-2">产 · 品 · 类 · 目 · v0.2</div>
+        <h1 class="font-display text-4xl font-medium" th:text="|${#lists.size(categories)} 个内置产品类目|">16 个内置产品类目</h1>
+        <p class="text-ink-soft text-sm mt-2 max-w-2xl">用于资产体检的「基准对照」与「风险评级」。每个账户挂一个 code(可在编辑页选择),计算引擎按此查 benchmark_pct + risk_level。当前为系统内置只读;如需扩展或微调,后续在此页加编辑能力。</p>
+      </div>
+      <span class="pill pill-rust">系统内置</span>
+    </div>
+
+    <div class="paper-card overflow-x-auto">
+      <table class="ledger-table">
+        <thead>
+        <tr>
+          <th>顺序</th>
+          <th>code</th>
+          <th>名称</th>
+          <th>风险</th>
+          <th>基准指数</th>
+          <th class="num">基准 %</th>
+          <th>适用类型</th>
+          <th>说明</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="c : ${categories}">
+          <td class="font-mono text-xs text-ink-subtle" th:text="${c.displayOrder}">10</td>
+          <td class="font-mono text-xs" th:text="${c.code}">A_STOCK</td>
+          <td><span class="font-display" th:text="${c.displayName}">A 股 / A 股基金</span></td>
+          <td>
+            <span th:if="${c.riskLevel != null and c.riskLevel > 0}"
+                  class="font-mono text-[11px]" style="color:var(--forest)"
+                  th:text="${c.riskStars()} + ' (' + ${c.riskLevel} + ')'">★★★ (3)</span>
+            <span th:unless="${c.riskLevel != null and c.riskLevel > 0}" class="text-ink-subtle">—</span>
+          </td>
+          <td class="text-ink-soft text-sm" th:text="${c.benchmarkLabel != null ? c.benchmarkLabel : '—'}">沪深 300</td>
+          <td class="num font-mono text-xs"
+              th:text="${c.benchmarkPct != null ? #numbers.formatDecimal(c.benchmarkPct, 1, 2) + '%' : '—'}">8.00%</td>
+          <td class="font-mono text-[10px] text-ink-subtle" th:text="${c.applicableTypes}">STOCK</td>
+          <td class="text-ink-soft text-xs" th:text="${c.description != null ? c.description : ''}">—</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="mt-8 paper-card p-5 bg-card-soft">
+      <div class="eyebrow mb-2">字段说明</div>
+      <ul class="text-sm text-ink-soft space-y-1.5">
+        <li><span class="font-mono text-[11px]">code</span> · 主键,规则引擎与服务层均按此引用,不可重命名</li>
+        <li><span class="font-mono text-[11px]">risk_level</span> · 0/无 · 1 极低 · 2 低 · 3 中低 · 4 中 · 5 中高 · 6 极高;账户可在编辑页覆盖</li>
+        <li><span class="font-mono text-[11px]">benchmark_pct</span> · 长期年化基准,用于 XIRR 跑赢/跑输判定;NULL 代表此类目无稳定基准(如现金/活期)</li>
+        <li><span class="font-mono text-[11px]">applicable_types</span> · 逗号分隔的 AccountType,例如 <span class="font-mono">STOCK</span> / <span class="font-mono">CASH,WEALTH</span> / <span class="font-mono">*</span>(全部)</li>
+      </ul>
+    </div>
+  </section>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

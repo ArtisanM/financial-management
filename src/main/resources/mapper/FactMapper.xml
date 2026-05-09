@@ -68,6 +68,7 @@
                SUM(CASE WHEN kind = 'INCOME' THEN amount ELSE 0 END) AS income_orig,
                SUM(CASE WHEN kind = 'EXPENSE' THEN amount ELSE 0 END) AS expense_orig
           FROM cash_flow
+         WHERE deleted_at IS NULL
          GROUP BY period_id, account_id
     ) cf
       ON cf.period_id = p.id
@@ -78,6 +79,7 @@
                SUM(amount) AS transfer_in_orig
           FROM transfer
          WHERE is_draft = 0
+           AND deleted_at IS NULL
          GROUP BY period_id, to_account_id
     ) tin
       ON tin.period_id = p.id
@@ -88,6 +90,7 @@
                SUM(amount) AS transfer_out_orig
           FROM transfer
          WHERE is_draft = 0
+           AND deleted_at IS NULL
          GROUP BY period_id, from_account_id
     ) tout
       ON tout.period_id = p.id

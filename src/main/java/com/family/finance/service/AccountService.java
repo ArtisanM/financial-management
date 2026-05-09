@@ -35,6 +35,7 @@ public class AccountService {
     private final PeriodMapper periodMapper;
     private final SnapshotMapper snapshotMapper;
     private final AuditLogService auditLogService;
+    private final ProductCategoryService productCategoryService;
 
     public List<Account> findActiveByFamily(long familyId) {
         return accountMapper.findActiveByFamily(familyId);
@@ -55,6 +56,13 @@ public class AccountService {
                         .collect(Collectors.toMap(PeriodSnapshot::getAccountId, Function.identity())))
                 .orElseGet(Map::of);
 
+        // v0.2 · 一次加载所有类目,模板免重复查 (FR-40d)
+        Map<String, com.family.finance.domain.category.ProductCategory> categoriesByCode =
+                productCategoryService.listAll().stream()
+                        .collect(Collectors.toMap(
+                                com.family.finance.domain.category.ProductCategory::getCode,
+                                Function.identity()));
+
         List<AccountRow> rows = new ArrayList<>();
         for (Account account : accounts) {
             PeriodSnapshot snapshot = snapshots.get(account.getId());
@@ -63,6 +71,10 @@ public class AccountService {
             Account source = account.getDefaultPaymentSourceAccountId() == null
                     ? null
                     : accountsById.get(account.getDefaultPaymentSourceAccountId());
+            com.family.finance.domain.category.ProductCategory cat =
+                    account.getProductCategoryCode() == null
+                            ? null
+                            : categoriesByCode.get(account.getProductCategoryCode());
             rows.add(new AccountRow(
                     account,
                     owner == null ? "共同" : owner.getDisplayName(),
@@ -70,7 +82,8 @@ public class AccountService {
                     snapshot,
                     balance,
                     MoneyFormat.formatForAccount(account.getType(), account.getCurrency(), balance),
-                    account.isArchived()
+                    account.isArchived(),
+                    cat
             ));
         }
         return rows;
@@ -119,6 +132,10 @@ public class AccountService {
     public Account create(MemberPrincipal me, Account account) {
         account.setFamilyId(me.getFamilyId());
         normalizeLoanFields(account);
+        // v0.2 · 类目缺省时按 account.type 给 default(FR-40d)
+        if (account.getProductCategoryCode() == null || account.getProductCategoryCode().isBlank()) {
+            account.setProductCategoryCode(productCategoryService.defaultCodeFor(account.getType()));
+        }
         if (account.getDisplayOrder() == null) {
             account.setDisplayOrder(nextDisplayOrder(me.getFamilyId()));
         }
@@ -134,6 +151,10 @@ public class AccountService {
         update.setId(existing.getId());
         update.setFamilyId(existing.getFamilyId());
         normalizeLoanFields(update);
+        // v0.2 · 编辑时若用户清空类目,沿用旧值(不允许 NULL)
+        if (update.getProductCategoryCode() == null || update.getProductCategoryCode().isBlank()) {
+            update.setProductCategoryCode(existing.getProductCategoryCode());
+        }
         accountMapper.update(update);
         auditLogService.record(me.getFamilyId(), me.getMemberId(), AuditLogType.ACCOUNT_UPDATE,
                 "account", accountId, "更新账户 " + update.getDisplayName());

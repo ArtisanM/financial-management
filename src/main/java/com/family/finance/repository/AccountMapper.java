@@ -17,7 +17,8 @@ public interface AccountMapper {
     @Select("""
             SELECT id, family_id, template_id, display_name, type, currency,
                    primary_owner_member_id, default_payment_source_account_id,
-                   display_order, archived_at, created_at, updated_at
+                   display_order, archived_at, created_at, updated_at,
+                   product_category_code, risk_level_override
               FROM account
              WHERE id = #{id}
             """)
@@ -26,7 +27,8 @@ public interface AccountMapper {
     @Select("""
             SELECT id, family_id, template_id, display_name, type, currency,
                    primary_owner_member_id, default_payment_source_account_id,
-                   display_order, archived_at, created_at, updated_at
+                   display_order, archived_at, created_at, updated_at,
+                   product_category_code, risk_level_override
               FROM account
              WHERE family_id = #{familyId}
              ORDER BY archived_at IS NOT NULL, display_order, id
@@ -36,7 +38,8 @@ public interface AccountMapper {
     @Select("""
             SELECT id, family_id, template_id, display_name, type, currency,
                    primary_owner_member_id, default_payment_source_account_id,
-                   display_order, archived_at, created_at, updated_at
+                   display_order, archived_at, created_at, updated_at,
+                   product_category_code, risk_level_override
               FROM account
              WHERE family_id = #{familyId}
                AND archived_at IS NULL
@@ -55,10 +58,12 @@ public interface AccountMapper {
     @Insert("""
             INSERT INTO account (
                 family_id, template_id, display_name, type, currency,
-                primary_owner_member_id, default_payment_source_account_id, display_order
+                primary_owner_member_id, default_payment_source_account_id, display_order,
+                product_category_code, risk_level_override
             ) VALUES (
                 #{familyId}, #{templateId}, #{displayName}, #{type}, #{currency},
-                #{primaryOwnerMemberId}, #{defaultPaymentSourceAccountId}, #{displayOrder}
+                #{primaryOwnerMemberId}, #{defaultPaymentSourceAccountId}, #{displayOrder},
+                #{productCategoryCode}, #{riskLevelOverride}
             )
             """)
     @Options(useGeneratedKeys = true, keyProperty = "id")
@@ -72,7 +77,9 @@ public interface AccountMapper {
                    currency = #{currency},
                    primary_owner_member_id = #{primaryOwnerMemberId},
                    default_payment_source_account_id = #{defaultPaymentSourceAccountId},
-                   display_order = #{displayOrder}
+                   display_order = #{displayOrder},
+                   product_category_code = #{productCategoryCode},
+                   risk_level_override = #{riskLevelOverride}
              WHERE id = #{id}
                AND family_id = #{familyId}
             """)

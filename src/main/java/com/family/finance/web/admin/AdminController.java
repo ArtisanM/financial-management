@@ -20,6 +20,7 @@ import com.family.finance.service.AuditLogService;
 import com.family.finance.service.FamilyService;
 import com.family.finance.service.FxService;
 import com.family.finance.service.PeriodService;
+import com.family.finance.service.ProductCategoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
@@ -55,6 +56,7 @@ public class AdminController {
     private final AdminService adminService;
     private final com.family.finance.service.PeriodOpener periodOpener;
     private final AuditLogService auditLogService;
+    private final ProductCategoryService productCategoryService;
 
     // ---------------------------------------------------------------------
     // 1. /admin · 总览
@@ -183,6 +185,15 @@ public class AdminController {
     public String cashFlowCategories(Model model) {
         model.addAttribute("categories", cashFlowCategoryMapper.listOrdered());
         return "admin/cash-flow-categories";
+    }
+
+    // ---------------------------------------------------------------------
+    // 6b. /admin/product-categories · v0.2 产品类目(只读)
+    // ---------------------------------------------------------------------
+    @GetMapping("/product-categories")
+    public String productCategories(Model model) {
+        model.addAttribute("categories", productCategoryService.listAll());
+        return "admin/product-categories";
     }
 
     // ---------------------------------------------------------------------

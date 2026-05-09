@@ -18,6 +18,7 @@ public interface CashFlowMapper {
               FROM cash_flow
              WHERE period_id = #{periodId}
                AND account_id = #{accountId}
+               AND deleted_at IS NULL
              ORDER BY submitted_at, id
             """)
     List<CashFlow> findByPeriodAndAccount(@Param("periodId") long periodId,
@@ -29,6 +30,7 @@ public interface CashFlowMapper {
               FROM cash_flow cf
               JOIN period p ON p.id = cf.period_id
              WHERE p.family_id = #{familyId}
+               AND cf.deleted_at IS NULL
              ORDER BY cf.period_id, cf.id
             """)
     List<CashFlow> findAllByFamily(@Param("familyId") long familyId);

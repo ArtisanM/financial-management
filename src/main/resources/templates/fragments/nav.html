@@ -25,6 +25,8 @@
            th:classappend="${active == 'accounts' ? ' text-ink border-b-2 border-brass pb-[18px]' : ' text-ink-soft hover:text-ink'}">账户</a>
         <a th:href="@{/reports}" class="no-underline"
            th:classappend="${active == 'reports' ? ' text-ink border-b-2 border-brass pb-[18px]' : ' text-ink-soft hover:text-ink'}">报表</a>
+        <a th:href="@{/checkup}" class="no-underline"
+           th:classappend="${active == 'checkup' ? ' text-ink border-b-2 border-brass pb-[18px]' : ' text-ink-soft hover:text-ink'}">资产体检</a>
         <a th:href="@{/admin}" class="no-underline"
    th:classappend="${active == 'admin' ? ' text-ink border-b-2 border-brass pb-[18px]' : ' text-ink-soft hover:text-ink'}">管理</a>
       </nav>
@@ -45,6 +47,7 @@
             </a>
             <a th:href="@{/accounts}" class="px-6 py-4 hover:bg-card-soft no-underline">账户</a>
             <a th:href="@{/reports}" class="px-6 py-4 hover:bg-card-soft no-underline">报表</a>
+            <a th:href="@{/checkup}" class="px-6 py-4 hover:bg-card-soft no-underline">资产体检</a>
             <a th:href="@{/admin}" class="px-6 py-4 hover:bg-card-soft no-underline">管理</a>
             <form th:action="@{/logout}" method="post" class="px-6 py-4 bg-card-soft">
               <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
