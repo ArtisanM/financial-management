@@ -345,11 +345,17 @@ v0.1 78 条用例继续 PASS;v0.2 阶段 1 新增 10 条全 PASS;无回归。
 
 ```
 ═══════════════════════════════════════
- 总结: PASS=139  FAIL=0  SKIP=1
+ 总结: PASS=143  FAIL=0  SKIP=1
 ═══════════════════════════════════════
 ```
 
-v0.1 + v0.2 共 139 条 curl + grep 黑盒用例全部通过,0 回归。
+v0.1 + v0.2 共 143 条 curl + grep 黑盒用例全部通过,0 回归。
+
+含:
+- v02-FR38-1/2/3 dashboard KPI 卡 deep-link 到 /checkup 锚点(allocation / risk / liquidity / return)
+- v02-LLM-LIVE-1 LLM 真实调用(Qwen-Plus,验证 ✨AI 角标渲染 + 数字保真)
+- v02-SOFT-DEL-1~8 软删 endpoint 全链路(包括 OPEN 反向冲销 + CLOSED 拒写 + 不存在 id 拦截)
+- v02-LEDGER-1~6 ledger.csv 导出全链路
 
 ### v0.2 · 单元测试(JUnit 5)
 

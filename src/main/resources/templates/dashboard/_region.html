@@ -92,16 +92,40 @@
     </details>
   </section>
 
+  <!-- v0.2 FR-38 · KPI 卡 deep-link 到 /checkup 锚点(group hover 提示「→ 详细」) -->
   <section class="grid grid-cols-2 lg:grid-cols-5 gap-px bg-rule mb-10">
-    <div class="kpi-card"><span class="kpi-eyebrow">净资产</span><div class="kpi-value tnum" th:text="${kpiNetWorth}">¥0</div>
+    <a th:href="@{/checkup}" class="kpi-card group no-underline relative hover:bg-card-soft transition-colors">
+      <span class="kpi-eyebrow">净资产</span>
+      <div class="kpi-value tnum" th:text="${kpiNetWorth}">¥0</div>
       <div class="kpi-delta"
            th:classappend="${kpiDelta != null and kpiDelta.startsWith('+') ? ' num-pos' : (kpiDelta != null and kpiDelta.startsWith('-') ? ' num-neg' : '')}"
            th:text="${kpiDelta}">—</div>
-    </div>
-    <div class="kpi-card"><span class="kpi-eyebrow">总资产</span><div class="kpi-value tnum" th:text="${kpiAssets}">¥0</div><div class="kpi-delta">不含 LOAN</div></div>
-    <div class="kpi-card"><span class="kpi-eyebrow">总负债</span><div class="kpi-value tnum num-neg" th:text="${kpiLiabilities}">¥0</div><div class="kpi-delta">仅 LOAN</div></div>
-    <div class="kpi-card"><span class="kpi-eyebrow">紧急储备</span><div class="kpi-value tnum" th:text="${kpiEmergency}">—</div><div class="kpi-delta">流动资产 / 月均支出</div></div>
-    <div class="kpi-card"><span class="kpi-eyebrow">负债率</span><div class="kpi-value tnum" th:text="${kpiDebtRatio}">—</div><div class="kpi-delta">负债 / 资产</div></div>
+      <span class="absolute top-2 right-3 text-[10px] text-ink-subtle opacity-0 group-hover:opacity-100 transition-opacity">→ 体检</span>
+    </a>
+    <a href="/checkup#allocation" class="kpi-card group no-underline relative hover:bg-card-soft transition-colors">
+      <span class="kpi-eyebrow">总资产</span>
+      <div class="kpi-value tnum" th:text="${kpiAssets}">¥0</div>
+      <div class="kpi-delta">不含 LOAN</div>
+      <span class="absolute top-2 right-3 text-[10px] text-ink-subtle opacity-0 group-hover:opacity-100 transition-opacity">→ 配置</span>
+    </a>
+    <a href="/checkup#allocation" class="kpi-card group no-underline relative hover:bg-card-soft transition-colors">
+      <span class="kpi-eyebrow">总负债</span>
+      <div class="kpi-value tnum num-neg" th:text="${kpiLiabilities}">¥0</div>
+      <div class="kpi-delta">仅 LOAN</div>
+      <span class="absolute top-2 right-3 text-[10px] text-ink-subtle opacity-0 group-hover:opacity-100 transition-opacity">→ 配置</span>
+    </a>
+    <a href="/checkup#liquidity" class="kpi-card group no-underline relative hover:bg-card-soft transition-colors">
+      <span class="kpi-eyebrow">紧急储备</span>
+      <div class="kpi-value tnum" th:text="${kpiEmergency}">—</div>
+      <div class="kpi-delta">流动资产 / 月均支出</div>
+      <span class="absolute top-2 right-3 text-[10px] text-ink-subtle opacity-0 group-hover:opacity-100 transition-opacity">→ 流动性</span>
+    </a>
+    <a href="/checkup#allocation" class="kpi-card group no-underline relative hover:bg-card-soft transition-colors">
+      <span class="kpi-eyebrow">负债率</span>
+      <div class="kpi-value tnum" th:text="${kpiDebtRatio}">—</div>
+      <div class="kpi-delta">负债 / 资产</div>
+      <span class="absolute top-2 right-3 text-[10px] text-ink-subtle opacity-0 group-hover:opacity-100 transition-opacity">→ 配置</span>
+    </a>
   </section>
 
   <section class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-10">
