@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI 介入设计 · 智能建议产品决策 · v0.2</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,ital,wght@9..144,0,300..700;9..144,1,300..600&family=JetBrains+Mono:wght@300;400;500&family=Noto+Serif+SC:wght@300;400;500;600&family=Source+Serif+4:opsz,wght@8..60,300;8..60,400;8..60,500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/style.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { theme: { extend: { colors: { paper: 'var(--paper)', 'paper-soft': 'var(--paper-soft)', 'paper-deep': 'var(--paper-deep)', card: 'var(--card)', 'card-soft': 'var(--card-soft)', ink: { DEFAULT: 'var(--ink)', soft: 'var(--ink-soft)', subtle: 'var(--ink-subtle)' }, rule: { DEFAULT: 'var(--rule)', soft: 'var(--rule-soft)' }, brass: { DEFAULT: 'var(--brass)', deep: 'var(--brass-deep)', soft: 'var(--brass-soft)' }, forest: 'var(--forest)', rust: 'var(--rust)' }, fontFamily: { display: ['Fraunces', 'Noto Serif SC', 'serif'], serif: ['"Source Serif 4"', 'Noto Serif SC', 'serif'], mono: ['JetBrains Mono', 'monospace'] } } } }
+  </script>
+  <style>
+    .layer-card {
+      padding: 16px;
+      background: var(--card);
+      border: 1px solid var(--rule);
+      position: relative;
+    }
+    .arrow {
+      width: 0;
+      height: 0;
+      border-left: 16px solid var(--brass-deep);
+      border-top: 12px solid transparent;
+      border-bottom: 12px solid transparent;
+      align-self: center;
+    }
+    .privacy-row {
+      display: flex;
+      align-items: baseline;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--rule-soft);
+    }
+    .privacy-row:last-child { border-bottom: 0; }
+    .check-yes { color: var(--forest); font-weight: 600; }
+    .check-no { color: var(--rust); font-weight: 600; }
+  </style>
+</head>
+<body class="min-h-screen relative">
+
+  <div class="fixed top-0 left-0 right-0 h-1 bg-ink z-40"></div>
+
+  <header class="sticky top-1 bg-paper/95 backdrop-blur border-b border-rule z-30">
+    <div class="max-w-[1400px] mx-auto px-6 lg:px-10 flex items-center justify-between h-16">
+      <div class="flex items-center gap-12">
+        <a href="../index.html" class="flex items-baseline gap-2 no-underline">
+          <span class="font-display text-xl font-medium">账房</span>
+          <span class="font-mono text-[10px] tracking-[0.2em] text-ink-subtle">№ 张</span>
+        </a>
+        <span class="font-mono text-[11px] tracking-[0.14em] uppercase text-ink-subtle">v0.2 · AI 介入设计</span>
+      </div>
+      <a href="../index.html" class="font-mono text-[10px] tracking-[0.18em] uppercase text-ink-soft hover:text-ink no-underline">← v0.2 索引</a>
+    </div>
+  </header>
+
+  <main class="max-w-[1400px] mx-auto px-6 lg:px-10 py-10 relative z-10">
+
+    <!-- 标题段 -->
+    <div class="mb-10">
+      <div class="eyebrow mb-3">/ 智 · 能 · 建 · 议 · 产 · 品 · 决 · 策</div>
+      <h1 class="font-display text-4xl md:text-5xl font-medium tracking-tight mb-3">
+        AI 介入设计 ·
+        <span class="italic font-light text-brass-deep">60% 规则 / 40% LLM / 0 幻觉</span>
+      </h1>
+      <p class="font-serif text-base text-ink-soft max-w-3xl leading-relaxed">
+        资产体检的智能建议<strong class="text-ink">不是纯模板填空,也不是纯 LLM 生成</strong>。规则引擎给硬骨架(数字 + level + 触发逻辑),LLM 给语言层(自然、专业、克制的投资顾问语调),OutputValidator 双重锁数字幻觉。
+        本页可视化展示这套架构的产品决策。
+      </p>
+    </div>
+
+    <!-- Section 1 · 三层责任边界 -->
+    <section class="mb-12">
+      <div class="flex items-baseline justify-between mb-4">
+        <div>
+          <div class="eyebrow mb-1">/ 三 · 层 · 责 · 任 · 边 · 界</div>
+          <h2 class="font-display text-2xl font-medium">数据流(请求时实时)</h2>
+        </div>
+        <span class="font-mono text-[10px] tracking-[0.18em] uppercase text-ink-subtle">RULE → LLM → VALIDATOR</span>
+      </div>
+
+      <!-- 三层 -->
+      <div class="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr_auto_1fr] gap-3 items-stretch">
+
+        <!-- 层 1 · 工程 -->
+        <div class="layer-card" style="border-left: 4px solid var(--forest)">
+          <div class="flex items-baseline justify-between mb-3">
+            <span class="font-mono text-[10px] tracking-[0.18em] uppercase font-medium" style="color:var(--forest)">层 1 · 工 程</span>
+            <span class="font-mono text-[9px] text-ink-subtle">< 50ms</span>
+          </div>
+          <h3 class="font-display text-base font-medium mb-2">规则引擎 + Calculator</h3>
+          <ul class="space-y-1.5 text-xs text-ink-soft">
+            <li class="flex gap-1.5"><span class="text-forest">✓</span> 数学计算(XIRR/TWR/σ/Sharpe/MaxDD)</li>
+            <li class="flex gap-1.5"><span class="text-forest">✓</span> 阈值判断 + Level 决定</li>
+            <li class="flex gap-1.5"><span class="text-forest">✓</span> 推荐金额估算</li>
+            <li class="flex gap-1.5"><span class="text-forest">✓</span> 预期收益计算</li>
+            <li class="flex gap-1.5"><span class="text-forest">✓</span> 输出 hardFacts + templateText</li>
+          </ul>
+          <div class="mt-3 pt-3 border-t border-rule-soft text-[10px] font-mono text-ink-subtle">
+            纯 Java 函数 / 完全可单测<br/>
+            Spring 注入收集 List&lt;Rule&gt;
+          </div>
+        </div>
+
+        <div class="hidden lg:flex justify-center"><div class="arrow"></div></div>
+
+        <!-- 层 2 · LLM -->
+        <div class="layer-card" style="border-left: 4px solid var(--brass-deep)">
+          <div class="flex items-baseline justify-between mb-3">
+            <span class="font-mono text-[10px] tracking-[0.18em] uppercase font-medium" style="color:var(--brass-deep)">层 2 · LLM</span>
+            <span class="font-mono text-[9px] text-ink-subtle">~1-3s 异步</span>
+          </div>
+          <h3 class="font-display text-base font-medium mb-2">DeepSeek/Qwen 文案润色</h3>
+          <ul class="space-y-1.5 text-xs text-ink-soft">
+            <li class="flex gap-1.5"><span class="text-brass-deep">✓</span> 把 hardFacts 组装成自然语言</li>
+            <li class="flex gap-1.5"><span class="text-brass-deep">✓</span> 投顾语调(数据驱动 / 克制)</li>
+            <li class="flex gap-1.5"><span class="text-brass-deep">✓</span> 维度专属术语恰当应用</li>
+            <li class="flex gap-1.5"><span class="text-brass-deep">✓</span> 60-80 字简洁</li>
+            <li class="flex gap-1.5"><span class="text-rust">✗</span> 不能计算 / 不能引未给数字</li>
+            <li class="flex gap-1.5"><span class="text-rust">✗</span> 不能给具体产品名</li>
+          </ul>
+          <div class="mt-3 pt-3 border-t border-rule-soft text-[10px] font-mono text-ink-subtle">
+            OpenAI 协议直连 · cache 24h<br/>
+            异步触发,不阻塞首屏
+          </div>
+        </div>
+
+        <div class="hidden lg:flex justify-center"><div class="arrow"></div></div>
+
+        <!-- 层 3 · Validator -->
+        <div class="layer-card" style="border-left: 4px solid var(--rust)">
+          <div class="flex items-baseline justify-between mb-3">
+            <span class="font-mono text-[10px] tracking-[0.18em] uppercase font-medium" style="color:var(--rust)">层 3 · 双 · 锁</span>
+            <span class="font-mono text-[9px] text-ink-subtle">< 5ms</span>
+          </div>
+          <h3 class="font-display text-base font-medium mb-2">OutputValidator</h3>
+          <ul class="space-y-1.5 text-xs text-ink-soft">
+            <li class="flex gap-1.5"><span class="text-rust">⊠</span> 正则提取所有数字</li>
+            <li class="flex gap-1.5"><span class="text-rust">⊠</span> 必须 ∈ hardFacts(±5% 容差)</li>
+            <li class="flex gap-1.5"><span class="text-rust">⊠</span> 禁词扫描(产品名 / 古典词)</li>
+            <li class="flex gap-1.5"><span class="text-rust">⊠</span> 长度校验(50-100 字)</li>
+            <li class="flex gap-1.5"><span class="text-rust">⊠</span> 不通过 → 降级 templateText</li>
+          </ul>
+          <div class="mt-3 pt-3 border-t border-rule-soft text-[10px] font-mono text-ink-subtle">
+            幻觉 → audit_log<br/>
+            用户感知:无差别(看模板版)
+          </div>
+        </div>
+      </div>
+
+      <!-- 用户体验流程 -->
+      <div class="mt-6 paper-card p-5" style="background:var(--card-soft)">
+        <div class="eyebrow mb-3" style="color:var(--brass-deep)">用 · 户 · 体 · 验 · 流 · 程</div>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-3 text-sm">
+          <div>
+            <div class="font-mono text-[10px] uppercase tracking-wider text-ink-subtle">T+0ms</div>
+            <p class="text-ink-soft mt-1">用户访问 /checkup</p>
+          </div>
+          <div>
+            <div class="font-mono text-[10px] uppercase tracking-wider text-ink-subtle">T+50ms</div>
+            <p class="text-ink-soft mt-1">规则引擎算完 → 立即看到模板版建议</p>
+          </div>
+          <div>
+            <div class="font-mono text-[10px] uppercase tracking-wider text-ink-subtle">T+100ms-3s</div>
+            <p class="text-ink-soft mt-1">浏览器异步请求 LLM 润色 → cache hit 100ms / miss 1-3s</p>
+          </div>
+          <div>
+            <div class="font-mono text-[10px] uppercase tracking-wider text-ink-subtle">T+完成</div>
+            <p class="text-ink-soft mt-1">模板版 fade-out → AI 版 fade-in("账房在思考")</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 2 · 4 维度 prompt 分表 -->
+    <section class="mb-12">
+      <div class="eyebrow mb-3">/ 4 · 个 · 维 · 度 · 专 · 属 · PROMPT</div>
+      <h2 class="font-display text-2xl font-medium mb-4">每个维度有自己的语言学</h2>
+
+      <div class="paper-card overflow-hidden">
+        <table class="w-full text-sm">
+          <thead class="bg-card-soft border-b border-rule">
+            <tr>
+              <th class="px-4 py-3 text-left font-mono text-[10px] tracking-wider uppercase text-ink-subtle">维度</th>
+              <th class="px-4 py-3 text-left font-mono text-[10px] tracking-wider uppercase text-ink-subtle">必用术语</th>
+              <th class="px-4 py-3 text-left font-mono text-[10px] tracking-wider uppercase text-ink-subtle">禁用</th>
+              <th class="px-4 py-3 text-left font-mono text-[10px] tracking-wider uppercase text-ink-subtle">标准模式</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-rule-soft">
+            <tr>
+              <td class="px-4 py-4 align-top">
+                <div class="font-display text-base font-medium">流动性</div>
+                <div class="font-mono text-[10px] text-ink-subtle mt-0.5">LIQUIDITY</div>
+              </td>
+              <td class="px-4 py-4 align-top text-xs text-ink-soft leading-relaxed">流动性月数 · 应急储备 · 流动性配置 · 机会成本 · 超额现金</td>
+              <td class="px-4 py-4 align-top text-xs text-ink-soft leading-relaxed">不建议高风险产品作流动性配置</td>
+              <td class="px-4 py-4 align-top text-xs font-mono text-ink-soft leading-relaxed">[量化状态] + [偏离区间] + [配置建议]</td>
+            </tr>
+            <tr>
+              <td class="px-4 py-4 align-top">
+                <div class="font-display text-base font-medium">风险与配置</div>
+                <div class="font-mono text-[10px] text-ink-subtle mt-0.5">RISK & ALLOCATION</div>
+              </td>
+              <td class="px-4 py-4 align-top text-xs text-ink-soft leading-relaxed">风险敞口 · 配置比例 · 再平衡 · σ · Sharpe · 风险预算</td>
+              <td class="px-4 py-4 align-top text-xs text-ink-soft leading-relaxed">"减少风险" → 用"再平衡 / 降低敞口"</td>
+              <td class="px-4 py-4 align-top text-xs font-mono text-ink-soft leading-relaxed">[偏离量化] + [量化影响] + [再平衡建议]</td>
+            </tr>
+            <tr>
+              <td class="px-4 py-4 align-top">
+                <div class="font-display text-base font-medium">收益质量</div>
+                <div class="font-mono text-[10px] text-ink-subtle mt-0.5">RETURN QUALITY</div>
+              </td>
+              <td class="px-4 py-4 align-top text-xs text-ink-soft leading-relaxed">年化 · 基准 · alpha · 跟踪误差 · 风险调整收益</td>
+              <td class="px-4 py-4 align-top text-xs text-ink-soft leading-relaxed">不能含糊"投资好/差"</td>
+              <td class="px-4 py-4 align-top text-xs font-mono text-ink-soft leading-relaxed">[年化数字] + [vs 基准] + [改进或表扬]</td>
+            </tr>
+            <tr>
+              <td class="px-4 py-4 align-top">
+                <div class="font-display text-base font-medium">负债健康</div>
+                <div class="font-mono text-[10px] text-ink-subtle mt-0.5">DEBT HEALTH</div>
+              </td>
+              <td class="px-4 py-4 align-top text-xs text-ink-soft leading-relaxed">本金 · 利息成本 · 加速偿还 · 还款节奏 · 负债率</td>
+              <td class="px-4 py-4 align-top text-xs text-ink-soft leading-relaxed">"快还点" → 用"加速偿还"</td>
+              <td class="px-4 py-4 align-top text-xs font-mono text-ink-soft leading-relaxed">[当前进度] + [节奏判断] + [优化建议]</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Section 3 · 隐私边界 -->
+    <section class="mb-12">
+      <div class="eyebrow mb-3">/ 隐 · 私 · 边 · 界 · 上 · 传 · 什 · 么 · 不 · 上 · 传 · 什 · 么</div>
+      <h2 class="font-display text-2xl font-medium mb-4">家庭账本的隐私承诺</h2>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-px bg-rule">
+
+        <!-- 上传(可见) -->
+        <div class="bg-card p-6">
+          <div class="font-mono text-[10px] tracking-[0.18em] uppercase text-forest mb-3">✓ 上 · 传(LLM 可见)</div>
+          <div class="space-y-1">
+            <div class="privacy-row">
+              <span class="check-yes mr-3">✓</span>
+              <div class="flex-1">
+                <div class="text-sm">类目代码</div>
+                <div class="font-mono text-[10px] text-ink-subtle">CASH_DEPOSIT / A_STOCK / ...</div>
+              </div>
+            </div>
+            <div class="privacy-row">
+              <span class="check-yes mr-3">✓</span>
+              <div class="flex-1">
+                <div class="text-sm">风险等级</div>
+                <div class="font-mono text-[10px] text-ink-subtle">★1-6 数字</div>
+              </div>
+            </div>
+            <div class="privacy-row">
+              <span class="check-yes mr-3">✓</span>
+              <div class="flex-1">
+                <div class="text-sm">硬数字</div>
+                <div class="font-mono text-[10px] text-ink-subtle">余额 / 月入月出 / 年化 / 基准 / 推荐金额</div>
+              </div>
+            </div>
+            <div class="privacy-row">
+              <span class="check-yes mr-3">✓</span>
+              <div class="flex-1">
+                <div class="text-sm">规则 ID + 模板文本</div>
+                <div class="font-mono text-[10px] text-ink-subtle">FAM-RISK-1 / LIQ-EFF-1 / ...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 不上传(被锁) -->
+        <div class="bg-card p-6">
+          <div class="font-mono text-[10px] tracking-[0.18em] uppercase text-rust mb-3">✗ 不 · 上 · 传(在 prompt 之前 strip)</div>
+          <div class="space-y-1">
+            <div class="privacy-row">
+              <span class="check-no mr-3">✗</span>
+              <div class="flex-1">
+                <div class="text-sm">账户名</div>
+                <div class="font-mono text-[10px] text-ink-subtle">"招行储蓄卡-工资" → 替换成类目代码</div>
+              </div>
+            </div>
+            <div class="privacy-row">
+              <span class="check-no mr-3">✗</span>
+              <div class="flex-1">
+                <div class="text-sm">主理人</div>
+                <div class="font-mono text-[10px] text-ink-subtle">"张伟" / "迪娃" → 完全 strip</div>
+              </div>
+            </div>
+            <div class="privacy-row">
+              <span class="check-no mr-3">✗</span>
+              <div class="flex-1">
+                <div class="text-sm">流水备注</div>
+                <div class="font-mono text-[10px] text-ink-subtle">"5 月薪" / "外卖+地铁" → 完全 strip</div>
+              </div>
+            </div>
+            <div class="privacy-row">
+              <span class="check-no mr-3">✗</span>
+              <div class="flex-1">
+                <div class="text-sm">家庭名 / 城市 / 其它 PII</div>
+                <div class="font-mono text-[10px] text-ink-subtle">完全 strip</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-3 paper-card p-4 text-sm text-ink-soft" style="background:var(--card-soft); border-left: 3px solid var(--forest)">
+        <strong class="text-ink">原则</strong>:LLM 看到的等价于
+        <code class="font-mono text-xs">{category: A_STOCK, risk: 5, balance: 438200, benchmark_pct: 10.5, ...}</code>
+        — 财务画像可见,身份完全匿名。
+      </div>
+    </section>
+
+    <!-- Section 4 · 文案对照 · 中式古典 vs 现代投顾 -->
+    <section class="mb-12">
+      <div class="eyebrow mb-3">/ 文 · 案 · 对 · 照 · 中 · 式 · 古 · 典 · vs · 现 · 代 · 投 · 顾</div>
+      <h2 class="font-display text-2xl font-medium mb-4">语调选择</h2>
+
+      <p class="text-sm text-ink-soft mb-5 max-w-3xl leading-relaxed">
+        视觉品牌(账房 logo / 印章 / 印泥红 / "印泥洒了"错误页)<strong class="text-ink">保留中式雅致</strong> — 这是品牌资产。
+        但 AI 输出文案<strong class="text-brass-deep">改用现代专业投资顾问</strong> — 否则妻子(非技术)看不懂"师傅打理 / 挪点钱"这种家常表述,工程师(自己)觉得不专业。
+      </p>
+
+      <div class="space-y-4">
+
+        <!-- 对照 1 -->
+        <div class="paper-card overflow-hidden">
+          <div class="bg-card-soft px-5 py-2 border-b border-rule font-mono text-[11px] tracking-wider text-ink-subtle">
+            场景 · 流动性过剩(WARN)· 同样的 hardFacts
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 divide-x divide-rule-soft">
+            <div class="p-5">
+              <div class="font-mono text-[10px] tracking-[0.18em] uppercase text-rust mb-2">✗ 中 · 式 · 古 · 典(否决)</div>
+              <p class="text-sm text-ink-soft italic leading-relaxed">
+                "你这账户压着 14 个月家用,搁着也是搁着。挪 ¥35k 到货币基金,留 5 月应急,一年多挣 ¥1,225。"
+              </p>
+            </div>
+            <div class="p-5" style="background:rgba(122,90,57,.04)">
+              <div class="font-mono text-[10px] tracking-[0.18em] uppercase mb-2" style="color:var(--brass-deep)">✓ 现 · 代 · 投 · 顾(选定)</div>
+              <p class="text-sm text-ink leading-relaxed">
+                流动性月数 14.2,显著高于推荐区间(6-9 月)。建议将 ¥35,000 配置至货币基金,保持 5 月应急储备,预计年化增收 ¥1,225。
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 对照 2 -->
+        <div class="paper-card overflow-hidden">
+          <div class="bg-card-soft px-5 py-2 border-b border-rule font-mono text-[11px] tracking-wider text-ink-subtle">
+            场景 · 跑输基准(WARN)
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 divide-x divide-rule-soft">
+            <div class="p-5">
+              <div class="font-mono text-[10px] tracking-[0.18em] uppercase text-rust mb-2">✗ 中 · 式 · 古 · 典</div>
+              <p class="text-sm text-ink-soft italic leading-relaxed">
+                "你这美股账户最近 12 个月赚了 9.2%,跑得比 QQQ 慢点(10.5%),要不直接买点 QQQ ETF?"
+              </p>
+            </div>
+            <div class="p-5" style="background:rgba(122,90,57,.04)">
+              <div class="font-mono text-[10px] tracking-[0.18em] uppercase mb-2" style="color:var(--brass-deep)">✓ 现 · 代 · 投 · 顾</div>
+              <p class="text-sm text-ink leading-relaxed">
+                近 12 月年化 9.2%,跑输基准 QQQ(10.5%)1.3 个百分点。考虑配置 30% 仓位至 QQQ ETF 直接跟踪基准,降低主动选股偏差。
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 对照 3 -->
+        <div class="paper-card overflow-hidden">
+          <div class="bg-card-soft px-5 py-2 border-b border-rule font-mono text-[11px] tracking-wider text-ink-subtle">
+            场景 · 集中度告警(DANGER)
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 divide-x divide-rule-soft">
+            <div class="p-5">
+              <div class="font-mono text-[10px] tracking-[0.18em] uppercase text-rust mb-2">✗ 中 · 式 · 古 · 典</div>
+              <p class="text-sm text-ink-soft italic leading-relaxed">
+                "这一个账户占了你家 42% 的资产,有点扎堆,挪点出去到债券基金更稳。"
+              </p>
+            </div>
+            <div class="p-5" style="background:rgba(122,90,57,.04)">
+              <div class="font-mono text-[10px] tracking-[0.18em] uppercase mb-2" style="color:var(--brass-deep)">✓ 现 · 代 · 投 · 顾</div>
+              <p class="text-sm text-ink leading-relaxed">
+                单账户敞口 42%,超过推荐集中度上限(30%)。建议将 ¥80,000 再配置至债券基金,预计组合波动率 σ 由 11.2% 降至 8.4%。
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="paper-card p-4">
+          <div class="font-mono text-[10px] tracking-[0.18em] uppercase text-rust mb-2">禁 · 词(LLM 输出层)</div>
+          <p class="text-sm text-ink-soft">师傅 · 打理 · 挪 · 留个 · 家底 · 搁着 · 扎堆 · 给你算算</p>
+          <p class="text-xs text-ink-subtle mt-2 font-mono">这些词在品牌 chrome 用,不进 AI 建议正文</p>
+        </div>
+        <div class="paper-card p-4">
+          <div class="font-mono text-[10px] tracking-[0.18em] uppercase text-forest mb-2">必 · 用 · 术 · 语</div>
+          <p class="text-sm text-ink-soft">流动性配置 · 应急储备 · 风险敞口 · 配置比例 · 再平衡 · 年化 · 跑输/跑赢 · 跟踪误差 · 加速偿还 · 利息成本</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 5 · 失败兜底 -->
+    <section class="mb-12">
+      <div class="eyebrow mb-3">/ 失 · 败 · 兜 · 底 · 用 · 户 · 无 · 感</div>
+      <h2 class="font-display text-2xl font-medium mb-4">3 种失败 → 3 种降级</h2>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
+        <div class="paper-card p-5" style="border-left: 4px solid var(--rust)">
+          <div class="flex items-baseline justify-between mb-3">
+            <span class="font-mono text-[10px] tracking-[0.18em] uppercase font-medium" style="color:var(--rust)">失 败 1 · API</span>
+            <span class="font-mono text-[9px] uppercase text-ink-subtle">超时 / 502 / 限流</span>
+          </div>
+          <p class="text-sm text-ink-soft mb-3">LLM API 调用失败、限流(QPS 满)、网络故障</p>
+          <div class="border-t border-rule-soft pt-3">
+            <div class="font-mono text-[10px] tracking-wider text-ink-subtle mb-1.5">→ 降级</div>
+            <p class="text-sm">显示 templateText(规则填空版)+ ⚠ 角标"模板"</p>
+          </div>
+        </div>
+
+        <div class="paper-card p-5" style="border-left: 4px solid var(--rust)">
+          <div class="flex items-baseline justify-between mb-3">
+            <span class="font-mono text-[10px] tracking-[0.18em] uppercase font-medium" style="color:var(--rust)">失 败 2 · 幻 觉</span>
+            <span class="font-mono text-[9px] uppercase text-ink-subtle">数字异常</span>
+          </div>
+          <p class="text-sm text-ink-soft mb-3">LLM 输出含 hardFacts 白名单外的数字 / 百分比</p>
+          <div class="border-t border-rule-soft pt-3">
+            <div class="font-mono text-[10px] tracking-wider text-ink-subtle mb-1.5">→ 降级</div>
+            <p class="text-sm">Validator 拦截 → 回退 templateText + 写 audit_log + 记录 prompt 用于改进</p>
+          </div>
+        </div>
+
+        <div class="paper-card p-5" style="border-left: 4px solid var(--rust)">
+          <div class="flex items-baseline justify-between mb-3">
+            <span class="font-mono text-[10px] tracking-[0.18em] uppercase font-medium" style="color:var(--rust)">失 败 3 · 禁 词</span>
+            <span class="font-mono text-[9px] uppercase text-ink-subtle">出现产品名</span>
+          </div>
+          <p class="text-sm text-ink-soft mb-3">LLM 输出含具体产品名(余额宝 / 510300 / 茅台等)</p>
+          <div class="border-t border-rule-soft pt-3">
+            <div class="font-mono text-[10px] tracking-wider text-ink-subtle mb-1.5">→ 降级</div>
+            <p class="text-sm">Validator 扫描禁词命中 → 回退 templateText + audit_log</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-3 paper-card p-4 text-sm text-ink-soft" style="background:var(--card-soft); border-left: 3px solid var(--forest)">
+        <strong class="text-ink">用户感受</strong>:任何失败场景都看到一段中文建议(模板版),不会看到错误信息 / 空白 / 转圈卡死。
+        所有失败案例进 audit_log 后台分析改进 prompt,5% 降级率内可接受。
+      </div>
+    </section>
+
+    <!-- Section 6 · 厂商选型 ★ 来自异步调研报告 -->
+    <section class="mb-12">
+      <div class="eyebrow mb-3">/ 厂 · 商 · 选 · 型 · 调 · 研 · 结 · 论</div>
+      <h2 class="font-display text-2xl font-medium mb-2">主 Qwen-Turbo · 备 DeepSeek</h2>
+      <p class="text-sm text-ink-soft max-w-3xl leading-relaxed mb-5">
+        2026-05-09 异步调研三家国产 LLM 的官方文档 + 定价 + 中文能力,综合<strong class="text-ink">价格 / OpenAI 兼容性 / 国内合规 / 数据训练默认</strong>四个维度,推荐 Qwen-Turbo 主用 + DeepSeek-v4-flash fallback。
+      </p>
+
+      <div class="paper-card overflow-hidden">
+        <table class="w-full text-sm">
+          <thead class="bg-card-soft border-b border-rule">
+            <tr>
+              <th class="px-4 py-3 text-left font-mono text-[10px] tracking-wider uppercase text-ink-subtle">维度</th>
+              <th class="px-4 py-3 text-left font-mono text-[10px] tracking-wider uppercase text-ink-subtle">DeepSeek</th>
+              <th class="px-4 py-3 text-left font-mono text-[10px] tracking-wider uppercase" style="color:var(--brass-deep)">Qwen ★ 主用</th>
+              <th class="px-4 py-3 text-left font-mono text-[10px] tracking-wider uppercase text-ink-subtle">Kimi</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-rule-soft text-xs">
+            <tr>
+              <td class="px-4 py-3 font-mono text-ink-soft">主力模型</td>
+              <td class="px-4 py-3">deepseek-v4-flash</td>
+              <td class="px-4 py-3 text-brass-deep">qwen-turbo / qwen-plus</td>
+              <td class="px-4 py-3 text-ink-subtle">moonshot-v1-8k</td>
+            </tr>
+            <tr>
+              <td class="px-4 py-3 font-mono text-ink-soft">100 次调用成本</td>
+              <td class="px-4 py-3">¥0.12</td>
+              <td class="px-4 py-3 text-brass-deep font-medium">¥0.036(turbo)/ ¥0.10(plus)</td>
+              <td class="px-4 py-3 text-ink-subtle">¥0.36 - ¥0.64</td>
+            </tr>
+            <tr>
+              <td class="px-4 py-3 font-mono text-ink-soft">OpenAI 兼容</td>
+              <td class="px-4 py-3 num-pos">✓ 完整</td>
+              <td class="px-4 py-3 num-pos">✓ 完整(compatible-mode/v1)</td>
+              <td class="px-4 py-3 num-pos">✓ 完整(api.moonshot.cn/v1)</td>
+            </tr>
+            <tr>
+              <td class="px-4 py-3 font-mono text-ink-soft">数据用于训练(默认)</td>
+              <td class="px-4 py-3 text-rust">⚠ 是,需手动关</td>
+              <td class="px-4 py-3 num-pos">✓ 否</td>
+              <td class="px-4 py-3 num-pos">✓ 否</td>
+            </tr>
+            <tr>
+              <td class="px-4 py-3 font-mono text-ink-soft">限流</td>
+              <td class="px-4 py-3 text-ink-soft">动态 / 不公开 / 高峰 429</td>
+              <td class="px-4 py-3 text-ink-soft">qwen-turbo 1200 RPM</td>
+              <td class="px-4 py-3 text-ink-soft">免费档 3 RPM 不可用</td>
+            </tr>
+            <tr>
+              <td class="px-4 py-3 font-mono text-ink-soft">中文能力</td>
+              <td class="px-4 py-3 text-ink-soft">SuperCLUE 第一梯队</td>
+              <td class="px-4 py-3 text-ink-soft">C-Eval/CMMLU 长期前列</td>
+              <td class="px-4 py-3 text-ink-soft">中上 · K2.6 编码 Tier A</td>
+            </tr>
+            <tr style="background:rgba(122,90,57,.04)">
+              <td class="px-4 py-3 font-mono text-brass-deep font-medium">本场景定位</td>
+              <td class="px-4 py-3"><span class="pill" style="background:rgba(122,90,57,.10);color:var(--brass-deep);border-color:var(--brass-deep)">备 · fallback</span></td>
+              <td class="px-4 py-3"><span class="pill pill-brass">主 · MAIN</span></td>
+              <td class="px-4 py-3"><span class="pill text-ink-subtle">不用 · 贵 10×</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="mt-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="paper-card p-4">
+          <div class="font-mono text-[10px] tracking-[0.18em] uppercase text-brass-deep mb-2">★ 切 · 换 · 厂 · 商 · 成 · 本</div>
+          <p class="text-sm text-ink-soft leading-relaxed">
+            两家都是 OpenAI 兼容协议,只需换 <code class="font-mono text-xs">base_url</code> +
+            <code class="font-mono text-xs">api_key</code> +
+            <code class="font-mono text-xs">model</code>,封装策略模式,**切换成本 < 30 行 Java**。
+          </p>
+        </div>
+        <div class="paper-card p-4">
+          <div class="font-mono text-[10px] tracking-[0.18em] uppercase text-rust mb-2">⚠ 风 · 险 · 缓 · 解</div>
+          <ul class="text-sm text-ink-soft space-y-1">
+            <li>· 模型版本漂移:固定 <code class="font-mono text-xs">qwen-turbo-latest</code> 别名,prompt 在 CI 中跑回归</li>
+            <li>· DeepSeek 限流:指数退避 + 熔断 + 不阻塞 UI</li>
+            <li>· 默认训练:DeepSeek console 关 "Improve the model"</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="mt-4 text-right font-mono text-[10px] text-ink-subtle">
+        完整调研报告 → <code>docs/llm-vendor-comparison.md</code>
+      </div>
+    </section>
+
+    <!-- 操作底栏 -->
+    <section class="border-t-2 border-double border-ink pt-6 flex items-center justify-between flex-wrap gap-4">
+      <a href="checkup-family.html" class="btn-paper no-underline">← 看全家维度体检</a>
+      <div class="flex gap-2">
+        <a href="checkup-account.html" class="btn-paper no-underline">看账户维度体检</a>
+        <a href="../index.html" class="btn-paper no-underline">→ v0.2 索引</a>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="border-t border-rule mt-12 py-6 px-8 text-center relative z-10">
+    <div class="font-mono text-[10px] tracking-[0.18em] text-ink-subtle">
+      家庭账房 · v0.2 · AI 介入设计 · 仅限家庭内部使用
+    </div>
+  </footer>
+
+</body>
+</html>
