@@ -333,7 +333,9 @@ public class EntryService {
                         t.getAmount(),
                         "+" + MoneyFormat.format(account.getCurrency(), t.getAmount()),
                         name,
-                        t.getNote()));
+                        t.getNote(),
+                        t.getId(),
+                        period.getStatus() == PeriodStatus.OPEN));
             } else if (t.getFromAccountId().equals(account.getId())) {
                 Account to = allAccountsById.get(t.getToAccountId());
                 String name = to == null ? "其他账户" : to.getDisplayName();
@@ -345,7 +347,9 @@ public class EntryService {
                         t.getAmount(),
                         "−" + MoneyFormat.format(account.getCurrency(), t.getAmount()),
                         name,
-                        t.getNote()));
+                        t.getNote(),
+                        t.getId(),
+                        period.getStatus() == PeriodStatus.OPEN));
             }
         }
         for (CashFlow cf : cashFlowMapper.findByPeriodAndAccount(period.getId(), account.getId())) {
@@ -358,7 +362,9 @@ public class EntryService {
                     cf.getAmount(),
                     sign + MoneyFormat.format(account.getCurrency(), cf.getAmount()),
                     cf.getCategoryCode(),
-                    cf.getNote()));
+                    cf.getNote(),
+                    cf.getId(),
+                    period.getStatus() == PeriodStatus.OPEN));
         }
         if (current != null) {
             ledger.add(new EntryRow.LedgerEntry(
@@ -367,7 +373,9 @@ public class EntryService {
                     current.getEndBalance(),
                     "= " + MoneyFormat.format(account.getCurrency(), current.getEndBalance()),
                     null,
-                    current.getNote()));
+                    current.getNote(),
+                    null,
+                    period.getStatus() == PeriodStatus.OPEN));
         }
         ledger.sort((a, b) -> {
             if (a.occurredAt() == null && b.occurredAt() == null) return 0;

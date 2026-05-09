@@ -36,10 +36,21 @@ class OutputValidatorTest {
     @Test
     void rejectsLostNumber() {
         var ad = advice("跑输基准", "近 12 期年化 10%, 跑输 3pp。");
-        // 润色文丢失 "12" 与 "3pp"
+        // 润色文丢失 "10%" 与 "3pp"(plain "12" 可被中文改写,"10%" 与 "3pp" 强制保留)
         var r = OutputValidator.check(ad, "近期组合表现不及预期,主动选股偏差较大。建议适度配置指数型产品以贴近基准并平滑短期波动。");
         assertThat(r.accepted()).isFalse();
         assertThat(r.reason()).contains("丢失");
+    }
+
+    @Test
+    void allowsPlainIntegerRewrittenAsChinese() {
+        // 原文 "3 个月" 中的 plain "3" 允许 LLM 改写为 "三个月"
+        var ad = advice("应急储备不足", "当前流动资产仅可覆盖 1.5 个月,低于推荐的 3 个月安全线。");
+        // 润色文用「三个月」改写 "3",但保留了 "1.5 个月"(必须保留,带小数)
+        // wait, 1.5 个月 → 抽出来是 "1.5个" — 让我们正确写一下
+        String polish = "当前流动资产仅可覆盖 1.5 个月,低于推荐三个月安全线。建议优先补足应急储备,从理财类账户调拨一部分至活期或货币基金。";
+        var r = OutputValidator.check(ad, polish);
+        assertThat(r.accepted()).isTrue();
     }
 
     @Test

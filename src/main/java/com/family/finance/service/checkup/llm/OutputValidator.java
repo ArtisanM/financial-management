@@ -22,9 +22,12 @@ import java.util.regex.Pattern;
  */
 public final class OutputValidator {
 
-    /** 抓所有数字片段:整数、小数、带单位、含 ¥ / % / pp / 月 / 个 */
+    /**
+     * 抓数字裸值:整数或小数。**不抓单位后缀**(避免 "12 期" vs "12期" 因空格被判不同 token)。
+     * 单位由 LLM 自由改写,验证只关心:原文出现过的数字必须保留;润色文不出现新数字。
+     */
     private static final Pattern NUMBER_TOKEN = Pattern.compile(
-            "[¥\\$]?\\d+(?:\\.\\d+)?(?:%|pp|个|月|期|星|★|分点)?"
+            "\\d+(?:\\.\\d+)?"
     );
 
     private OutputValidator() {
@@ -37,18 +40,26 @@ public final class OutputValidator {
         if (len < 30) return Result.reject("文本过短 len=" + len);
         if (len > 300) return Result.reject("文本过长 len=" + len);
 
-        Set<String> originalNumbers = extractNumbers(advice.rawTitle() + " " + advice.rawBody());
-        Set<String> polishedNumbers = extractNumbers(trimmed);
+        // 抽两类:
+        //   strictNumbers: 数字后紧跟单位(%/pp/月/个/期/¥/$/.0+)→ 必须逐字符保留
+        //   plainNumbers: 裸数字(后无单位)→ 允许 LLM 改写为中文数字
+        Set<String> origStrict = extractStrictNumbers(advice.rawTitle() + " " + advice.rawBody());
+        Set<String> polishStrict = extractStrictNumbers(trimmed);
+        Set<String> origAll = extractNumbers(advice.rawTitle() + " " + advice.rawBody());
+        Set<String> polishAll = extractNumbers(trimmed);
 
-        // 防丢失:原文每个数字 token 必须保留
-        for (String n : originalNumbers) {
-            if (!polishedNumbers.contains(n)) {
-                return Result.reject("数字丢失: " + n);
-            }
+        // 防丢失:strict 数字的"裸数字部分"必须在润色文出现;
+        // 仅当(plain 小整数 + 时间类单位月/期/个 时)允许 LLM 改写为中文(如 3 个月→三个月)。
+        // 量化类单位(% / pp / ★ / ¥)必须严格保留。
+        for (String n : origStrict) {
+            String bare = stripUnit(n);
+            if (polishAll.contains(bare)) continue;
+            if (isPlainSmallInteger(bare) && hasTimeUnit(n)) continue;
+            return Result.reject("数字丢失: " + n);
         }
-        // 防新增:润色文不能出现原文没有的数字
-        for (String n : polishedNumbers) {
-            if (!originalNumbers.contains(n)) {
+        // 防新增:润色文不能出现原文没有的 strict 数字(带单位)
+        for (String n : polishStrict) {
+            if (!origStrict.contains(n) && !origAll.contains(stripUnit(n))) {
                 return Result.reject("新增数字: " + n);
             }
         }
@@ -60,6 +71,21 @@ public final class OutputValidator {
         return Result.accept();
     }
 
+    /** 时间类单位:月、个月、期、个 — 允许 plain 小整数被中文化 */
+    private static boolean hasTimeUnit(String strictToken) {
+        if (strictToken == null) return false;
+        return strictToken.endsWith("月") || strictToken.endsWith("个月")
+                || strictToken.endsWith("期") || strictToken.endsWith("个");
+    }
+
+    /** plain 小整数(无小数 < 100):允许 LLM 在中英文/汉字间改写,如 3 → 三 */
+    private static boolean isPlainSmallInteger(String token) {
+        if (token == null || !token.matches("\\d+")) return false;
+        try { return Integer.parseInt(token) < 100; }
+        catch (NumberFormatException e) { return false; }
+    }
+
+    /** 裸数字 token 抽取(包含 plain 整数和小数,不关心单位上下文) */
     private static Set<String> extractNumbers(String src) {
         Set<String> tokens = new HashSet<>();
         if (src == null) return tokens;
@@ -68,6 +94,36 @@ public final class OutputValidator {
             tokens.add(normalizeToken(m.group()));
         }
         return tokens;
+    }
+
+    /**
+     * Strict 数字抽取:数字后紧跟单位(%/pp/月/个/期/星/★/分点)→ 收 "数字+单位" 一体 token。
+     * 这些是关键金融数字,LLM 不许改写。前后空格/标点都允许;比如 "3pp" 与 "3 pp" 等价。
+     */
+    private static final Pattern STRICT_NUMBER = Pattern.compile(
+            "\\d+(?:\\.\\d+)?\\s*(?:%|pp|个月|月|个|期|星|★|分点)"
+    );
+
+    private static Set<String> extractStrictNumbers(String src) {
+        Set<String> tokens = new HashSet<>();
+        if (src == null) return tokens;
+        Matcher m = STRICT_NUMBER.matcher(src);
+        while (m.find()) {
+            // 规范化:压缩空格 + 数字尾零去掉
+            String t = m.group().replaceAll("\\s+", "");
+            tokens.add(normalizeToken(t));
+        }
+        return tokens;
+    }
+
+    /** 把 strict token 拆出主体数字,用于跨原文/润色比较"裸数字是否一致" */
+    private static String stripUnit(String token) {
+        if (token == null) return "";
+        Matcher num = Pattern.compile("\\d+(?:\\.\\d+)?").matcher(token);
+        if (num.find()) {
+            return normalizeToken(num.group());
+        }
+        return token;
     }
 
     /** 规范化:¥1,000 → ¥1000;0.50 → 0.5(去尾零) */

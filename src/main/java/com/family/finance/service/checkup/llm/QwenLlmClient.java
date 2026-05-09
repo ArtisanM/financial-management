@@ -27,7 +27,7 @@ import java.util.Map;
 public class QwenLlmClient implements LlmClient {
 
     private static final String API = "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions";
-    private static final String MODEL = "qwen-turbo";
+    private static final String MODEL = "qwen-plus";
     private static final int FAIL_THRESHOLD = 3;
     private static final long COOLDOWN_MS = 60_000L;
 
@@ -72,7 +72,7 @@ public class QwenLlmClient implements LlmClient {
                         Map.of("role", "system", "content", systemPrompt),
                         Map.of("role", "user", "content", userPrompt)
                 ),
-                "temperature", 0.4,
+                "temperature", 0.15,
                 "max_tokens", 320
         );
 

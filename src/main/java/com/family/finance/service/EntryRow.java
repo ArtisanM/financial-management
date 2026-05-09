@@ -57,7 +57,11 @@ public record EntryRow(
             /** 收入/支出 → 类别名;划转 → 对方账户名;snapshot → null */
             String label,
             /** 用户备注;snapshot 时为修改人显示名 */
-            String note
+            String note,
+            /** v0.2 FR-32 · 行 id(cash_flow.id 或 transfer.id);SNAPSHOT 类型为 null */
+            Long sourceId,
+            /** v0.2 · 此条目所属的周期是否 OPEN(决定是否显示删除按钮) */
+            boolean periodOpen
     ) {}
 
     public enum LedgerKind {

@@ -62,7 +62,7 @@ public class AccountRules {
                     Advice.Dimension.RETURN_QUALITY, Advice.Severity.OK,
                     "跑赢基准",
                     "近 12 期年化 " + d.annualizedReturnPctLabel() + ",跑赢类目基准 "
-                            + b.diffPct().toPlainString() + "pp。",
+                            + b.diffPct().setScale(1, RoundingMode.HALF_EVEN).toPlainString() + "pp。",
                     "持仓策略有效,建议保持。注意基准本身也可能在高位,关注最大回撤准备。",
                     null));
         }
@@ -84,7 +84,7 @@ public class AccountRules {
                     Advice.Dimension.RETURN_QUALITY, Advice.Severity.WARN,
                     "跑输基准",
                     "近 12 期年化 " + d.annualizedReturnPctLabel() + ",跑输类目基准 "
-                            + b.diffPct().abs().toPlainString() + "pp。",
+                            + b.diffPct().abs().setScale(1, RoundingMode.HALF_EVEN).toPlainString() + "pp。",
                     "考虑评估持仓:是否过多主动选股偏差?可配置一部分仓位至跟踪基准的指数型产品。",
                     "→ 看基准对照"));
         }

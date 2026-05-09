@@ -263,7 +263,7 @@
 | FR34-NEG-1 | macOS Chrome / Firefox / Edge | 打开账房 | banner 不弹、遮罩不弹 |
 | FR34-NEG-2 | iOS Chrome / Firefox(CriOS / FxiOS) | 打开账房 | 都不弹(不是 Safari) |
 
-### v0.2 · 自动化测试结果(2026-05-09)
+### v0.2 · 自动化测试结果(2026-05-09 阶段 1)
 
 ```
 ═══════════════════════════════════════
@@ -271,4 +271,101 @@
 ═══════════════════════════════════════
 ```
 
-v0.1 78 条用例继续 PASS;v0.2 新增 10 条全 PASS;无回归。
+v0.1 78 条用例继续 PASS;v0.2 阶段 1 新增 10 条全 PASS;无回归。
+
+---
+
+## v0.2 · 阶段 1 · 数据底座 + 类目骨架(自动化)
+
+| ID | 接口 | 步骤 | 预期 |
+|---|---|---|---|
+| v02-NAV-1 | GET /dashboard | 顶部 nav | 含「资产体检」入口 |
+| v02-CHK-1 | GET /checkup | 全家页 200 | 含「资产体检」标题 |
+| v02-CHK-2 | GET /checkup?account=1 | 账户级 200 | 含「资产体检 / 账户体检」标题 |
+| v02-PCAT-1 | GET /admin/product-categories | 200 | 管理员只读页可达 |
+| v02-PCAT-2 | GET /admin/product-categories | 类目数 | ≥15 个产品类目 code 渲染(共 16 个) |
+| v02-PCAT-3 | GET /admin/product-categories | 基准 | 含「沪深 300 / 标普 500」等基准指数 |
+| v02-PCAT-4 | GET /admin | hub | 含产品类目 tile |
+| v02-PCAT-5 | GET /admin/cash-flow-categories | sidebar | 含「产品类目」侧栏链接 |
+| v02-PILL-1 | GET /accounts | 类目 pill | 列表渲染 ≥20 个 📊 类目 pill |
+| v02-PILL-2 | GET /accounts | 风险 pill | 列表渲染 ≥4 个 ★ 风险 pill |
+| v02-PILL-3 | GET /accounts | 无错误兜底 | 不再触发 /error 兜底 |
+| v02-WIZ-1 | GET /accounts/new | 向导 | 含产品类目下拉 + 「按账户类型默认」选项 |
+| v02-EDIT-1 | GET /accounts/1/edit | 编辑页 | 含 productCategoryCode + riskLevelOverride 字段 |
+| v02-DASH-1 | GET /dashboard | 行入口 | 含 `/checkup?account=` 链接 |
+| v02-SOFT-1 | GET /entry | 兼容性 | deleted_at 过滤生效后 entry 仍可加载 |
+
+## v0.2 · 阶段 2 · FR-40b 账户级体检(自动化)
+
+| ID | 接口 | 步骤 | 预期 |
+|---|---|---|---|
+| v02-DIAG-1 | GET /checkup?account={1..13} | 13 个账户均访问 | 全部 200,无 Thymeleaf 渲染异常 |
+| v02-DIAG-2 | GET /checkup?account=1(CASH) | 视觉分支 | 仅显示「流动性」卡;不显示投资 / 欠款 / 估值卡 |
+| v02-DIAG-3 | GET /checkup?account=3(STOCK) | 视觉分支 | 显示「收益表现 / 风险刻度 / 基准对照 / 现金流」4 张投资卡 |
+| v02-DIAG-4 | GET /checkup?account=5(LOAN) | 视觉分支 | 显示「欠款余额 / 还款进度」;不显示投资卡 |
+| v02-DIAG-5 | GET /checkup?account=10(PROPERTY) | 视觉分支 | 显示「估值」简卡;不显示投资卡 |
+| v02-DIAG-6 | GET /checkup?account=99999 | 越权 | 跨家庭账户跳 /checkup 全家页 |
+| v02-DIAG-7 | GET /checkup?account=3 | 顶部账户标签 | 含 📊 类目 pill + ★ 风险 pill |
+| v02-DIAG-8 | GET /checkup?account=3 | 余额走势 | DOM 含 `<canvas id="balanceTrend">` |
+
+## v0.2 · 阶段 3 · FR-40a/c 全家诊断 + 智能建议 + LLM(自动化)
+
+| ID | 接口 | 步骤 | 预期 |
+|---|---|---|---|
+| v02-ADV-1 | GET /checkup + 13 个账户 | 14 个体检页 | 全部 200,无 Thymeleaf 渲染异常 |
+| v02-ADV-2 | GET /checkup | 全家页 | 含 advice 卡或「健康状态良好」提示 |
+| v02-ADV-3 | GET /checkup | 全家页 | eyebrow 文案存在 |
+| v02-ADV-4 | GET /checkup?account=3 | 账户级 advice | 含 advice 卡或「本账户体检通过」 |
+| v02-ADV-5 | GET /checkup | DOM 属性 | 每张卡含 `data-rule` + `data-severity` |
+| v02-ADV-6 | GET /checkup | AI 润色按钮 | DOM 含「✨ AI 润色」 |
+| v02-ADV-7 | Cookie | XSRF-TOKEN | 浏览器获取到 XSRF cookie |
+| v02-ADV-8 | POST /checkup/advice/{ruleId}/polish | 全家级建议润色 | 200,返回单卡 fragment |
+| v02-ADV-9 | POST /checkup/advice/{ruleId}/polish?account=3 | 账户级 | 200,fragment 含 `data-account="3"` |
+| v02-ADV-10 | POST /checkup/advice/NONEXISTENT/polish | 不存在规则 | 200,空 fragment |
+
+## v0.2 · 阶段 4 · FR-30/31/32 账本侧(自动化)
+
+| ID | 接口 | 步骤 | 预期 |
+|---|---|---|---|
+| v02-LEDGER-1 | GET /accounts | 操作列 | 13 个账户均含「📊 体检」入口 |
+| v02-LEDGER-2 | GET /accounts | 操作列 | 13 个账户均含「⬇ 账本」入口 |
+| v02-LEDGER-3 | GET /accounts/3/ledger.csv | 下载 | Content-Type=text/csv;表头 9 列正确 |
+| v02-LEDGER-4 | ledger.csv | 编码 | 文件首 3 字节为 UTF-8 BOM(EF BB BF) |
+| v02-LEDGER-5 | ledger.csv | 响应头 | Content-Disposition 含 `filename*=UTF-8''` |
+| v02-LEDGER-6 | GET /accounts/99999/ledger.csv | 越权 | ≥ 400 |
+| v02-SOFT-DEL-2 | GET /entry?period=35 | OPEN 周期 | DOM 含 ≥1 个 `hx-post=".../delete"` 删除按钮 |
+| v02-SOFT-DEL-3 | 删除按钮 URL | 路径 | 指向 `/entry/cash-flow/{id}/delete` 或 `/entry/transfer/{id}/delete` |
+| v02-SOFT-DEL-4 | 删除按钮 attr | hx-confirm | 含「确定删除」二次确认 |
+| v02-SOFT-DEL-5 | POST /entry/cash-flow/{id}/delete | 软删真实 cf | 200,DB cf.deleted_at 设为 NOW(3),余额反向冲销 |
+| v02-SOFT-DEL-6 | GET /entry?period=35 | 重新加载 | 已软删 cf 不再出现在 ledger |
+| v02-SOFT-DEL-7 | POST /entry/cash-flow/222/delete | CLOSED 周期 | ≥ 400(IllegalStateException 拒写) |
+| v02-SOFT-DEL-8 | POST /entry/cash-flow/9999999/delete | 不存在 id | ≥ 400 |
+
+### v0.2 · 阶段 1-4 全量自动化测试结果(2026-05-10)
+
+```
+═══════════════════════════════════════
+ 总结: PASS=139  FAIL=0  SKIP=1
+═══════════════════════════════════════
+```
+
+v0.1 + v0.2 共 139 条 curl + grep 黑盒用例全部通过,0 回归。
+
+### v0.2 · 单元测试(JUnit 5)
+
+| 包 | 测试类 | 用例数 |
+|---|---|---|
+| calc | PnlCalculatorTest | 9 (v0.1) |
+| calc | XirrCalculatorTest | 4 (v0.1) |
+| calc | ReconciliationCalculatorTest | 3 (v0.1) |
+| calc | MaxDrawdownCalculatorTest | 11 (v0.2 新增) |
+| calc | NavSeriesBuilderTest | 10 (v0.2 新增) |
+| calc | BenchmarkComparatorTest | 5 (v0.2 新增) |
+| service.checkup.rule | RulesTest | 19 (v0.2 新增) |
+| service.checkup.llm | OutputValidatorTest | 8 (v0.2 新增) |
+
+```
+Tests run: 69, Failures: 0, Errors: 0, Skipped: 0
+```
+
+v0.2 新增 53 个单测,加 v0.1 的 16 个,合计 69 个,全部通过。

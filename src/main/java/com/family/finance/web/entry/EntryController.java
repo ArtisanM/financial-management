@@ -176,6 +176,15 @@ public class EntryController {
     /** 把 EntryRow.ledger 渲染为预格式化的 HTML 片段(规避 Thymeleaf 在 each 嵌套 List 上的 accessor bug)。 */
     private String renderLedgerHtml(EntryRow row) {
         if (row == null || row.ledger() == null || row.ledger().isEmpty()) return "";
+        // CSRF token 用于本期内 ⋮ 删除按钮的 hx-headers
+        String csrfToken = "";
+        try {
+            org.springframework.security.web.csrf.CsrfToken t = (org.springframework.security.web.csrf.CsrfToken)
+                    org.springframework.web.context.request.RequestContextHolder.currentRequestAttributes()
+                            .getAttribute("_csrf", org.springframework.web.context.request.RequestAttributes.SCOPE_REQUEST);
+            if (t != null) csrfToken = t.getToken();
+        } catch (Exception ignored) {}
+
         StringBuilder sb = new StringBuilder();
         sb.append("<details open class=\"paper-card -mt-3 mb-3 px-6 py-3 border-t-0 border-rule bg-card-soft\">");
         sb.append("<summary class=\"font-mono text-[10px] tracking-[0.16em] uppercase text-ink-soft cursor-pointer select-none\">");
@@ -199,6 +208,20 @@ public class EntryController {
             sb.append("<span class=\"text-ink-soft flex-1 min-w-[120px]\">").append(escapeHtml(label)).append("</span>");
             if (le.occurredAt() != null) {
                 sb.append("<span class=\"text-ink-subtle text-[10px]\">").append(le.occurredAt().format(fmt)).append("</span>");
+            }
+            // v0.2 FR-32 · OPEN 周期下的 cash_flow / transfer 加 ⋮ 删除按钮(SNAPSHOT 不能删)
+            if (le.periodOpen() && le.sourceId() != null
+                    && le.kind() != EntryRow.LedgerKind.SNAPSHOT) {
+                String url = (le.kind() == EntryRow.LedgerKind.TRANSFER_IN || le.kind() == EntryRow.LedgerKind.TRANSFER_OUT)
+                        ? "/entry/transfer/" + le.sourceId() + "/delete"
+                        : "/entry/cash-flow/" + le.sourceId() + "/delete";
+                sb.append("<button class=\"text-[11px] text-ink-subtle hover:text-rust px-1\" title=\"删除此条\" ")
+                        .append("hx-post=\"").append(url).append("\" ")
+                        .append("hx-target=\"#row-").append(row.account().getId()).append("\" ")
+                        .append("hx-swap=\"outerHTML\" ")
+                        .append("hx-confirm=\"确定删除这条流水?余额会自动反向冲销。\" ")
+                        .append("hx-headers='{\"X-XSRF-TOKEN\":\"").append(escapeHtml(csrfToken)).append("\"}'>")
+                        .append("✕</button>");
             }
             if (le.note() != null && !le.note().isBlank()) {
                 sb.append("<span class=\"w-full text-ink-subtle italic pl-24\">· ").append(escapeHtml(le.note())).append("</span>");
