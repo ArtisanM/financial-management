@@ -229,4 +229,46 @@
 | ST-12 | 手动刷新 icon 存在 | GET /entry?account={id} | 含 `aria-label="刷新"` + `⟳` 字符 |
 | ST-13 | dashboard 实时自刷新 | GET /dashboard | dashboard-region 含 hx-trigger="visibilitychange... every 90s" |
 
-总计:**70 + 用例**。
+总计:**78 用例**(v0.1)。
+
+---
+
+## v0.2 · FR-33 微信引导 + FR-34 iOS PWA 添加到主屏
+
+> 2026-05-09 上线。新增 10 条自动化(已加入 `/tmp/qa-run.sh` 末段)+ 8 条真机手测。
+
+### v0.2 · 自动化(curl,与 v0.1 同 BASE)
+
+| ID | 目标 | 步骤 | 预期 |
+|---|---|---|---|
+| FR34-1 | manifest MIME 正确 | curl -I /manifest.webmanifest | Content-Type=application/manifest+json |
+| FR34-2 | manifest 字段齐 | 解析 JSON | 含 name / start_url=/dashboard / display=standalone / icons[3] |
+| FR34-3 | 三张 PNG 200 | curl /img/{apple-touch-icon-180,icon-192,icon-512}.png | 各 200 + Content-Type=image/png |
+| FR34-4 | layout 含 PWA meta | curl /login → grep | 含 apple-mobile-web-app-capable / status-bar-style / title / manifest link / apple-touch-icon-180.png / theme-color |
+| FR34-5 | mobile-guide.js 未登录可达 | curl /js/mobile-guide.js(无 cookie) | 200 |
+| FR34-6 | manifest 未登录可达 | curl /manifest.webmanifest(无 cookie) | 200 |
+| FR33-1 | layout 引用 mobile-guide.js | curl /login → grep mobile-guide.js | 命中 |
+| FR33-2 | 脚本含微信 + iOS 检测分支 | curl /js/mobile-guide.js → grep | 含 MicroMessenger / wx_dismissed_at / pwa_dismissed_at / standalone |
+
+### v0.2 · 真机手测(浏览器开发者工具 / 实机)
+
+| ID | 设备 | 步骤 | 预期 |
+|---|---|---|---|
+| FR33-M1 | iOS 微信 | 微信里点账房链接 | 看到全屏遮罩 + 引导卡 + 大箭头指右上 ⋯;呼吸闪动 |
+| FR33-M2 | iOS 微信 | 点 dismiss 后立即重进 | 不再弹遮罩(localStorage `wx_dismissed_at` 已写) |
+| FR33-M3 | Android 微信 | 同 M1 | 行为一致 |
+| FR34-M1 | iPhone Safari | 打开 dashboard | 1.5 秒后底部弹卡片;高亮分享按钮金色光环 |
+| FR34-M2 | iPhone Safari | 按引导:分享 → 添加到主屏 → 添加 | 主屏出现**墨底金棕"账"硬币 ¥ + 朱红印泥点**(非默认 favicon、非截图);点击进入是 standalone(无 Safari UI) |
+| FR34-M3 | iPhone(主屏入口) | 从主屏图标重开账房 | banner 不再弹(`navigator.standalone === true`) |
+| FR34-NEG-1 | macOS Chrome / Firefox / Edge | 打开账房 | banner 不弹、遮罩不弹 |
+| FR34-NEG-2 | iOS Chrome / Firefox(CriOS / FxiOS) | 打开账房 | 都不弹(不是 Safari) |
+
+### v0.2 · 自动化测试结果(2026-05-09)
+
+```
+═══════════════════════════════════════
+ 总结: PASS=88  FAIL=0  SKIP=1
+═══════════════════════════════════════
+```
+
+v0.1 78 条用例继续 PASS;v0.2 新增 10 条全 PASS;无回归。

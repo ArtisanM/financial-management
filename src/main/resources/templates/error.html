@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<!--
+  统一错误兜底页 · 已登录复用 fragments/layout + nav(与其它页面顶栏一致),
+  未登录走极简自包含 fallback(无 nav,只一个简化顶栏)。
+-->
+<head th:if="${nav != null}" th:replace="~{fragments/layout :: head('出错了 · 家庭账房')}"></head>
+<head th:unless="${nav != null}">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>出错了 · 家庭账房</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,ital,wght@9..144,0,400..600;9..144,1,400&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+SC:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="icon" type="image/svg+xml" href="/img/default-logo.svg">
+  <script src="/vendor/tailwind.js"></script>
+</head>
+<body class="min-h-screen relative">
+
+<div class="fixed top-0 left-0 right-0 h-1 bg-ink z-40"></div>
+
+<!-- 已登录:复用完整 nav(与其它页面一致) -->
+<header th:if="${nav != null}" th:replace="~{fragments/nav :: nav('error', ${me}, ${nav})}"></header>
+
+<!-- 未登录:简化顶栏 -->
+<header th:unless="${nav != null}" class="sticky top-1 backdrop-blur border-b border-rule z-30"
+        style="background:rgba(246,241,234,.95);">
+  <div class="max-w-[1400px] mx-auto px-6 lg:px-10 flex items-center justify-between h-16">
+    <a href="/login" class="flex items-baseline gap-2 no-underline">
+      <span class="font-display text-xl font-medium">账房</span>
+      <span class="font-mono text-[10px] tracking-[0.2em] text-ink-subtle">№ 张</span>
+    </a>
+    <a href="/login" class="font-mono text-[10px] tracking-[0.18em] uppercase text-ink-soft hover:text-ink no-underline">↩ 去登录</a>
+  </div>
+</header>
+
+<main class="max-w-[1100px] mx-auto px-6 lg:px-10 py-12 lg:py-20 relative z-10">
+
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+
+    <!-- 左:卡通插画(手机端在上,PC 端在左) -->
+    <div class="lg:col-span-5 flex justify-center">
+      <svg viewBox="0 0 280 280" class="w-48 sm:w-56 md:w-64 lg:w-80" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <!-- 桌面木纹底色 -->
+        <rect x="20" y="180" width="240" height="80" rx="4" fill="#f0e6d2" stroke="#c8b896" stroke-width="1"/>
+        <line x1="40" y1="200" x2="240" y2="200" stroke="#c8b896" stroke-width=".5" opacity=".6"/>
+        <line x1="40" y1="220" x2="240" y2="220" stroke="#c8b896" stroke-width=".5" opacity=".6"/>
+        <line x1="40" y1="240" x2="240" y2="240" stroke="#c8b896" stroke-width=".5" opacity=".6"/>
+
+        <!-- 散落的硬币(三枚) -->
+        <g>
+          <ellipse cx="62" cy="208" rx="22" ry="6" fill="#c4943e" stroke="#1a1714" stroke-width="1.2"/>
+          <ellipse cx="62" cy="206" rx="22" ry="6" fill="#d6a04a" stroke="#1a1714" stroke-width="1.2"/>
+          <text x="62" y="210" text-anchor="middle" font-family="Fraunces,serif" font-size="9" fill="#1a1714" font-weight="500">¥</text>
+        </g>
+        <g transform="rotate(-15 220 230)">
+          <ellipse cx="220" cy="232" rx="20" ry="6" fill="#c4943e" stroke="#1a1714" stroke-width="1.2"/>
+          <ellipse cx="220" cy="230" rx="20" ry="6" fill="#d6a04a" stroke="#1a1714" stroke-width="1.2"/>
+          <text x="220" y="234" text-anchor="middle" font-family="Fraunces,serif" font-size="9" fill="#1a1714" font-weight="500">¥</text>
+        </g>
+        <g transform="rotate(8 130 245)">
+          <ellipse cx="130" cy="247" rx="18" ry="5" fill="#c4943e" stroke="#1a1714" stroke-width="1.2"/>
+          <ellipse cx="130" cy="245" rx="18" ry="5" fill="#d6a04a" stroke="#1a1714" stroke-width="1.2"/>
+          <text x="130" y="249" text-anchor="middle" font-family="Fraunces,serif" font-size="8" fill="#1a1714">¥</text>
+        </g>
+
+        <!-- 翻倒的印泥盒 -->
+        <g transform="rotate(35 165 160)">
+          <rect x="135" y="130" width="60" height="50" rx="3" fill="#1a1714" stroke="#1a1714" stroke-width="1.5"/>
+          <rect x="135" y="120" width="60" height="14" rx="2" fill="#3a3530" stroke="#1a1714" stroke-width="1.5" transform="skewX(-12)"/>
+          <ellipse cx="165" cy="150" rx="25" ry="14" fill="#9f4a3a"/>
+          <ellipse cx="165" cy="148" rx="22" ry="11" fill="#b8543e"/>
+          <ellipse cx="158" cy="146" rx="6" ry="3" fill="#d56b54" opacity=".6"/>
+        </g>
+
+        <!-- 洒出的印泥 -->
+        <path d="M 188 168 C 200 175, 215 180, 230 178 C 240 176, 246 173, 248 168 L 248 175 C 244 182, 230 188, 215 187 C 200 186, 192 178, 188 168 Z"
+              fill="#9f4a3a" opacity=".85"/>
+        <ellipse cx="245" cy="180" rx="3" ry="2" fill="#9f4a3a" opacity=".7"/>
+        <ellipse cx="252" cy="178" rx="2" ry="1.5" fill="#9f4a3a" opacity=".5"/>
+
+        <!-- 翻倒的账本 -->
+        <g transform="rotate(-22 90 130)">
+          <rect x="55" y="90" width="80" height="60" rx="2" fill="#7a5a39" stroke="#1a1714" stroke-width="1.5"/>
+          <line x1="62" y1="92" x2="62" y2="148" stroke="#1a1714" stroke-width=".8"/>
+          <line x1="65" y1="92" x2="65" y2="148" stroke="#1a1714" stroke-width=".8"/>
+          <text x="100" y="115" text-anchor="middle" font-family="Fraunces,serif" font-size="9" font-weight="500" fill="#fdf8ef">家</text>
+          <text x="100" y="128" text-anchor="middle" font-family="Fraunces,serif" font-size="9" font-weight="500" fill="#fdf8ef">庭</text>
+          <text x="100" y="141" text-anchor="middle" font-family="Fraunces,serif" font-size="9" font-weight="500" fill="#fdf8ef">账</text>
+          <circle cx="125" cy="100" r="4" fill="#9f4a3a"/>
+        </g>
+
+        <!-- 顶部小问号 -->
+        <g transform="translate(180 50)">
+          <circle cx="0" cy="0" r="22" fill="#fdf8ef" stroke="#1a1714" stroke-width="2"/>
+          <text x="0" y="7" text-anchor="middle" font-family="Fraunces,serif" font-size="26" font-weight="600" fill="#1a1714">?</text>
+        </g>
+        <path d="M 168 65 Q 180 110, 175 145" stroke="#1a1714" stroke-width="1.5"
+              stroke-dasharray="3 3" fill="none" opacity=".6"/>
+      </svg>
+    </div>
+
+    <!-- 右:文案 + 操作 -->
+    <div class="lg:col-span-7">
+      <div class="eyebrow mb-3">/ 出 · 错 · 了 · ENCOUNTERED · AN · ERROR</div>
+
+      <h1 class="font-display font-medium tracking-tight leading-[1.05] mb-4
+                 text-4xl sm:text-5xl md:text-6xl">
+        印泥洒了 ·<br/>
+        <span class="italic font-light text-brass-deep">账册暂时翻不开</span>
+      </h1>
+
+      <div class="paper-card p-5 mb-6 bg-card-soft">
+        <div class="flex items-baseline gap-3 mb-2 flex-wrap">
+          <span class="font-mono text-[10px] tracking-[0.18em] uppercase text-rust">错 · 误 · 详 · 情</span>
+          <span class="font-mono text-xs text-ink-soft" th:if="${status}">
+            HTTP <span th:text="${status}">500</span>
+          </span>
+          <span class="font-mono text-xs text-ink-soft" th:if="${error}"
+                th:text="' · ' + ${error}"> · Internal Server Error</span>
+        </div>
+        <p class="text-sm leading-relaxed text-ink-soft" th:if="${message != null and message != 'No message available'}"
+           th:text="${message}">内部错误。</p>
+        <p class="text-sm leading-relaxed text-ink-soft"
+           th:unless="${message != null and message != 'No message available'}">
+          系统遇到了一点小麻烦,账册暂时翻不开。账目数据安全无虞,刷新页面或回到主页通常就能恢复。
+        </p>
+        <p class="text-[11px] font-mono mt-3 text-ink-subtle" th:if="${path}">
+          路径:<span th:text="${path}">/some/url</span>
+        </p>
+      </div>
+
+      <p class="font-serif text-base leading-relaxed text-ink-soft mb-7">
+        别担心,你填过的数据都安全保存在账房里。
+        点下面任意一个按钮回到正轨;如果反复出现,请把页面截图发给管理员。
+      </p>
+
+      <div class="flex flex-wrap gap-3">
+        <a href="/dashboard" class="btn-ink no-underline">↩ 回到主页 · 仪表盘</a>
+        <a href="/entry" class="btn-paper no-underline" th:if="${nav != null}">→ 去本月填报</a>
+        <a href="javascript:history.back()" class="btn-paper no-underline">← 返回上一页</a>
+      </div>
+
+      <div class="mt-8 pt-5 border-t border-rule-soft font-mono text-[10px] tracking-[0.16em] uppercase text-ink-subtle">
+        <a href="/admin/audit" class="text-ink-subtle hover:text-ink no-underline" th:if="${nav != null}">审计日志</a>
+        <span class="mx-2" th:if="${nav != null}">·</span>
+        <a href="/health" class="text-ink-subtle hover:text-ink no-underline">系统健康</a>
+        <span class="mx-2">·</span>
+        <a href="/login" class="text-ink-subtle hover:text-ink no-underline">重新登录</a>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<footer class="border-t border-rule mt-12 py-6 px-8 text-center relative z-10">
+  <div class="font-mono text-[10px] tracking-[0.18em] text-ink-subtle">
+    家庭账房 · 仅限家庭内部使用
+  </div>
+</footer>
+
+</body>
+</html>

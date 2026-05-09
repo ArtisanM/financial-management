@@ -14,7 +14,14 @@
   <link rel="icon" type="image/svg+xml"
         th:href="${nav != null and nav.family != null and nav.family.logoPath != null} ? @{|/uploads/${nav.family.logoPath}|} : @{/img/default-logo.svg(v=${buildVersion})}">
   <link rel="alternate icon" type="image/svg+xml" th:href="@{/img/default-logo.svg(v=${buildVersion})}">
-  <link rel="apple-touch-icon" th:href="@{/img/default-logo.svg(v=${buildVersion})}">
+  <!-- v0.2 FR-34 · iOS 主屏图标必须用 PNG(iOS 不支持 SVG 作 apple-touch-icon)+ PWA manifest -->
+  <link rel="apple-touch-icon" sizes="180x180"
+        th:href="@{/img/apple-touch-icon-180.png(v=${buildVersion})}">
+  <link rel="manifest" th:href="@{/manifest.webmanifest(v=${buildVersion})}">
+  <meta name="theme-color" content="#1a1714">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="账房">
   <link rel="stylesheet" th:href="@{/css/style.css(v=${buildVersion})}">
   <script th:src="@{/vendor/tailwind.js(v=${buildVersion})}"></script>
   <script th:src="@{/vendor/htmx.min.js(v=${buildVersion})}"></script>
@@ -43,6 +50,81 @@
       const header = document.querySelector('meta[name="_csrf_header"]')?.content;
       if (token && header) event.detail.headers[header] = token;
     });
+  </script>
+  <!-- v0.2 全局错误兜底:HTMX 5xx / 网络错误 / JS 致命异常,统一 toast 反馈 -->
+  <script>
+    (function () {
+      'use strict';
+
+      function toast(msg, level) {
+        // 复用现有 showToast 事件协议(detail = { message, level })
+        document.body.dispatchEvent(new CustomEvent('showToast', {
+          detail: { message: msg, level: level || 'error' },
+          bubbles: true
+        }));
+      }
+
+      // HTMX 服务器返回 4xx / 5xx
+      document.addEventListener('htmx:responseError', function (e) {
+        var xhr = e.detail.xhr;
+        var status = xhr.status;
+        var path = (e.detail.requestConfig && e.detail.requestConfig.path) || 'unknown';
+
+        // 401 → 登录态过期,必须跳登录
+        if (status === 401) {
+          window.location.href = '/login?expired=1';
+          return;
+        }
+        // 403 → CSRF 过期或权限,提示刷新
+        if (status === 403) {
+          toast('登录态可能已过期,请刷新页面后重试', 'error');
+          return;
+        }
+        // 404 → 资源不存在
+        if (status === 404) {
+          toast('该数据不存在或已被删除', 'error');
+          return;
+        }
+        // 4xx 其它 → ToastErrorAdvice 已通过 HX-Trigger=showToast 推送了具体消息;这里只兜底
+        if (status >= 400 && status < 500) {
+          // 业务异常通常已经 toast,如果没有 HX-Trigger,显示通用提示
+          if (xhr.getResponseHeader && !xhr.getResponseHeader('HX-Trigger')) {
+            toast('请求被拒绝(' + status + '),请检查后重试', 'error');
+          }
+          return;
+        }
+        // 5xx → 服务器错误:toast + 控制台留痕。不自动跳 /error(避免丢失填报现场)
+        if (status >= 500) {
+          toast('服务器繁忙(HTTP ' + status + ',' + path + '),请稍后再试。如反复出现请联系管理员', 'error');
+          if (window.console) console.error('HTMX 5xx', status, path, xhr.responseText && xhr.responseText.slice(0, 500));
+        }
+      });
+
+      // HTMX 网络层错误(请求未发出 / 超时)
+      document.addEventListener('htmx:sendError', function () {
+        toast('网络异常 — 请检查网络连接后重试', 'error');
+      });
+
+      // HTMX 超时
+      document.addEventListener('htmx:timeout', function () {
+        toast('请求超时 — 服务器响应慢,请稍后再试', 'error');
+      });
+
+      // JS 同步异常 — 仅 console,避免噪音(浏览器扩展 / 第三方脚本经常误触发)
+      window.addEventListener('error', function (e) {
+        // 过滤掉浏览器无关错误
+        if (e.message && (
+          e.message.indexOf('ResizeObserver') > -1 ||
+          e.message.indexOf('Script error') > -1 ||
+          e.message.indexOf('Non-Error promise rejection') > -1)) return;
+        if (window.console) console.error('Window error:', e.message, 'at', e.filename + ':' + e.lineno);
+      });
+
+      // Promise rejection 未捕获
+      window.addEventListener('unhandledrejection', function (e) {
+        if (window.console) console.error('Unhandled rejection:', e.reason);
+      });
+    })();
   </script>
   <!-- 全局加载进度条 + 印章式启动遮罩(早注入,首屏即生效) -->
   <style>
@@ -189,6 +271,8 @@
       });
     })();
   </script>
+  <!-- v0.2 FR-33 / FR-34 · 移动端引导(微信内 + iOS Safari PWA) -->
+  <script th:src="@{/js/mobile-guide.js(v=${buildVersion})}" defer></script>
 </head>
 
 <!--

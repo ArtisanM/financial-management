@@ -13,7 +13,23 @@
     tailwind.config = { theme: { extend: { colors: { paper: 'var(--paper)', 'paper-soft': 'var(--paper-soft)', 'paper-deep': 'var(--paper-deep)', card: 'var(--card)', 'card-soft': 'var(--card-soft)', ink: { DEFAULT: 'var(--ink)', soft: 'var(--ink-soft)', subtle: 'var(--ink-subtle)' }, rule: { DEFAULT: 'var(--rule)', soft: 'var(--rule-soft)' }, brass: { DEFAULT: 'var(--brass)', deep: 'var(--brass-deep)', soft: 'var(--brass-soft)' }, forest: 'var(--forest)', rust: 'var(--rust)' }, fontFamily: { display: ['Fraunces', 'Noto Serif SC', 'serif'], serif: ['"Source Serif 4"', 'Noto Serif SC', 'serif'], mono: ['JetBrains Mono', 'monospace'], sf: ['-apple-system', 'BlinkMacSystemFont', '"SF Pro Text"', '"SF Pro Display"', 'system-ui', 'sans-serif'] } } } }
   </script>
   <style>
-    /* ============ iPhone 14 Pro Hardware Shell ============ */
+    /* ============ 真机截图 wrapper(STEP 1-4 用)============ */
+    .shot-frame {
+      background: #1d1d1f;
+      border-radius: 36px;
+      padding: 6px;
+      box-shadow: 0 18px 40px -12px rgba(0,0,0,.4), 0 6px 16px -4px rgba(0,0,0,.25);
+      max-width: 280px;
+      margin: 0 auto;
+    }
+    .shot {
+      width: 100%;
+      display: block;
+      border-radius: 30px;
+      object-fit: cover;
+    }
+
+    /* ============ iPhone 14 Pro Hardware Shell(SVG 模拟 — 已弃用,保留以兼容)============ */
     .iphone {
       width: 390px;
       height: 800px;
@@ -356,252 +372,97 @@
       </p>
     </div>
 
-    <!-- 两台手机并列演示 -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16 justify-items-center">
+    <!-- ============ 4 步真机操作截图(STEP 1-4 横排)============ -->
+    <div class="mb-12">
+      <div class="eyebrow mb-3">/ 实 · 操 · 流 · 程 · 4 · 步</div>
+      <h2 class="font-display text-2xl md:text-3xl font-medium tracking-tight mb-2">家庭成员实际看到的操作过程</h2>
+      <p class="font-serif text-sm text-ink-soft max-w-2xl leading-relaxed">
+        以下是真机 iPhone Safari 截图,iOS 18 中文版。<span class="text-ink">添加到主屏幕</span>需 4 步:
+        ① 底部 ⋯ → ② 共享 → ③ 共享面板底部「更多」→ ④ 列表里点「添加到主屏幕」。
+      </p>
+    </div>
 
-      <!-- ============ STEP 1: 看到底部 banner ============ -->
-      <div class="relative pt-6">
-        <div class="step-badge">STEP · 1 · 看 · 到 · 提 · 示</div>
-        <div class="iphone">
-          <div class="iphone-screen">
-            <div class="dynamic-island"></div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-4 mb-16">
 
-            <!-- iOS 状态栏 -->
-            <div class="status-bar">
-              <div class="status-time">9:41</div>
-              <div class="status-icons">
-                <!-- Cellular bars -->
-                <svg width="18" height="11" viewBox="0 0 18 11" fill="black"><rect x="0" y="7" width="3" height="4" rx=".5"/><rect x="5" y="5" width="3" height="6" rx=".5"/><rect x="10" y="2" width="3" height="9" rx=".5"/><rect x="15" y="0" width="3" height="11" rx=".5"/></svg>
-                <!-- Wi-Fi -->
-                <svg width="17" height="12" viewBox="0 0 17 12" fill="black"><path d="M8.5 12c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zM5.36 8.86l1.06 1.06a3 3 0 014.16 0l1.06-1.06a4.5 4.5 0 00-6.28 0zM2.54 6.04l1.06 1.06a7 7 0 019.8 0l1.06-1.06a8.5 8.5 0 00-11.92 0zM8.5 0C5.46 0 2.6 1.18.4 3.34l1.06 1.06a10 10 0 0114.08 0l1.06-1.06A12 12 0 008.5 0z"/></svg>
-                <!-- Battery 90% -->
-                <svg width="27" height="12" viewBox="0 0 27 12"><rect x="0" y="0" width="22" height="12" rx="3" stroke="black" stroke-opacity=".4" fill="none"/><rect x="2" y="2" width="17" height="8" rx="1.5" fill="black"/><rect x="23" y="3.5" width="2" height="5" rx="1" fill="black" fill-opacity=".4"/></svg>
-              </div>
-            </div>
-
-            <!-- Safari 顶部 URL bar -->
-            <div class="safari-top">
-              <span class="safari-aA"><span class="safari-aA-big">A</span>A</span>
-              <div class="safari-url-bar">
-                <span style="color:#8e8e93; font-size:12px;">🔒</span>
-                <span style="color:#000;">family-finance.example.com</span>
-              </div>
-              <span style="color:#007AFF; font-size:18px; padding:0 4px;">⟳</span>
-            </div>
-
-            <!-- 应用背景 -->
-            <div class="app-bg faded">
-              <div class="font-mono text-[9px] tracking-widest uppercase" style="color:#888;">/ 仪表盘 · 2026 · 05</div>
-              <div class="font-display text-3xl mt-2 mb-4" style="color:#000; font-family:'Fraunces',serif;">¥ 1,847,200</div>
-              <div class="grid grid-cols-2 gap-2 mb-3">
-                <div style="border:1px solid #e5e1d8; padding:10px;">
-                  <div class="font-mono text-[9px] tracking-wider uppercase" style="color:#888;">总资产</div>
-                  <div class="text-base mt-1 tnum font-medium" style="color:#000;">¥ 2.6M</div>
-                </div>
-                <div style="border:1px solid #e5e1d8; padding:10px;">
-                  <div class="font-mono text-[9px] tracking-wider uppercase" style="color:#888;">总负债</div>
-                  <div class="text-base mt-1 tnum font-medium" style="color:#9f4a3a;">¥ 780k</div>
-                </div>
-              </div>
-              <div style="height:80px; background:#f6f1ea; border:1px solid #e5e1d8; margin-bottom:10px;"></div>
-              <div class="font-mono text-[9px]" style="color:#888;">···</div>
-            </div>
-
-            <!-- PWA 底部 banner -->
-            <div class="pwa-banner">
-              <button style="position:absolute; top:6px; right:8px; width:22px; height:22px; display:flex; align-items:center; justify-content:center; color:#888; font-size:14px;">✕</button>
-              <div class="flex items-start gap-3 mb-2.5">
-                <div class="pwa-icon">账</div>
-                <div class="flex-1 pt-0.5">
-                  <h3 style="font-family:'Fraunces',serif; font-size:15px; font-weight:500; line-height:1.2; color:var(--ink); margin:0;">添加到主屏 · 像 App 一样使用</h3>
-                  <p style="font-family:'JetBrains Mono',monospace; font-size:9px; letter-spacing:.18em; color:#888; margin-top:2px; text-transform:uppercase;">FAMILY · COUNTING · HOUSE</p>
-                </div>
-              </div>
-              <ol style="margin:0; padding:0; list-style:none;">
-                <li style="display:flex; align-items:baseline; gap:6px; font-size:11.5px; line-height:1.4; padding:2px 0; color:#3a3530;">
-                  <span class="step-num-circle">1</span>
-                  <span>点击底部 <span style="color:#007AFF; font-weight:600;">分享按钮 ⤴</span></span>
-                </li>
-                <li style="display:flex; align-items:baseline; gap:6px; font-size:11.5px; line-height:1.4; padding:2px 0; color:#3a3530;">
-                  <span class="step-num-circle">2</span>
-                  <span>滚动找到 <strong>「添加到主屏幕」</strong></span>
-                </li>
-                <li style="display:flex; align-items:baseline; gap:6px; font-size:11.5px; line-height:1.4; padding:2px 0; color:#3a3530;">
-                  <span class="step-num-circle">3</span>
-                  <span>点击右上角 <strong>「添加」</strong></span>
-                </li>
-              </ol>
-              <div style="display:flex; gap:6px; padding-top:9px; margin-top:9px; border-top:0.5px solid rgba(0,0,0,.1);">
-                <button style="flex:1; padding:7px; border:1px solid #c8c2b6; background:transparent; font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.1em;">知道了</button>
-                <button style="flex:1; padding:7px; border:0; background:transparent; font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.1em; color:#888;">7 天内不再</button>
-              </div>
-            </div>
-
-            <!-- 大箭头指向分享按钮 -->
-            <svg class="arrow-pointer" viewBox="0 0 56 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M14 0 Q 8 30, 26 56" stroke="#d6a04a" stroke-width="3" stroke-linecap="round" fill="none" stroke-dasharray="5 4"/>
-              <path d="M26 56 L 18 50 M26 56 L 22 46" stroke="#d6a04a" stroke-width="3" stroke-linecap="round"/>
-            </svg>
-
-            <!-- Safari 底部工具栏 -->
-            <div class="safari-bottom">
-              <div class="safari-btn disabled"><svg width="13" height="22" viewBox="0 0 13 22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="11,2 2,11 11,20"/></svg></div>
-              <div class="safari-btn"><svg width="13" height="22" viewBox="0 0 13 22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,2 11,11 2,20"/></svg></div>
-              <div class="safari-btn highlight">
-                <svg width="22" height="26" viewBox="0 0 22 26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M11 1 V 16 M5 7 L 11 1 L 17 7"/>
-                  <path d="M3 11 V 23 H 19 V 11" stroke-width="2"/>
-                </svg>
-              </div>
-              <div class="safari-btn"><svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="12" height="14" rx="1.5"/><rect x="6" y="6" width="12" height="14" rx="1.5"/></svg></div>
-              <div class="safari-btn"><svg width="20" height="22" viewBox="0 0 20 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 1 H 17 V 21 L 10 16 L 3 21 Z"/></svg></div>
-            </div>
-
-            <div class="home-indicator"></div>
+      <!-- STEP 1 -->
+      <figure class="m-0">
+        <div class="flex items-baseline gap-3 mb-3">
+          <span class="font-display text-4xl font-medium tnum text-brass-deep leading-none">01</span>
+          <div class="flex-1">
+            <h3 class="font-display text-base font-medium leading-tight">底部 <span class="font-mono">⋯</span> 按钮</h3>
+            <div class="font-mono text-[10px] tracking-[0.16em] uppercase text-ink-subtle mt-0.5">SAFARI · MORE</div>
           </div>
         </div>
-        <div class="text-center mt-5 max-w-[380px]">
-          <div class="font-mono text-[10px] tracking-[0.18em] uppercase text-ink-subtle mb-2">底 · 部 · 提 · 示 · 卡 · 片</div>
-          <p class="text-sm text-ink-soft leading-relaxed">
-            首次访问 1.5 秒后自底部滑入 — 不阻塞内容,愿意看的就看。<br/>
-            指向 Safari 底部分享按钮 ⤴ 的金色箭头,呼吸闪动提示位置。
-          </p>
+        <div class="shot-frame">
+          <img src="../screenshots/safari-screen/step1.jpg" alt="STEP 1 真机:Safari 底部 ⋯ 按钮"
+               class="shot" loading="lazy">
         </div>
-      </div>
+        <figcaption class="text-xs text-ink-soft leading-relaxed mt-3 px-1">
+          看到账房底部弹出的提示卡片后,在 Safari 底部地址栏的<strong class="text-ink">右下角</strong>点击「<span class="font-mono">⋯</span>」按钮(红圈位置)。
+        </figcaption>
+      </figure>
 
-      <!-- ============ STEP 2: iOS Share Sheet ============ -->
-      <div class="relative pt-6">
-        <div class="step-badge" style="background:var(--brass-deep)">STEP · 2 · 系 · 统 · 共 · 享 · 菜 · 单</div>
-        <div class="iphone">
-          <div class="iphone-screen">
-            <div class="dynamic-island"></div>
-
-            <!-- iOS 状态栏 (背景模糊) -->
-            <div class="status-bar" style="opacity:.5;">
-              <div class="status-time">9:41</div>
-              <div class="status-icons">
-                <svg width="18" height="11" viewBox="0 0 18 11" fill="black"><rect x="0" y="7" width="3" height="4" rx=".5"/><rect x="5" y="5" width="3" height="6" rx=".5"/><rect x="10" y="2" width="3" height="9" rx=".5"/><rect x="15" y="0" width="3" height="11" rx=".5"/></svg>
-                <svg width="17" height="12" viewBox="0 0 17 12" fill="black"><path d="M8.5 12c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zM5.36 8.86l1.06 1.06a3 3 0 014.16 0l1.06-1.06a4.5 4.5 0 00-6.28 0zM2.54 6.04l1.06 1.06a7 7 0 019.8 0l1.06-1.06a8.5 8.5 0 00-11.92 0zM8.5 0C5.46 0 2.6 1.18.4 3.34l1.06 1.06a10 10 0 0114.08 0l1.06-1.06A12 12 0 008.5 0z"/></svg>
-                <svg width="27" height="12" viewBox="0 0 27 12"><rect x="0" y="0" width="22" height="12" rx="3" stroke="black" stroke-opacity=".4" fill="none"/><rect x="2" y="2" width="17" height="8" rx="1.5" fill="black"/><rect x="23" y="3.5" width="2" height="5" rx="1" fill="black" fill-opacity=".4"/></svg>
-              </div>
-            </div>
-
-            <!-- 模糊背景 (Safari + 应用) -->
-            <div class="safari-top" style="opacity:.4;">
-              <span class="safari-aA"><span class="safari-aA-big">A</span>A</span>
-              <div class="safari-url-bar"><span style="color:#000;">family-finance.example.com</span></div>
-            </div>
-            <div class="app-bg" style="opacity:.4; bottom:0; padding-top:30px;">
-              <div class="font-display text-2xl" style="color:#000; font-family:'Fraunces',serif;">¥ 1,847,200</div>
-            </div>
-
-            <!-- 半透明 backdrop -->
-            <div class="share-backdrop"></div>
-
-            <!-- iOS Share Sheet -->
-            <div class="share-sheet">
-              <div class="share-grabber"></div>
-
-              <!-- 网站头 -->
-              <div class="share-header">
-                <div class="share-favicon">账</div>
-                <div style="flex:1; min-width:0;">
-                  <div style="font-size:15px; font-weight:600; color:#000; line-height:1.2;">家庭账房 · 仪表盘</div>
-                  <div style="font-size:12px; color:#8e8e93; margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">family-finance.example.com</div>
-                </div>
-                <div style="font-size:13px; color:#007AFF; font-weight:400;">选项 ›</div>
-              </div>
-
-              <!-- 第一行:AirDrop / 应用 -->
-              <div class="share-row-apps">
-                <div class="share-app-icons">
-                  <div class="share-app">
-                    <div class="share-app-icon" style="background:linear-gradient(135deg, #007AFF 0%, #0051D5 100%);">
-                      <svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><circle cx="16" cy="16" r="13"/><path d="M9 18 L 16 11 L 23 18 M16 11 V 22"/></svg>
-                    </div>
-                    <div class="share-app-label">隔空投送</div>
-                  </div>
-                  <div class="share-app">
-                    <div class="share-app-icon" style="background:linear-gradient(135deg, #4cd964 0%, #3aac4e 100%);">💬</div>
-                    <div class="share-app-label">信息</div>
-                  </div>
-                  <div class="share-app">
-                    <div class="share-app-icon" style="background:linear-gradient(135deg, #65d3ff 0%, #008cff 100%);">📧</div>
-                    <div class="share-app-label">邮件</div>
-                  </div>
-                  <div class="share-app">
-                    <div class="share-app-icon" style="background:linear-gradient(135deg, #07c160 0%, #06ae56 100%); font-family:sans-serif; font-size:24px;">微</div>
-                    <div class="share-app-label">微信</div>
-                  </div>
-                  <div class="share-app">
-                    <div class="share-app-icon" style="background:linear-gradient(135deg, #ff9500 0%, #ff6a00 100%);">📒</div>
-                    <div class="share-app-label">备忘录</div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- 操作列表 -->
-              <div class="share-list">
-                <div class="share-list-row">
-                  <div style="display:flex; align-items:center; gap:14px;">
-                    <span class="icon"><svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="2" y="2" width="14" height="14" rx="2.5"/><rect x="6" y="6" width="14" height="14" rx="2.5" fill="#fff"/></svg></span>
-                    <span>拷贝</span>
-                  </div>
-                </div>
-                <div class="share-list-row">
-                  <div style="display:flex; align-items:center; gap:14px;">
-                    <span class="icon"><svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2 5 H 20 M2 11 H 20 M2 17 H 14"/></svg></span>
-                    <span>添加到阅读列表</span>
-                  </div>
-                </div>
-                <div class="share-list-row">
-                  <div style="display:flex; align-items:center; gap:14px;">
-                    <span class="icon"><svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 2 H 17 V 20 L 11 16 L 5 20 Z"/></svg></span>
-                    <span>添加书签</span>
-                  </div>
-                </div>
-                <div class="share-list-row">
-                  <div style="display:flex; align-items:center; gap:14px;">
-                    <span class="icon"><svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 1 L 13.6 7.7 L 21 8.5 L 15.5 13.5 L 17.1 21 L 11 17 L 4.9 21 L 6.5 13.5 L 1 8.5 L 8.4 7.7 Z"/></svg></span>
-                    <span>添加到收藏夹</span>
-                  </div>
-                </div>
-                <div class="share-list-row highlight">
-                  <div style="display:flex; align-items:center; gap:14px;">
-                    <span class="icon" style="color:#7a5a39;"><svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="18" height="18" rx="3"/><path d="M11 6 V 16 M6 11 H 16"/></svg></span>
-                    <span style="font-weight:500; color:#000;">添加到主屏幕</span>
-                  </div>
-                  <span style="color:#7a5a39; font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.15em;">↑ 这一项 ↑</span>
-                </div>
-                <div class="share-list-row">
-                  <div style="display:flex; align-items:center; gap:14px;">
-                    <span class="icon"><svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 2 L 6 12 L 4 18 L 10 16 L 20 6 Z"/></svg></span>
-                    <span>标记</span>
-                  </div>
-                </div>
-                <div class="share-list-row">
-                  <div style="display:flex; align-items:center; gap:14px;">
-                    <span class="icon"><svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="9"/><line x1="11" y1="6" x2="11" y2="11"/><line x1="11" y1="11" x2="14" y2="14"/></svg></span>
-                    <span>稍后提醒</span>
-                  </div>
-                </div>
-              </div>
-
-              <div class="share-cancel">取消</div>
-            </div>
-
-            <div class="home-indicator"></div>
+      <!-- STEP 2 -->
+      <figure class="m-0">
+        <div class="flex items-baseline gap-3 mb-3">
+          <span class="font-display text-4xl font-medium tnum text-brass-deep leading-none">02</span>
+          <div class="flex-1">
+            <h3 class="font-display text-base font-medium leading-tight">选择「共享」</h3>
+            <div class="font-mono text-[10px] tracking-[0.16em] uppercase text-ink-subtle mt-0.5">MENU · SHARE</div>
           </div>
         </div>
-        <div class="text-center mt-5 max-w-[380px]">
-          <div class="font-mono text-[10px] tracking-[0.18em] uppercase text-ink-subtle mb-2">系 · 统 · 弹 · 出 · 共 · 享 · 表</div>
-          <p class="text-sm text-ink-soft leading-relaxed">
-            点击 Safari 底部分享按钮后,iOS 系统弹出共享表。
-            「<span class="text-ink font-medium">添加到主屏幕</span>」高亮(图中金棕色 + 呼吸闪动),
-            点击后 iOS 会再弹一个确认页(标题可改、确认"添加")。
-          </p>
+        <div class="shot-frame">
+          <img src="../screenshots/safari-screen/step2.jpg" alt="STEP 2 真机:菜单中选择共享"
+               class="shot" loading="lazy">
         </div>
-      </div>
+        <figcaption class="text-xs text-ink-soft leading-relaxed mt-3 px-1">
+          弹出的菜单中第一项「<strong class="text-ink">共享</strong>」(红圈)— 注意 iOS 中文版叫「共享」不叫「分享」。
+        </figcaption>
+      </figure>
+
+      <!-- STEP 3 -->
+      <figure class="m-0">
+        <div class="flex items-baseline gap-3 mb-3">
+          <span class="font-display text-4xl font-medium tnum text-brass-deep leading-none">03</span>
+          <div class="flex-1">
+            <h3 class="font-display text-base font-medium leading-tight">底部「<span class="font-mono">⋯</span> 更多」</h3>
+            <div class="font-mono text-[10px] tracking-[0.16em] uppercase text-ink-subtle mt-0.5">SHEET · MORE</div>
+          </div>
+        </div>
+        <div class="shot-frame">
+          <img src="../screenshots/safari-screen/step3.jpg" alt="STEP 3 真机:共享面板底部点击更多"
+               class="shot" loading="lazy">
+        </div>
+        <figcaption class="text-xs text-ink-soft leading-relaxed mt-3 px-1">
+          共享面板默认<strong class="text-ink">不显示</strong>「添加到主屏幕」,在底部应用图标行右侧点「<span class="font-mono">⋯ 更多</span>」(红圈)展开完整列表。
+        </figcaption>
+      </figure>
+
+      <!-- STEP 4 -->
+      <figure class="m-0">
+        <div class="flex items-baseline gap-3 mb-3">
+          <span class="font-display text-4xl font-medium tnum text-brass-deep leading-none">04</span>
+          <div class="flex-1">
+            <h3 class="font-display text-base font-medium leading-tight">添加到主屏幕</h3>
+            <div class="font-mono text-[10px] tracking-[0.16em] uppercase text-ink-subtle mt-0.5">ADD TO HOME</div>
+          </div>
+        </div>
+        <div class="shot-frame">
+          <img src="../screenshots/safari-screen/step4.jpg" alt="STEP 4 真机:列表里点添加到主屏幕"
+               class="shot" loading="lazy">
+        </div>
+        <figcaption class="text-xs text-ink-soft leading-relaxed mt-3 px-1">
+          展开后向下滚动,找到「<strong class="text-ink">添加到主屏幕</strong>」(红圈),点击 → 编辑页 → 右上「添加」即完成。
+        </figcaption>
+      </figure>
+    </div>
+
+    <!-- 流程示意:01 → 02 → 03 → 04 -->
+    <div class="hidden lg:flex items-center justify-center gap-6 mb-12 font-mono text-[11px] tracking-[0.18em] uppercase text-ink-subtle">
+      <span>底部 ⋯</span><span class="text-brass-deep">→</span>
+      <span>共享</span><span class="text-brass-deep">→</span>
+      <span>更多</span><span class="text-brass-deep">→</span>
+      <span class="text-ink font-medium">添加到主屏幕</span>
     </div>
 
     <!-- 添加完成后的状态对比 -->

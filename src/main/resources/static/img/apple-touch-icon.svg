@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="家庭账房 主屏图标">
+  <title>家庭账房 — 屋顶下的硬币(主屏图标)</title>
+  <!-- 实心墨色背景(iOS 自动加圆角,源 PNG 必须方形不带圆角不带 alpha) -->
+  <rect width="512" height="512" fill="#1a1714"/>
+  <!-- 屋顶(双坡,金棕色) -->
+  <path d="M 100 240 L 256 110 L 412 240" fill="none"
+        stroke="#d6a04a" stroke-width="22"
+        stroke-linejoin="round" stroke-linecap="round"/>
+  <!-- 屋脊小烟囱 -->
+  <path d="M 330 158 L 330 116 L 360 116 L 360 188"
+        fill="none" stroke="#d6a04a" stroke-width="11" stroke-linejoin="round"/>
+  <!-- 屋顶下两条墙脚短线 -->
+  <line x1="112" y1="240" x2="112" y2="266" stroke="#d6a04a" stroke-width="22" stroke-linecap="round"/>
+  <line x1="400" y1="240" x2="400" y2="266" stroke="#d6a04a" stroke-width="22" stroke-linecap="round"/>
+  <!-- 硬币(黄铜色填充) -->
+  <circle cx="256" cy="340" r="105" fill="#c4943e"/>
+  <!-- 硬币内圈装饰 -->
+  <circle cx="256" cy="340" r="78" fill="none" stroke="#1a1714" stroke-width="2" opacity=".4"/>
+  <!-- ¥ 符号 -->
+  <g stroke="#1a1714" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M 218 296 L 256 348 L 294 296"/>
+    <line x1="256" y1="348" x2="256" y2="396"/>
+    <line x1="220" y1="356" x2="292" y2="356"/>
+    <line x1="220" y1="376" x2="292" y2="376"/>
+  </g>
+  <!-- 朱红印泥点(右上,品牌一致) -->
+  <circle cx="448" cy="64" r="22" fill="#9f4a3a"/>
+</svg>

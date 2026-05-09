@@ -42,6 +42,12 @@ server:
         http-only: true
         secure: false  # TLS 在用户更上游处终结,本服务接收 HTTP
         same-site: lax
+  error:
+    # v0.2:让 templates/error.html 能拿到 status / error / message / path
+    include-message: always
+    include-binding-errors: always
+    whitelabel:
+      enabled: false
 
 mybatis:
   mapper-locations: classpath:mapper/*.xml
