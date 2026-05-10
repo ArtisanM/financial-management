@@ -19,6 +19,13 @@
 |---|---|---|---|
 | **A. 首次部署** | `bash deploy/push-to-prod.sh user@host` | `cd ~/finance-deploy && sudo bash deploy/init-prod.sh` | ~5 分钟 |
 | **B. 后续迭代** | `bash deploy/push-to-prod.sh user@host` | `cd ~/finance-deploy && bash deploy/deploy-prod.sh user@host`<br/>(或本地直接 `bash deploy/deploy-prod.sh user@host`) | ~30 秒 |
+| **C. 单独装/换 nginx** | `bash deploy/push-to-prod.sh user@host` | `cd ~/finance-deploy && sudo bash deploy/nginx-setup.sh [域名]` | ~30 秒 |
+
+> **所有脚本都幂等可重跑**:`init-prod.sh` / `nginx-setup.sh` / `deploy-prod.sh` / `push-to-prod.sh` 都用 `cmp -s` 对比文件内容、检测 systemd 状态、检测 DB 表结构,**只在内容真变了的时候才动作 + 触发 restart**。
+>
+> - 一次跑挂了 → 修了 → 重跑同样的脚本即可,**不会重复装、不会无谓抖动服务**
+> - 想"重置"某一步 → 删掉对应文件(如 `/etc/finance.env`、`/etc/nginx/sites-available/finance.conf`)再重跑,脚本会重建
+> - **certbot 加过 SSL 后**:`nginx-setup.sh` 检测到 `ssl_certificate` 自动跳过覆盖,保你的 HTTPS 不丢
 
 ---
 

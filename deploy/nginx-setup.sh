@@ -52,49 +52,79 @@ else
   ok "nginx 已装 + 启动"
 fi
 
-# ---------- 2. 渲染配置 ----------
+# ---------- 2. 渲染配置(检测 certbot SSL 接管,不覆盖)----------
 say "2/5 渲染 /etc/nginx/sites-available/finance.conf"
-sed -e "s|__PORT__|${PORT}|g" \
-    -e "s|__SERVER_NAME__|${SERVER_NAME}|g" \
-    deploy/nginx-finance.conf.example > /etc/nginx/sites-available/finance.conf
-chmod 644 /etc/nginx/sites-available/finance.conf
-ok "/etc/nginx/sites-available/finance.conf 写入"
+NGINX_CONF=/etc/nginx/sites-available/finance.conf
+if [[ -f "$NGINX_CONF" ]] && grep -qE 'ssl_certificate|managed by Certbot' "$NGINX_CONF" 2>/dev/null; then
+  warn "检测到 finance.conf 已含 SSL 配置(疑似 certbot 接管)— 不覆盖,保留你的 HTTPS"
+  warn "若要重置:1) sudo certbot delete --cert-name <域名>  2) sudo rm $NGINX_CONF  3) 重跑此脚本"
+  NGINX_CONF_CHANGED=0
+else
+  RENDERED=$(mktemp)
+  sed -e "s|__PORT__|${PORT}|g" \
+      -e "s|__SERVER_NAME__|${SERVER_NAME}|g" \
+      deploy/nginx-finance.conf.example > "$RENDERED"
+  if [[ -f "$NGINX_CONF" ]] && cmp -s "$RENDERED" "$NGINX_CONF"; then
+    ok "$NGINX_CONF 已是最新,跳过"
+    NGINX_CONF_CHANGED=0
+    rm -f "$RENDERED"
+  else
+    install -m 644 "$RENDERED" "$NGINX_CONF"
+    rm -f "$RENDERED"
+    NGINX_CONF_CHANGED=1
+    ok "$NGINX_CONF 已写入"
+  fi
+fi
 
 # ---------- 3. enable 站点 + 处理默认站点 ----------
 say "3/5 enable finance.conf + 移除默认站点"
 mkdir -p /etc/nginx/sites-enabled
-ln -sf /etc/nginx/sites-available/finance.conf /etc/nginx/sites-enabled/finance.conf
-ok "sites-enabled/finance.conf 软链就位"
+if [[ -L /etc/nginx/sites-enabled/finance.conf ]] \
+   && [[ "$(readlink /etc/nginx/sites-enabled/finance.conf)" == "$NGINX_CONF" ]]; then
+  ok "sites-enabled/finance.conf 软链已就位"
+else
+  ln -sf "$NGINX_CONF" /etc/nginx/sites-enabled/finance.conf
+  ok "sites-enabled/finance.conf 软链已建"
+fi
 
 if [[ -L /etc/nginx/sites-enabled/default ]]; then
   rm -f /etc/nginx/sites-enabled/default
-  warn "已移除默认 80 站点(/etc/nginx/sites-enabled/default)避免端口冲突"
+  warn "已移除默认 80 站点 sites-enabled/default(避免端口冲突)"
 fi
 
-# nginx 主配置 include 检查
+# nginx 主配置 include 检查 — RHEL 系默认走 conf.d/
 if ! grep -qE '^\s*include\s+/etc/nginx/sites-enabled/' /etc/nginx/nginx.conf 2>/dev/null; then
-  warn "/etc/nginx/nginx.conf 没 include sites-enabled/*,RHEL 默认目录是 conf.d"
-  warn "改用 /etc/nginx/conf.d/finance.conf 兜底"
-  cp /etc/nginx/sites-available/finance.conf /etc/nginx/conf.d/finance.conf
+  if [[ ! -f /etc/nginx/conf.d/finance.conf ]] || ! cmp -s "$NGINX_CONF" /etc/nginx/conf.d/finance.conf; then
+    warn "/etc/nginx/nginx.conf 没 include sites-enabled/*(RHEL 默认),兜底用 conf.d/"
+    cp "$NGINX_CONF" /etc/nginx/conf.d/finance.conf
+  fi
 fi
 
-# ---------- 4. 把 Spring 绑回 127.0.0.1 ----------
-say "4/5 把 Spring 绑到 127.0.0.1(只允许 nginx 走 loopback 进)"
-if grep -q '^SERVER_ADDRESS=' /etc/finance.env; then
+# ---------- 4. 把 Spring 绑回 127.0.0.1(幂等)----------
+say "4/5 把 Spring 绑到 127.0.0.1(只让 nginx 走 loopback 进)"
+CURRENT_ADDR=$(grep '^SERVER_ADDRESS=' /etc/finance.env 2>/dev/null | cut -d= -f2- | tr -d '"' || true)
+if [[ "$CURRENT_ADDR" == "127.0.0.1" ]]; then
+  ok "SERVER_ADDRESS=127.0.0.1 已就位,不动 finance"
+elif grep -q '^SERVER_ADDRESS=' /etc/finance.env; then
   sed -i 's|^SERVER_ADDRESS=.*|SERVER_ADDRESS=127.0.0.1|' /etc/finance.env
-  ok "SERVER_ADDRESS=127.0.0.1 已更新"
+  systemctl restart finance
+  ok "SERVER_ADDRESS 改为 127.0.0.1 + finance restart"
 else
   echo "SERVER_ADDRESS=127.0.0.1" >> /etc/finance.env
-  ok "SERVER_ADDRESS=127.0.0.1 已追加到 /etc/finance.env"
+  systemctl restart finance
+  ok "SERVER_ADDRESS=127.0.0.1 追加 + finance restart"
 fi
-systemctl restart finance
-ok "finance 服务已 restart(现在外部访问 :${PORT} 会被拒,只 nginx 能走 127.0.0.1:${PORT})"
 
-# ---------- 5. nginx -t + reload ----------
+# ---------- 5. nginx -t + reload(只在配置变了的时候 reload)----------
 say "5/5 校验 + reload nginx"
-nginx -t || die "nginx 配置语法错,看上面输出"
-systemctl reload nginx
-ok "nginx reload 完成"
+nginx -t 2>&1 | tail -3 || die "nginx 配置语法错,看上面输出"
+if [[ "${NGINX_CONF_CHANGED:-1}" == "1" ]]; then
+  systemctl reload nginx
+  ok "nginx 配置变了 → reload 完成"
+else
+  systemctl is-active --quiet nginx && ok "nginx 配置无变化 + 已在跑,不 reload" \
+    || { systemctl start nginx; ok "nginx 启动"; }
+fi
 
 # ---------- 健康检查 ----------
 say "健康检查"

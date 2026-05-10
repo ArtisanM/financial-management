@@ -35,6 +35,16 @@ say "0/12 预飞检查"
 [[ -f deploy/finance.service ]] || die "deploy/finance.service 缺失"
 ok "在 staging 目录:$(pwd)"
 
+# 幂等关键:跟踪是否真的改了什么 — 只在末尾按 NEEDS_* 标志决定 daemon-reload / restart,
+# 重跑无变化时一动不动(避免无谓的服务抖动)
+NEEDS_DAEMON_RELOAD=0
+NEEDS_FINANCE_RESTART=0
+REINIT_MODE=0
+if systemctl is-active --quiet finance 2>/dev/null && [[ -f /etc/finance.env && -f /opt/finance/app.jar ]]; then
+  REINIT_MODE=1
+  warn "检测到 finance 已在运行,本次为「重跑模式」:仅补做缺失步骤,无变化时不重启"
+fi
+
 # 检测 OS
 if   [[ -f /etc/debian_version ]]; then OS=debian
 elif [[ -f /etc/redhat-release ]]; then OS=rhel
@@ -184,21 +194,38 @@ fi
 
 # ---------- 9. 把 jar 放到 /opt/finance/ ----------
 say "9/12 部署 app.jar"
-install -m 644 -o finance -g finance app.jar /opt/finance/app.jar
-ok "/opt/finance/app.jar 就位($(stat -c%s /opt/finance/app.jar) bytes)"
+if [[ -f /opt/finance/app.jar ]] && cmp -s app.jar /opt/finance/app.jar; then
+  ok "/opt/finance/app.jar 与 staging 一致,跳过覆盖"
+else
+  # 重跑且 jar 变了 → 备份旧的供回滚
+  [[ -f /opt/finance/app.jar ]] && install -m 644 -o finance -g finance /opt/finance/app.jar /opt/finance/app.jar.prev && ok "旧 jar 已备份到 app.jar.prev"
+  install -m 644 -o finance -g finance app.jar /opt/finance/app.jar
+  ok "/opt/finance/app.jar 已写入($(stat -c%s /opt/finance/app.jar) bytes)"
+  NEEDS_FINANCE_RESTART=1
+fi
 
 # ---------- 10. 装 systemd unit + sudoers ----------
 say "10/12 装 systemd unit + sudoers"
-# 把 deploy/finance.service 里的 java 路径校准到当前发行版(JAVA_BIN)
+# 渲染到临时文件,与现有对比,只在变了的时候真写
+RENDERED=$(mktemp)
 sed -e "s|/usr/lib/jvm/java-21-openjdk-amd64/bin/java|${JAVA_BIN}|" \
-    deploy/finance.service > /etc/systemd/system/finance.service
-chmod 644 /etc/systemd/system/finance.service
-systemctl daemon-reload
-systemctl enable finance
-ok "systemd unit 安装 + enable"
+    deploy/finance.service > "$RENDERED"
+if [[ -f /etc/systemd/system/finance.service ]] && cmp -s "$RENDERED" /etc/systemd/system/finance.service; then
+  ok "/etc/systemd/system/finance.service 已是最新,跳过"
+  rm -f "$RENDERED"
+else
+  install -m 644 "$RENDERED" /etc/systemd/system/finance.service
+  rm -f "$RENDERED"
+  NEEDS_DAEMON_RELOAD=1
+  NEEDS_FINANCE_RESTART=1
+  ok "systemd unit 已写入"
+fi
+systemctl is-enabled --quiet finance 2>/dev/null && ok "finance 已 enable" \
+  || { systemctl enable finance >/dev/null 2>&1 && ok "finance enable 完成"; }
 
 # Sudoers — 让 finance 可以无密码 cp + restart(供 deploy-prod.sh 用)
-cat > /etc/sudoers.d/finance <<EOF
+SUDOERS_TMP=$(mktemp)
+cat > "$SUDOERS_TMP" <<EOF
 # 允许 finance 用户做这几件事(供后续 deploy-prod.sh 使用)
 finance ALL=(root) NOPASSWD: /bin/cp /home/finance/finance-deploy/app.jar /opt/finance/app.jar
 finance ALL=(root) NOPASSWD: /bin/cp /opt/finance/app.jar.new /opt/finance/app.jar
@@ -210,9 +237,16 @@ finance ALL=(root) NOPASSWD: /bin/systemctl restart finance
 finance ALL=(root) NOPASSWD: /bin/systemctl status finance
 finance ALL=(root) NOPASSWD: /bin/journalctl -u finance *
 EOF
-chmod 440 /etc/sudoers.d/finance
-visudo -cf /etc/sudoers.d/finance >/dev/null && ok "/etc/sudoers.d/finance 写入 + 语法校验通过" \
-  || die "sudoers 语法错误,已 abort(检查 /etc/sudoers.d/finance)"
+if [[ -f /etc/sudoers.d/finance ]] && cmp -s "$SUDOERS_TMP" /etc/sudoers.d/finance; then
+  ok "/etc/sudoers.d/finance 已是最新,跳过"
+  rm -f "$SUDOERS_TMP"
+else
+  install -m 440 "$SUDOERS_TMP" /etc/sudoers.d/finance
+  rm -f "$SUDOERS_TMP"
+  visudo -cf /etc/sudoers.d/finance >/dev/null \
+    || die "sudoers 语法错误(已写入但语法挂),手动检查 /etc/sudoers.d/finance"
+  ok "/etc/sudoers.d/finance 写入 + 语法校验通过"
+fi
 
 # ---------- 11. 装备份 systemd timer(可选)----------
 say "11/12 安装备份 timer(deploy/finance-backup.{service,timer})"
@@ -229,36 +263,68 @@ fi
 
 # ---------- 12. 启服务 + 健康检查 ----------
 say "12/12 启动 finance 服务 + 健康检查"
-systemctl restart finance
+[[ "$NEEDS_DAEMON_RELOAD" == "1" ]] && { systemctl daemon-reload; ok "systemd daemon-reload(unit 变了)"; }
+
 SERVER_PORT=$(grep '^SERVER_PORT=' /etc/finance.env | cut -d= -f2- | tr -d '"' || echo 20000)
 SERVER_PORT="${SERVER_PORT:-20000}"
 
-for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15; do
-  sleep 2
-  code=$(curl -s -o /dev/null -w "%{http_code}" "http://127.0.0.1:${SERVER_PORT}/health" || echo 000)
-  if [[ "$code" == "200" ]]; then
-    ok "/health 200(${i}× 2s = $((i*2))s)"
-    break
+if systemctl is-active --quiet finance; then
+  if [[ "$NEEDS_FINANCE_RESTART" == "1" ]]; then
+    systemctl restart finance
+    ok "finance 已 restart(检测到 jar / unit 变化)"
+  else
+    ok "finance 已在跑且无变化,不重启(避免无谓抖动)"
   fi
-  [[ $i -eq 15 ]] && {
-    journalctl -u finance --no-pager -n 30
-    die "应用 30s 未起来,看上方 journalctl 日志"
-  }
-done
+else
+  systemctl start finance
+  ok "finance 已 start"
+  NEEDS_FINANCE_RESTART=1   # 让下面的健康检查知道要等
+fi
+
+# 健康检查 — 重跑且未重启时跑一次快验,变更时跑完整等待
+if [[ "$NEEDS_FINANCE_RESTART" == "1" ]]; then
+  for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15; do
+    sleep 2
+    code=$(curl -s -o /dev/null -w "%{http_code}" "http://127.0.0.1:${SERVER_PORT}/health" || echo 000)
+    if [[ "$code" == "200" ]]; then
+      ok "/health 200(${i}× 2s = $((i*2))s)"
+      break
+    fi
+    [[ $i -eq 15 ]] && {
+      journalctl -u finance --no-pager -n 30
+      die "应用 30s 未起来,看上方 journalctl 日志"
+    }
+  done
+fi
 
 HEALTH=$(curl -s "http://127.0.0.1:${SERVER_PORT}/health")
 [[ "$HEALTH" == *'"status":"UP"'* ]] && ok "/health = $HEALTH" || die "/health 内容异常: $HEALTH"
 
-# ---------- 13. 可选:nginx :80 反代 ----------
-say "13/13 nginx 反代 :80 → :${SERVER_PORT}(可选,但 prod 强烈建议)"
-read -p "现在装 nginx 反代到 :80 吗? [Y/n] " yn
-if [[ "$yn" != "n" && "$yn" != "N" ]]; then
-  SN=$(ask "nginx server_name(域名,纯 IP 访问就回车用 _)" "_")
-  bash deploy/nginx-setup.sh "$SN"
+# ---------- 13. nginx :80 反代(幂等)----------
+say "13/13 nginx 反代 :80 → :${SERVER_PORT}"
+NGINX_CONF=/etc/nginx/sites-available/finance.conf
+NGINX_LINK=/etc/nginx/sites-enabled/finance.conf
+NGINX_RHEL_CONF=/etc/nginx/conf.d/finance.conf
+
+if command -v nginx >/dev/null 2>&1 \
+   && { [[ -f $NGINX_CONF && -e $NGINX_LINK ]] || [[ -f $NGINX_RHEL_CONF ]]; }; then
+  ok "nginx + finance.conf 已就位,跳过(若想重置:rm $NGINX_CONF 后重跑此脚本或 nginx-setup.sh)"
+  NGINX_DONE=1
+elif [[ "$REINIT_MODE" == "1" ]]; then
+  # 重跑且 nginx 未配过 — 不打扰交互,默认装,server_name=_
+  warn "重跑模式且未配 nginx,自动装(server_name=_,域名后续可重跑 nginx-setup.sh 改)"
+  bash deploy/nginx-setup.sh "_"
   NGINX_DONE=1
 else
-  NGINX_DONE=0
-  warn "已跳过 nginx;若需要后续再跑:sudo bash deploy/nginx-setup.sh"
+  read -p "现在装 nginx 反代到 :80 吗? [Y/n] " yn
+  if [[ "$yn" != "n" && "$yn" != "N" ]]; then
+    SN=$(ask "nginx server_name(域名,纯 IP 访问就回车用 _)" "_")
+    bash deploy/nginx-setup.sh "$SN"
+    NGINX_DONE=1
+  else
+    NGINX_DONE=0
+    warn "已跳过 nginx;后续随时:sudo bash deploy/nginx-setup.sh"
+  fi
 fi
 
 echo
