@@ -18,6 +18,7 @@ import com.family.finance.repository.AccountMapper;
 import com.family.finance.repository.FxMapper;
 import com.family.finance.repository.PeriodMapper;
 import com.family.finance.service.FamilyService;
+import com.family.finance.service.FxService;
 import com.family.finance.service.NavService;
 import com.family.finance.service.checkup.FamilyDiagnose;
 import com.family.finance.service.checkup.FamilyDiagnoseService;
@@ -49,6 +50,7 @@ public class ReportsController {
     private final PeriodMapper periodMapper;
     private final AccountMapper accountMapper;
     private final FxMapper fxMapper;
+    private final FxService fxService;
     private final NavService navService;
     private final FamilyDiagnoseService familyDiagnoseService;
 
@@ -94,12 +96,11 @@ public class ReportsController {
         Period anchor = anchorPeriod(me.getFamilyId());
         List<Long> accountIds = parseAccountIds(accountsCsv);
         String viewCurrency = parseCurrency(currency, family.getBaseCurrency());
-        // BUG-FIX(2026-05-10):同 dashboard,缺 fx_rate 时强制回退到 base,UI 给提示
+        // BUG-FIX(2026-05-10):同 dashboard,缺 fx_rate 时即时拉 frankfurter,失败再回退 + toast 提示
         String requestedCurrency = viewCurrency;
         boolean fxFallback = false;
         if (!viewCurrency.equalsIgnoreCase(family.getBaseCurrency())) {
-            boolean hasRate = fxMapper.findOne(me.getFamilyId(), family.getBaseCurrency(), viewCurrency, anchor.getId()).isPresent()
-                    || fxMapper.findLatest(me.getFamilyId(), family.getBaseCurrency(), viewCurrency).isPresent();
+            boolean hasRate = fxService.getOrFetchRate(me.getFamilyId(), family.getBaseCurrency(), viewCurrency, anchor.getId()).isPresent();
             if (!hasRate) {
                 viewCurrency = family.getBaseCurrency();
                 fxFallback = true;

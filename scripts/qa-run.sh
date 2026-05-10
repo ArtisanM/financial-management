@@ -374,22 +374,29 @@ if [[ -n "$nw_cny" && -n "$nw_usd" ]]; then
     || log_bad "v02-CCY-2 USD 数学错" "expected≈${expected_usd} got=${nw_usd}"
 fi
 
-# fxFallback banner:删 fx_rate 后切 USD,banner 必须出现 + 数字回退到 ¥
+# 按需拉汇率:删 fx_rate 后切 USD,后端应即时调 frankfurter API 拉新汇率写入,然后正常显示 $
 mysql -ufinance -pfinance finance -e "DELETE FROM fx_rate;" 2>/dev/null
-$CURL -b $COOKIE "$BASE/dashboard?currency=USD" -o "$TMP" -w ""
-grep -q "汇率缺失" "$TMP" \
-  && log_ok "v02-CCY-3 fx_rate 缺 → dashboard 显示「汇率缺失」banner" \
-  || log_bad "v02-CCY-3 fxFallback banner 缺" "no 汇率缺失"
-grep -A1 'kpi-eyebrow">净资产' "$TMP" | grep "kpi-value" | head -1 | grep -qF '¥' \
-  && log_ok "v02-CCY-4 fxFallback 时强制回退 ¥ 显示(不再误用 \$)" \
-  || log_bad "v02-CCY-4 fxFallback 未回退到 ¥" "still wrong symbol"
+$CURL --max-time 30 -b $COOKIE "$BASE/dashboard?currency=USD" -o "$TMP" -w ""
+fx_after=$(mysql -ufinance -pfinance finance -sN -e "SELECT COUNT(*) FROM fx_rate WHERE family_id=1 AND quote_currency='USD' AND source='frankfurter.dev';" 2>/dev/null)
+if [[ "${fx_after:-0}" -ge 1 ]]; then
+  log_ok "v02-CCY-3 fx_rate 缺 → 即时调 frankfurter 拉取并入库(source=frankfurter.dev count=$fx_after)"
+  # 拉成功后 USD KPI 应该是 $ 而不是 ¥
+  grep -A1 'kpi-eyebrow">净资产' "$TMP" | grep "kpi-value" | head -1 | grep -qF '$' \
+    && log_ok "v02-CCY-4 即时拉成功后正常显示 \$ 数字(无 toast 兜底)" \
+    || log_bad "v02-CCY-4 即时拉成功但仍未显示 \$" "wrong symbol"
+else
+  # 网络拉不到时:fxFallback 路径,toast 脚本必现 + 显示 ¥
+  log_skip "v02-CCY-3 frankfurter 不可达 / 拉失败,走 fallback 路径校验" "fx_after=$fx_after"
+  grep -q "汇率未配置" "$TMP" \
+    && log_ok "v02-CCY-4 拉失败 fallback → 渲染「汇率未配置」toast 脚本" \
+    || log_bad "v02-CCY-4 fallback toast 缺" "no 汇率未配置"
+fi
 
-# 复种回 fx_rate,后续 case 不受影响
-mysql -ufinance -pfinance finance -e "
-INSERT INTO fx_rate (family_id, base_currency, quote_currency, period_id, rate, source) VALUES
-(1, 'CNY', 'USD', ${fx_seed_periodId}, 0.140000, 'qa-seed'),
-(1, 'CNY', 'HKD', ${fx_seed_periodId}, 1.090000, 'qa-seed')
-ON DUPLICATE KEY UPDATE rate=VALUES(rate);" 2>/dev/null
+# v02-CCY-5 模板防回归:确保 dashboard / reports 都有 fxFallback toast 脚本块
+grep -q '汇率未配置' src/main/resources/templates/dashboard/_region.html \
+  && grep -q '汇率未配置' src/main/resources/templates/reports/_region.html \
+  && log_ok "v02-CCY-5 dashboard / reports 均含 fxFallback toast 脚本块(防回归)" \
+  || log_bad "v02-CCY-5 fxFallback toast 模板缺失" "missing in dashboard/reports _region.html"
 
 # ---------- 静态资源 ----------
 section "Static / vendor"

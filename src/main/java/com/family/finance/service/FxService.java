@@ -15,6 +15,7 @@ import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 @Service
@@ -94,5 +95,35 @@ public class FxService {
     public void fetchForLatestPeriods(long familyId) {
         Period current = periodService.findCurrentOpen(familyId).orElse(null);
         if (current != null) fetchAndStore(familyId, current.getId());
+    }
+
+    /**
+     * v0.2 BUG-FIX(2026-05-10):用户切 viewCurrency 时按需获取汇率。
+     * 顺序:DB 查 (familyId, base, quote, periodId) → DB 查最近一期 → 实时拉 frankfurter 写入并返回。
+     * 全部失败返回空,调用方应回退到 base + 显示 banner。
+     */
+    public Optional<FxRate> getOrFetchRate(long familyId, String baseCurrency, String quoteCurrency, long periodId) {
+        if (baseCurrency.equalsIgnoreCase(quoteCurrency)) {
+            return Optional.empty();
+        }
+        Optional<FxRate> exact = fxMapper.findOne(familyId, baseCurrency, quoteCurrency, periodId);
+        if (exact.isPresent()) return exact;
+        Optional<FxRate> latest = fxMapper.findLatest(familyId, baseCurrency, quoteCurrency);
+        if (latest.isPresent()) return latest;
+        try {
+            int wrote = fetchAndStore(familyId, periodId);
+            if (wrote > 0) {
+                Optional<FxRate> fresh = fxMapper.findOne(familyId, baseCurrency, quoteCurrency, periodId);
+                if (fresh.isPresent()) {
+                    log.info("[Fx] on-demand fetched rate for {} {}->{} period#{}: {}",
+                            familyId, baseCurrency, quoteCurrency, periodId, fresh.get().getRate());
+                    return fresh;
+                }
+            }
+        } catch (Exception e) {
+            log.warn("[Fx] on-demand fetch failed for {} {}->{} period#{}: {}",
+                    familyId, baseCurrency, quoteCurrency, periodId, e.toString());
+        }
+        return Optional.empty();
     }
 }

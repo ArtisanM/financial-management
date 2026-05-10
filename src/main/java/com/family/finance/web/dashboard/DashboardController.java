@@ -14,10 +14,10 @@ import com.family.finance.factview.KpiSnapshot;
 import com.family.finance.factview.TrendPoint;
 import com.family.finance.factview.WaterfallSegment;
 import com.family.finance.repository.AccountMapper;
-import com.family.finance.repository.FxMapper;
 import com.family.finance.repository.PeriodMapper;
 import com.family.finance.service.EntryService;
 import com.family.finance.service.FamilyService;
+import com.family.finance.service.FxService;
 import com.family.finance.service.NavService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -45,7 +45,7 @@ public class DashboardController {
     private final AccountMapper accountMapper;
     private final EntryService entryService;
     private final NavService navService;
-    private final FxMapper fxMapper;
+    private final FxService fxService;
 
     @GetMapping("/dashboard")
     public String dashboard(@AuthenticationPrincipal MemberPrincipal me,
@@ -80,13 +80,12 @@ public class DashboardController {
         );
         // BUG-FIX(2026-05-10):FactMapper.queryBase 用 viewCurrency 当 fx 索引把账户原币 → viewCurrency,
         // 当 fx_rate 表缺该 (base,quote,period) 行时 SQL 落到 ELSE 1.0 兜底 → 数值不换算只换符号,
-        // 用户感觉"币种切换失效"。这里在加载前先校验汇率充足:任一非 base 货币的账户缺 fx_rate 时
-        // 强制回退到 base,并给前端 banner 提示。
+        // 用户感觉"币种切换失效"。这里在加载前先确保汇率充足 — DB 查不到就调 frankfurter API 即时拉,
+        // 拉成功后正常进入 USD/HKD 视图;真拉不下来才回退 base + banner 提示。
         String requestedCurrency = viewCurrency;
         boolean fxFallback = false;
         if (!viewCurrency.equalsIgnoreCase(family.getBaseCurrency())) {
-            boolean hasRate = fxMapper.findOne(me.getFamilyId(), family.getBaseCurrency(), viewCurrency, anchor.getId()).isPresent()
-                    || fxMapper.findLatest(me.getFamilyId(), family.getBaseCurrency(), viewCurrency).isPresent();
+            boolean hasRate = fxService.getOrFetchRate(me.getFamilyId(), family.getBaseCurrency(), viewCurrency, anchor.getId()).isPresent();
             if (!hasRate) {
                 viewCurrency = family.getBaseCurrency();
                 fxFallback = true;

@@ -212,10 +212,11 @@
 | FR22-2 | 切 HKD 货币符号变 HK$ | GET /dashboard?currency=HKD | 含 `HK$` |
 | v02-CCY-1 | 三套币种数字真换算(2026-05-10 BUG-FIX 回归保护)| 种 fx_rate 后 GET dashboard?currency={CNY,USD,HKD} | 三个净资产数字必须不同 |
 | v02-CCY-2 | USD 数学正确 | CNY × 0.14 ≈ USD KPI(±2 元容差) | 数学正确 |
-| v02-CCY-3 | fx_rate 缺时 banner 提示 | 删 fx_rate → GET dashboard?currency=USD | DOM 含「汇率缺失」banner |
-| v02-CCY-4 | fxFallback 强制回退 ¥ | 同上,检查净资产 KPI | 不带 `$`,以 `¥` 显示(不静默冠错符号)|
+| v02-CCY-3 | fx_rate 缺时按需即时拉汇率 | 删 fx_rate → GET dashboard?currency=USD | fx_rate 表新增 frankfurter.dev 来源行 |
+| v02-CCY-4 | 拉成功后正常显示 $ | 同上 | 净资产 KPI 含 `$`(无 toast 兜底)|
+| v02-CCY-5 | 拉失败 fallback toast 防回归 | 模板源码扫描 | dashboard / reports `_region.html` 均含「汇率未配置」toast 脚本块 |
 
-> **回归历史**:`FactMapper.xml` 的 fx CASE 公式两个分支(`fx_direct` / `fx_inverse`)曾在 v0.1 → v0.2 期间两次倒挂,导致 USD/HKD 视图全表数字 ×7 错位。v02-CCY-1/2 数学校验 + v02-CCY-3/4 fallback 校验是防回归底线。
+> **回归历史**:`FactMapper.xml` 的 fx CASE 公式两个分支(`fx_direct` / `fx_inverse`)曾在 v0.1 → v0.2 期间两次倒挂,导致 USD/HKD 视图全表数字 ×7 错位。v02-CCY-1/2 数学校验 + v02-CCY-3/4 即时拉取 + v02-CCY-5 toast 兜底是防回归底线。
 
 ## 静态资源 / 安全
 
@@ -375,15 +376,21 @@ qa-run.sh:   PASS=164, FAIL=0, SKIP=3     ← 黑盒 endpoint + 模板渲染
 合计:        276 通过 / 0 失败             ← 封版基线
 ```
 
-### v0.2 · 币种切换 BUG-FIX(2026-05-10 第二轮)+ 输入框对齐
+### v0.2 · 币种切换 BUG-FIX(2026-05-10 第二轮)+ 输入框对齐 + 按需拉汇率
 
 ```
 mvn test:    Tests run: 76,  Failures: 0
 qa-e2e.sh:   PASS=36, FAIL=0
-qa-run.sh:   PASS=173, FAIL=0, SKIP=3
+qa-run.sh:   PASS=174, FAIL=0, SKIP=3
 ─────────────────────────────────────────
-合计:        285 通过 / 0 失败
+合计:        286 通过 / 0 失败
 ```
+
+完整修复链(从用户报「币种切换失效」到完整解):
+1. **核心算式倒挂**:`FactMapper.xml` fx CASE 公式两个分支方向都搞反 — `fx_inverse.rate` 已经是 `a.currency → viewCurrency` 直乘比例,被错写成 `1/rate` 导致 USD/HKD 数字被 1/0.14 ≈ ×7 放大
+2. **fx_rate 表空兜底**:SQL 落到 `ELSE 1.0` 时只换符号不换数 — 改为 controller 检测缺失并触发 `FxService.getOrFetchRate(...)` 即时调 frankfurter.dev API 拉取 + 缓存
+3. **拉失败 UX**:从 banner 改为 toast 自动消失提示「当期 CNY 对 USD 汇率未配置」,active tab 保持用户点击前的 base 币种,符合"我看到的数字是什么币种,active tab 就是什么"的一致性
+4. **输入框对齐**:entry 余额 / 备注共用 h-9 + 各自 eyebrow,「参考 · 上期末」从 label 内迁出为独立 caption
 
 新增 5 条 case(从 168 → 173):
 - **v02-CCY-1**:三套币种净资产 KPI 数字必须真的不同(防 SQL CASE 倒挂回归)
