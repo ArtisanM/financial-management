@@ -38,7 +38,7 @@
                th:text="${#temporals.format(r.createdAt,'yyyy-MM-dd HH:mm:ss')}">2026-05-07 15:00</div>
           <div class="col-span-3 md:col-span-2"><span class="pill" th:text="${r.type}">SYSTEM</span></div>
           <div class="col-span-3 md:col-span-1 text-ink-soft text-xs"
-               th:text="${r.actorMemberId == null ? '系统' : '#' + r.actorMemberId}">系统</div>
+               th:text="${r.actorMemberId == null ? '系统' : (memberNames[r.actorMemberId] != null ? memberNames[r.actorMemberId] : ('#' + r.actorMemberId))}">系统</div>
           <div class="col-span-3 md:col-span-7"
                th:text="${r.summary}">事件</div>
         </div>

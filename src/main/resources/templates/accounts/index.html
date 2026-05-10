@@ -62,7 +62,9 @@
       <tr th:each="row : ${rows}" th:classappend="${row.archived ? ' opacity-50' : ''}">
         <td class="font-mono text-ink-subtle text-xs" th:text="${#numbers.formatInteger(row.account.displayOrder, 3)} + ' ·☰'">001 ·☰</td>
         <td>
-          <span class="font-display" th:text="${row.account.displayName}">招行储蓄卡-工资</span>
+          <a th:href="@{/accounts/{id}(id=${row.account.id})}"
+             class="font-display hover:text-brass-deep no-underline"
+             th:text="${row.account.displayName}">招行储蓄卡-工资</a>
           <!-- v0.2 类目 + 风险 pill (FR-37)-->
           <div class="flex items-center gap-1.5 mt-1 flex-wrap" th:if="${row.category != null}">
             <span class="pill text-[10px]" style="background:rgba(122,90,57,.10);border-color:var(--brass-deep);color:var(--brass-deep)"
@@ -107,7 +109,9 @@
     <div th:each="row : ${rows}" class="paper-card p-4" th:style="${row.account.type.name() == 'LOAN' ? 'border-color: var(--rust-soft);' : ''}">
       <div class="flex items-baseline justify-between gap-2 mb-2">
         <div class="flex-1 min-w-0">
-          <div class="font-display text-base" th:text="${row.account.displayName}">招行储蓄卡-工资</div>
+          <a th:href="@{/accounts/{id}(id=${row.account.id})}"
+             class="font-display text-base hover:text-brass-deep no-underline block"
+             th:text="${row.account.displayName}">招行储蓄卡-工资</a>
           <div class="font-mono text-[10px] text-ink-subtle mt-0.5 tracking-wider" th:text="${#numbers.formatInteger(row.account.displayOrder, 3)} + ' · ' + ${row.ownerName}">001 · 张伟</div>
           <!-- v0.2 类目 + 风险 pill (FR-37)-->
           <div class="flex items-center gap-1.5 mt-2 flex-wrap" th:if="${row.category != null}">

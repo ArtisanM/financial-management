@@ -124,11 +124,13 @@ public class DashboardController {
         model.addAttribute("allocationValues", allocation.stream().map(AllocationSlice::value).toList());
     }
 
+    /**
+     * Dashboard 锚点 = 最新一期(无论 OPEN/CLOSED)。
+     * <p>v0.1 的旧实现优先取「最新 CLOSED」,导致开了新月后 dashboard 始终显示上个月数据 ——
+     * 这与"实时汇总"产品定位冲突,2026-05-10 改为永远取最新一期。
+     */
     private Period anchorPeriod(long familyId) {
-        return periodMapper.findLatest(familyId, 120).stream()
-                .filter(period -> period.getStatus() == PeriodStatus.CLOSED)
-                .findFirst()
-                .or(() -> periodMapper.findLatest(familyId, 1).stream().findFirst())
+        return periodMapper.findLatest(familyId, 1).stream().findFirst()
                 .orElseThrow(() -> new IllegalStateException("尚未创建周期"));
     }
 

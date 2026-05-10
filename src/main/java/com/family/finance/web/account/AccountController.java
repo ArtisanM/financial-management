@@ -4,6 +4,7 @@ import com.family.finance.auth.MemberPrincipal;
 import com.family.finance.domain.account.Account;
 import com.family.finance.domain.account.AccountType;
 import com.family.finance.repository.MemberMapper;
+import com.family.finance.service.AccountDetailService;
 import com.family.finance.service.AccountService;
 import com.family.finance.service.AccountTemplateService;
 import com.family.finance.service.NavService;
@@ -33,6 +34,7 @@ public class AccountController {
     private final NavService navService;
     private final ProductCategoryService productCategoryService;
     private final LedgerExporter ledgerExporter;
+    private final AccountDetailService accountDetailService;
 
     @GetMapping
     public String index(@AuthenticationPrincipal MemberPrincipal me,
@@ -101,6 +103,25 @@ public class AccountController {
                           @PathVariable("id") long accountId) {
         accountService.restore(me, accountId);
         return "redirect:/accounts?archived=true";
+    }
+
+    /** v0.2 FR-30 · 账户详情页(账本视角) */
+    @GetMapping("/{id}")
+    public String detail(@AuthenticationPrincipal MemberPrincipal me,
+                         @PathVariable("id") long accountId,
+                         @RequestParam(name = "type", required = false) String filterType,
+                         @RequestParam(name = "range", required = false) Integer rangeMonths,
+                         @RequestParam(name = "q", required = false) String keyword,
+                         Model model) {
+        var detail = accountDetailService.detail(me.getFamilyId(), accountId,
+                filterType, rangeMonths, keyword);
+        model.addAttribute("me", me);
+        model.addAttribute("nav", navService.load(me));
+        model.addAttribute("detail", detail);
+        model.addAttribute("filterType", filterType == null ? "ALL" : filterType.toUpperCase());
+        model.addAttribute("rangeMonths", rangeMonths == null ? 12 : rangeMonths);
+        model.addAttribute("keyword", keyword == null ? "" : keyword);
+        return "accounts/detail";
     }
 
     /** v0.2 FR-31 · 单账户账本 CSV 导出 */

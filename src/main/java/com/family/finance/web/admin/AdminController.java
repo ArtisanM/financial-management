@@ -312,7 +312,11 @@ public class AdminController {
                         @RequestParam(required = false) String type,
                         Model model) {
         List<AuditLog> rows = auditMapper.findByFamily(me.getFamilyId(), blankToNull(type), 100);
+        // v0.2 · "由谁" 列展示成员真名而非 #id
+        java.util.Map<Long, String> memberNames = memberMapper.findActiveByFamily(me.getFamilyId()).stream()
+                .collect(java.util.stream.Collectors.toMap(Member::getId, Member::getDisplayName));
         model.addAttribute("rows", rows);
+        model.addAttribute("memberNames", memberNames);
         model.addAttribute("filterType", type);
         model.addAttribute("availableTypes", AuditLogType.values());
         return "admin/audit";

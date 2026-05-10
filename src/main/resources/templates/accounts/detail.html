@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('账户详情 · 家庭账房')}"></head>
+<body class="min-h-screen relative">
+<div class="fixed top-0 left-0 right-0 h-1 bg-ink z-40"></div>
+<header th:replace="~{fragments/nav :: nav('accounts', ${me}, ${nav})}"></header>
+
+<main class="max-w-[1400px] mx-auto px-6 lg:px-10 py-10 relative z-10">
+
+  <div class="flex items-baseline gap-3 mb-3 font-mono text-[11px] tracking-wider text-ink-subtle">
+    <a th:href="@{/accounts}" class="hover:text-ink no-underline">/ 账户簿</a>
+    <span>›</span>
+    <span class="text-ink" th:text="${detail.account.displayName}">账户详情</span>
+  </div>
+
+  <!-- 顶部信息卡 -->
+  <section class="paper-card p-6 mb-6">
+    <div class="flex items-baseline justify-between gap-4 flex-wrap mb-3">
+      <h1 class="font-display text-3xl md:text-4xl font-medium tracking-tight"
+          th:text="${detail.account.displayName}">账户名</h1>
+      <div class="flex items-center gap-2 flex-wrap">
+        <span class="pill"
+              th:classappend="${detail.account.type.name() == 'LOAN' ? ' pill-rust' : (detail.account.type.name() == 'WEALTH' ? ' pill-forest' : (detail.account.type.name() == 'STOCK' ? ' pill-brass' : ''))}"
+              th:text="${detail.account.type.label} + ' (' + ${detail.account.type.name()} + ')'">现金 (CASH)</span>
+        <span class="pill" th:if="${detail.category != null}"
+              style="background:rgba(122,90,57,.10);border-color:var(--brass-deep);color:var(--brass-deep)"
+              th:text="'📊 ' + ${detail.category.displayName}">📊 类目</span>
+      </div>
+    </div>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
+      <div>
+        <div class="kpi-eyebrow">币种</div>
+        <div class="font-mono text-base mt-1" th:text="${detail.account.currency}">CNY</div>
+      </div>
+      <div>
+        <div class="kpi-eyebrow">主理人</div>
+        <div class="font-mono text-base mt-1" th:text="${detail.owner != null ? detail.owner.displayName : '共同'}">—</div>
+      </div>
+      <div>
+        <div class="kpi-eyebrow">当前本期余额</div>
+        <div class="font-display text-xl tnum mt-1"
+             th:classappend="${detail.account.type.name() == 'LOAN' ? ' num-neg' : ''}"
+             th:text="${detail.currentBalance != null ? '¥' + #numbers.formatDecimal(detail.currentBalance, 1, 2) : '—'}">¥0.00</div>
+      </div>
+      <div>
+        <div class="kpi-eyebrow">较上期</div>
+        <div class="font-mono tnum text-base mt-1"
+             th:classappend="${detail.monthDelta != null and detail.monthDelta.signum() > 0 ? ' num-pos' : (detail.monthDelta != null and detail.monthDelta.signum() < 0 ? ' num-neg' : '')}"
+             th:text="${detail.monthDeltaPctLabel()}">—</div>
+        <div class="font-mono text-[10px] text-ink-soft"
+             th:text="${detail.monthDelta != null ? (detail.monthDelta.signum() >= 0 ? '+' : '') + #numbers.formatDecimal(detail.monthDelta, 1, 2) : '—'}">—</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 余额时间序列折线图 -->
+  <section class="paper-card p-6 mb-6" th:if="${!#lists.isEmpty(detail.trend)}">
+    <h3 class="font-display text-lg font-medium mb-3 flex items-baseline gap-3">
+      余额时序 <span class="font-mono text-[10px] tracking-[0.16em] uppercase text-ink-subtle">BALANCE TIMELINE</span>
+    </h3>
+    <div style="height:240px"><canvas id="balanceTimeline"></canvas></div>
+  </section>
+
+  <!-- 4 张账本 KPI -->
+  <section class="grid grid-cols-2 md:grid-cols-4 gap-px bg-rule mb-6">
+    <div class="kpi-card">
+      <span class="kpi-eyebrow">累计净流入</span>
+      <div class="kpi-value tnum"
+           th:classappend="${detail.cumulativeNetInflow.signum() >= 0 ? '' : ' num-neg'}"
+           th:text="${(detail.cumulativeNetInflow.signum() >= 0 ? '+' : '') + '¥' + #numbers.formatDecimal(detail.cumulativeNetInflow, 1, 0)}">+¥0</div>
+      <div class="kpi-delta">收入−支出+转入−转出</div>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-eyebrow">月均收入</span>
+      <div class="kpi-value tnum num-pos"
+           th:text="${'¥' + #numbers.formatDecimal(detail.avgMonthlyIncome, 1, 0)}">¥0</div>
+      <div class="kpi-delta">含转入</div>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-eyebrow">月均支出</span>
+      <div class="kpi-value tnum num-neg"
+           th:text="${'¥' + #numbers.formatDecimal(detail.avgMonthlyExpense, 1, 0)}">¥0</div>
+      <div class="kpi-delta">含转出</div>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-eyebrow">流水总笔数</span>
+      <div class="kpi-value tnum" th:text="${detail.entryCount}">0</div>
+      <div class="kpi-delta">含 snapshot / 收支 / 转账</div>
+    </div>
+  </section>
+
+  <!-- 筛选条 -->
+  <section class="paper-card px-5 py-3 mb-6">
+    <form method="get" th:action="@{/accounts/{id}(id=${detail.account.id})}" class="flex items-center gap-3 flex-wrap text-sm">
+      <span class="font-mono text-[10px] tracking-[0.18em] uppercase text-ink-soft">筛选</span>
+      <select name="type" class="border border-rule bg-card px-2 py-1 text-xs">
+        <option value="ALL"      th:selected="${filterType == 'ALL'}">全部类型</option>
+        <option value="INCOME"   th:selected="${filterType == 'INCOME'}">+ 收入</option>
+        <option value="EXPENSE"  th:selected="${filterType == 'EXPENSE'}">- 支出</option>
+        <option value="TRANSFER" th:selected="${filterType == 'TRANSFER'}">↔ 划转(进/出)</option>
+        <option value="SNAPSHOT" th:selected="${filterType == 'SNAPSHOT'}">= 月末校准</option>
+      </select>
+      <select name="range" class="border border-rule bg-card px-2 py-1 text-xs">
+        <option value="3"   th:selected="${rangeMonths == 3}">近 3 月</option>
+        <option value="6"   th:selected="${rangeMonths == 6}">近 6 月</option>
+        <option value="12"  th:selected="${rangeMonths == 12}">近 12 月</option>
+        <option value="24"  th:selected="${rangeMonths == 24}">近 24 月</option>
+        <option value="0"   th:selected="${rangeMonths == 0}">全部</option>
+      </select>
+      <input name="q" th:value="${keyword}" placeholder="备注/类别 关键字"
+             class="border border-rule bg-card px-2 py-1 text-xs flex-1 min-w-[120px]">
+      <button class="btn-paper text-[10px]">筛选</button>
+      <a th:href="@{/accounts/{id}(id=${detail.account.id})}" class="btn-ghost text-[10px] no-underline">↺ 重置</a>
+      <span class="ml-auto"></span>
+      <a th:href="@{/accounts/{id}/ledger.csv(id=${detail.account.id})}" class="btn-paper text-[10px] no-underline">⬇ 导出 CSV</a>
+    </form>
+  </section>
+
+  <!-- 月分组流水时间线 -->
+  <section class="mb-8">
+    <div class="flex items-baseline justify-between mb-3">
+      <h2 class="font-display text-2xl font-medium">流水时间线</h2>
+      <span class="font-mono text-[10px] text-ink-subtle"
+            th:text="${#lists.size(detail.months)} + ' 个月 · ' + ${detail.entryCount} + ' 笔'">0 个月 · 0 笔</span>
+    </div>
+
+    <div th:if="${#lists.isEmpty(detail.months)}" class="paper-card p-10 text-center text-ink-soft">
+      <p class="mb-2">暂无符合筛选条件的流水。</p>
+      <a th:href="@{/accounts/{id}(id=${detail.account.id})}" class="font-mono text-[11px] text-brass-deep hover:underline no-underline">↺ 清空筛选</a>
+    </div>
+
+    <details th:each="g,gi : ${detail.months}" class="paper-card mb-3"
+             th:open="${gi.index == 0}">
+      <summary class="px-5 py-3 cursor-pointer select-none flex items-center justify-between flex-wrap gap-3">
+        <div class="flex items-baseline gap-3">
+          <span class="font-display text-lg"
+                th:text="${#temporals.format(g.month, 'yyyy · MM')}">2026 · 05</span>
+          <span class="pill" th:if="${g.periodOpen}"
+                style="background:var(--forest-soft);color:var(--forest);border-color:var(--forest)">OPEN</span>
+          <span class="pill" th:unless="${g.periodOpen}">CLOSED</span>
+        </div>
+        <div class="font-mono text-xs">
+          <span class="text-ink-soft mr-3" th:text="${g.entryCount} + ' 笔'">0 笔</span>
+          <span th:classappend="${g.netDelta.signum() > 0 ? ' num-pos' : (g.netDelta.signum() < 0 ? ' num-neg' : ' text-ink-soft')}"
+                th:text="'净 ' + ${g.netDeltaLabel}">净 ¥0</span>
+        </div>
+      </summary>
+      <ul class="px-5 pb-3 divide-y divide-rule-soft text-xs font-mono">
+        <li th:each="e : ${g.entries}" class="py-2 flex items-baseline gap-3 flex-wrap">
+          <span class="w-20 inline-flex items-center gap-1"
+                th:classappend="${e.kind.name() == 'INCOME' ? ' num-pos' : (e.kind.name() == 'EXPENSE' ? ' num-neg' : (e.kind.name() == 'TRANSFER_IN' ? ' text-forest' : (e.kind.name() == 'TRANSFER_OUT' ? ' text-rust' : ' text-ink-subtle')))}"
+                th:text="${e.kind.name() == 'INCOME' ? '+ 收入' : (e.kind.name() == 'EXPENSE' ? '- 支出' : (e.kind.name() == 'TRANSFER_IN' ? '↳ 划入' : (e.kind.name() == 'TRANSFER_OUT' ? '↱ 划出' : '= 校准')))}">
+            类型</span>
+          <span class="tnum w-28" th:text="${e.amountSignedLabel}">+¥0</span>
+          <span class="text-ink-soft flex-1 min-w-[140px]" th:text="${e.label}">类别 / 对手账户</span>
+          <span class="text-ink-subtle text-[10px]"
+                th:if="${e.occurredAt != null}"
+                th:text="${#temporals.format(e.occurredAt, 'M月d日 HH:mm')}">5月15日 14:30</span>
+          <!-- 删除按钮(仅 OPEN 期 + 非 SNAPSHOT,通过 entryService.softDelete 端点) -->
+          <form th:if="${e.deletable}" class="inline"
+                th:action="@{${e.kind.name() == 'TRANSFER_IN' or e.kind.name() == 'TRANSFER_OUT' ? '/entry/transfer/' + e.sourceId + '/delete' : '/entry/cash-flow/' + e.sourceId + '/delete'}}"
+                method="post"
+                onsubmit="return confirm('确定删除这条流水?余额会自动反向冲销。')">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <button type="submit" class="text-ink-subtle hover:text-rust px-1" title="软删此条">✕</button>
+          </form>
+          <span th:if="${e.note != null and !e.note.isEmpty()}"
+                class="w-full text-ink-subtle italic pl-20"
+                th:text="'· ' + ${e.note}">备注</span>
+        </li>
+      </ul>
+    </details>
+  </section>
+
+  <!-- 操作底栏 -->
+  <section class="paper-card p-4 flex items-center justify-between flex-wrap gap-3">
+    <a th:href="@{/accounts}" class="btn-paper text-[11px] no-underline">← 返回账户簿</a>
+    <div class="flex gap-2">
+      <a th:href="@{/checkup(account=${detail.account.id})}" class="btn-paper text-[11px] no-underline">📊 看资产体检 ↗</a>
+      <a th:href="@{/accounts/{id}/edit(id=${detail.account.id})}" class="btn-paper text-[11px] no-underline">✎ 编辑</a>
+      <a th:href="@{/accounts/{id}/ledger.csv(id=${detail.account.id})}" class="btn-ink text-[11px] no-underline">⬇ 导出本账户 CSV</a>
+    </div>
+  </section>
+
+  <script th:inline="javascript">
+    (() => {
+      const trend = /*[[${detail.trend}]]*/ [];
+      if (!trend.length) return;
+      const ctx = document.getElementById('balanceTimeline');
+      if (!ctx) return;
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: trend.map(p => p.month),
+          datasets: [{
+            label: '本期末余额',
+            data: trend.map(p => p.endBalance == null ? null : Number(p.endBalance)),
+            borderColor: '#7a5a39', backgroundColor: 'rgba(122,90,57,.08)',
+            tension: .35, fill: true, pointRadius: 4, pointBackgroundColor: '#7a5a39'
+          }]
+        },
+        options: {
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: (c) => '¥' + Number(c.parsed.y).toLocaleString() } }
+          },
+          scales: {
+            y: { ticks: { callback: v => v >= 10000 ? (v/10000).toFixed(1)+'万' : v.toLocaleString() } }
+          }
+        }
+      });
+    })();
+  </script>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

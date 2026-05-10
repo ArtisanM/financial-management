@@ -175,11 +175,13 @@ public class ReportsController {
                 .toList();
     }
 
+    /**
+     * Reports 锚点 = 最新一期(无论 OPEN/CLOSED)。
+     * <p>2026-05-10 与 dashboard 同步修复:旧逻辑优先取最新 CLOSED,会让用户在 OPEN 新月时
+     * 看到的是上个月报表,与"实时汇总"产品定位冲突。
+     */
     private Period anchorPeriod(long familyId) {
-        return periodMapper.findLatest(familyId, 120).stream()
-                .filter(period -> period.getStatus() == PeriodStatus.CLOSED)
-                .findFirst()
-                .or(() -> periodMapper.findLatest(familyId, 1).stream().findFirst())
+        return periodMapper.findLatest(familyId, 1).stream().findFirst()
                 .orElseThrow(() -> new IllegalStateException("尚未创建周期"));
     }
 
