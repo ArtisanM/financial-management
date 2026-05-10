@@ -165,17 +165,36 @@ public class LlmDiagnoseService {
         // 2. 遍历 clients(主 qwen → 备 deepseek)
         for (LlmClient client : clients) {
             if (!client.available()) continue;
+            long t0 = System.currentTimeMillis();
+            String raw = null;
+            String error = null;
             try {
-                String raw = client.chat(systemPrompt, userPrompt);
-                // 校验:LLM 输出应仍为代号体(成员A/B/C),不该含真名
-                OutputValidator.Result vr = OutputValidator.check(raw, realNames);
-                if (!vr.accepted()) {
-                    log.warn("LLM[{}] 综合诊断输出未通过校验: {}", client.vendor(), vr.reason());
-                    auditLogService.record(familyId, actorMemberId, AuditLogType.LLM_REJECTED,
-                            "checkup_diagnose", entityId,
-                            "vendor=" + client.vendor() + " reason=" + vr.reason());
-                    continue;
-                }
+                raw = client.chat(systemPrompt, userPrompt);
+            } catch (Exception e) {
+                error = e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage();
+                long elapsed = System.currentTimeMillis() - t0;
+                log.warn("LLM[{}] 调用失败: {} (elapsed={}ms)", client.vendor(), error, elapsed);
+                LlmAuditLogger.log(client.vendor(), scope, familyId, entityId,
+                        systemPrompt, userPrompt, null, elapsed, false, null, error);
+                continue;
+            }
+            long elapsed = System.currentTimeMillis() - t0;
+
+            // 校验:LLM 输出应仍为代号体(成员A/B/C),不该含真名
+            OutputValidator.Result vr = OutputValidator.check(raw, realNames);
+            // 全交互日志(prompt + response + elapsed,无论接受与否都记)
+            LlmAuditLogger.log(client.vendor(), scope, familyId, entityId,
+                    systemPrompt, userPrompt, raw, elapsed,
+                    vr.accepted(), vr.accepted() ? null : vr.reason(), null);
+
+            if (!vr.accepted()) {
+                log.warn("LLM[{}] 综合诊断输出未通过校验: {}", client.vendor(), vr.reason());
+                auditLogService.record(familyId, actorMemberId, AuditLogType.LLM_REJECTED,
+                        "checkup_diagnose", entityId,
+                        "vendor=" + client.vendor() + " reason=" + vr.reason());
+                continue;
+            }
+            try {
 
                 // 反映射代号 → 真名(给前端用户展示)
                 String mapped = PromptBuilder.reverseMapping(raw, codenameToReal);

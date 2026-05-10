@@ -115,7 +115,12 @@
       <button class="btn-paper text-[10px]">筛选</button>
       <a th:href="@{/accounts/{id}(id=${detail.account.id})}" class="btn-ghost text-[10px] no-underline">↺ 重置</a>
       <span class="ml-auto"></span>
-      <a th:href="@{/accounts/{id}/ledger.csv(id=${detail.account.id})}" class="btn-paper text-[10px] no-underline">⬇ 导出 CSV</a>
+      <a th:href="@{/accounts/{id}/ledger.csv(id=${detail.account.id})}" class="btn-paper text-[10px] no-underline inline-flex items-center gap-1" title="导出账本 CSV">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+        </svg>
+        <span>导出 CSV</span>
+      </a>
     </form>
   </section>
 
@@ -177,11 +182,32 @@
 
   <!-- 操作底栏 -->
   <section class="paper-card p-4 flex items-center justify-between flex-wrap gap-3">
-    <a th:href="@{/accounts}" class="btn-paper text-[11px] no-underline">← 返回账户簿</a>
+    <a th:href="@{/accounts}" class="btn-paper text-[11px] no-underline inline-flex items-center gap-1.5">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M19 12H5M12 19l-7-7 7-7"/>
+      </svg>
+      <span>返回账户簿</span>
+    </a>
     <div class="flex gap-2">
-      <a th:href="@{/checkup(account=${detail.account.id})}" class="btn-paper text-[11px] no-underline">📊 看资产体检 ↗</a>
-      <a th:href="@{/accounts/{id}/edit(id=${detail.account.id})}" class="btn-paper text-[11px] no-underline">✎ 编辑</a>
-      <a th:href="@{/accounts/{id}/ledger.csv(id=${detail.account.id})}" class="btn-ink text-[11px] no-underline">⬇ 导出本账户 CSV</a>
+      <a th:href="@{/checkup(account=${detail.account.id})}" class="btn-paper text-[11px] no-underline inline-flex items-center gap-1.5" title="资产体检">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+        </svg>
+        <span>看资产体检</span>
+      </a>
+      <a th:href="@{/accounts/{id}/edit(id=${detail.account.id})}" class="btn-paper text-[11px] no-underline inline-flex items-center gap-1.5" title="编辑">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+          <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+        </svg>
+        <span>编辑</span>
+      </a>
+      <a th:href="@{/accounts/{id}/ledger.csv(id=${detail.account.id})}" class="btn-ink text-[11px] no-underline inline-flex items-center gap-1.5" title="导出本账户 CSV">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+        </svg>
+        <span>导出本账户 CSV</span>
+      </a>
     </div>
   </section>
 
