@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/layout :: head('账户详情 · 家庭账房')}"></head>
-<!-- v0.2 FR-30 · 余额时序折线需要 Chart.js -->
+<!-- v0.2 FR-30 · 余额时序折线需要 Chart.js + datalabels 把数字浮在数据点上 -->
 <script th:src="@{/vendor/chart.umd.min.js(v=${buildVersion})}"></script>
+<script th:src="@{/vendor/chartjs-plugin-datalabels.min.js(v=${buildVersion})}"></script>
 <body class="min-h-screen relative">
 <div class="fixed top-0 left-0 right-0 h-1 bg-ink z-40"></div>
 <header th:replace="~{fragments/nav :: nav('accounts', ${me}, ${nav})}"></header>
@@ -190,6 +191,12 @@
       if (!trend.length) return;
       const ctx = document.getElementById('balanceTimeline');
       if (!ctx) return;
+      const fmtMoney = (v) => {
+        if (v == null) return '—';
+        const n = Number(v);
+        if (Math.abs(n) >= 10000) return '¥' + (n/10000).toFixed(1) + '万';
+        return '¥' + Math.round(n).toLocaleString();
+      };
       new Chart(ctx, {
         type: 'line',
         data: {
@@ -203,14 +210,21 @@
         },
         options: {
           maintainAspectRatio: false,
+          layout: { padding: { top: 28, right: 16 } },
           plugins: {
             legend: { display: false },
-            tooltip: { callbacks: { label: (c) => '¥' + Number(c.parsed.y).toLocaleString() } }
+            tooltip: { callbacks: { label: (c) => fmtMoney(c.parsed.y) } },
+            datalabels: {
+              anchor: 'end', align: 'top', offset: 6,
+              color: '#3a302a', font: { size: 10, weight: '500' },
+              formatter: (v) => v == null ? '' : fmtMoney(v)
+            }
           },
           scales: {
             y: { ticks: { callback: v => v >= 10000 ? (v/10000).toFixed(1)+'万' : v.toLocaleString() } }
           }
-        }
+        },
+        plugins: [ChartDataLabels]
       });
     })();
   </script>

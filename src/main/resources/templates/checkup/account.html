@@ -356,6 +356,12 @@
       if (!c || sparkData.length === 0) return;
       const labels = sparkData.map(p => p.month);
       const values = sparkData.map(p => p.endBalance == null ? null : Number(p.endBalance));
+      const fmtMoney = (v) => {
+        if (v == null) return '—';
+        const n = Number(v);
+        if (Math.abs(n) >= 10000) return '¥' + (n/10000).toFixed(1) + '万';
+        return '¥' + Math.round(n).toLocaleString();
+      };
       new Chart(c, {
         type: 'line',
         data: {
@@ -363,13 +369,24 @@
           datasets: [{
             label: '余额', data: values,
             borderColor: '#7a5a39', backgroundColor: 'rgba(122,90,57,.08)',
-            tension: .35, fill: true, pointRadius: 3, pointBackgroundColor: '#7a5a39'
+            tension: .35, fill: true, pointRadius: 4, pointBackgroundColor: '#7a5a39'
           }]
         },
         options: {
-          maintainAspectRatio: false, plugins: { legend: { display: false } },
+          maintainAspectRatio: false,
+          layout: { padding: { top: 24, right: 16 } },
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: (ctx) => fmtMoney(ctx.parsed.y) } },
+            datalabels: {
+              anchor: 'end', align: 'top', offset: 6,
+              color: '#3a302a', font: { size: 10, weight: '500' },
+              formatter: (v) => v == null ? '' : fmtMoney(v)
+            }
+          },
           scales: { y: { ticks: { callback: v => v >= 10000 ? (v / 10000).toFixed(1) + '万' : v.toLocaleString() } } }
-        }
+        },
+        plugins: [ChartDataLabels]
       });
     })();
   </script>

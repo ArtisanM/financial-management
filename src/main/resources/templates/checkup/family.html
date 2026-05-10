@@ -205,6 +205,13 @@
     (() => {
       const allocLabels = /*[[${diagnose.allocation}]]*/ [];
       const riskBuckets = /*[[${diagnose.riskDistribution}]]*/ [];
+      const fmtMoney = (v) => {
+        if (v == null) return '—';
+        const n = Number(v);
+        if (Math.abs(n) >= 10000) return '¥' + (n/10000).toFixed(1) + '万';
+        return '¥' + Math.round(n).toLocaleString();
+      };
+      const allocTotal = allocLabels.reduce((s,x) => s + Number(x.value || 0), 0);
       // 资产配置 doughnut
       const ac = document.getElementById('allocChart');
       if (ac && allocLabels.length) {
@@ -219,8 +226,24 @@
           },
           options: {
             maintainAspectRatio: false,
-            plugins: { legend: { position: 'right', labels: { boxWidth: 12, font: { size: 11 } } } }
-          }
+            layout: { padding: 12 },
+            plugins: {
+              legend: { position: 'right', labels: { boxWidth: 12, font: { size: 11 } } },
+              tooltip: { callbacks: { label: (ctx) => ctx.label + ': ' + fmtMoney(ctx.parsed) + ' · ' + (allocTotal > 0 ? (ctx.parsed*100/allocTotal).toFixed(1) + '%' : '') } },
+              datalabels: {
+                color: '#fffaf0',
+                font: { size: 11, weight: '600' },
+                textStrokeColor: 'rgba(26,23,20,.55)', textStrokeWidth: 2,
+                formatter: (v, ctx) => {
+                  if (!v || allocTotal === 0) return '';
+                  const pct = v * 100 / allocTotal;
+                  if (pct < 4) return '';  // 太小不挤
+                  return fmtMoney(v) + '\n' + pct.toFixed(0) + '%';
+                }
+              }
+            }
+          },
+          plugins: [ChartDataLabels]
         });
       }
       // 风险分布 bar
@@ -243,11 +266,21 @@
           },
           options: {
             maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
+            layout: { padding: { top: 24 } },
+            plugins: {
+              legend: { display: false },
+              tooltip: { callbacks: { label: (ctx) => fmtMoney(ctx.parsed.y) } },
+              datalabels: {
+                anchor: 'end', align: 'top', offset: 4,
+                color: '#3a302a', font: { size: 10, weight: '500' },
+                formatter: (v) => v && v > 0 ? fmtMoney(v) : ''
+              }
+            },
             scales: {
               y: { ticks: { callback: v => v >= 10000 ? (v/10000).toFixed(1)+'万' : v.toLocaleString() } }
             }
-          }
+          },
+          plugins: [ChartDataLabels]
         });
       }
     })();
