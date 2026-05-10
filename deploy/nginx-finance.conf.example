@@ -24,13 +24,7 @@ server {
     access_log /var/log/nginx/finance.access.log;
     error_log  /var/log/nginx/finance.error.log warn;
 
-    # 静态资源 — 优先 nginx 直发,绕过 Java
-    location /css/ {
-        proxy_pass http://finance_backend;     # CSS 由 Spring 打包在 jar 里,反代上去最简单
-        expires 1y;
-        add_header Cache-Control "public, immutable";
-    }
-
+    # 用户上传的 logo · 走 nginx 直读文件系统,绕过 Java(更快)
     location /uploads/ {
         alias /var/finance/uploads/;
         expires 7d;
@@ -39,14 +33,11 @@ server {
         try_files $uri =404;
     }
 
-    location /favicon.ico {
-        proxy_pass http://finance_backend;
-        access_log off;
-        log_not_found off;
-        expires 30d;
-    }
-
-    # 应用主路径
+    # 所有其它请求(含 /css/ /js/ /img/ /vendor/ /favicon.ico /dashboard 等)
+    # 统一走后端反代。Spring 已经在 link 上加 ?v=${buildVersion} 做 cache-busting,
+    # 不需要再在 nginx 单独给静态资源加 expires。
+    # 历史遗留:不要单独给 /css/ 拆出 location 块 — 那样会少几条 proxy_set_header,
+    # 触发 Spring forward-headers-strategy=framework 的边界 bug,导致 CSS 加载失败。
     location / {
         proxy_pass         http://finance_backend;
         proxy_http_version 1.1;
