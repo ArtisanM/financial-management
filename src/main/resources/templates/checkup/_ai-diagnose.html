@@ -42,10 +42,10 @@
   </div>
 </section>
 
-<!-- placeholder · spinner · 由 family.html / account.html 直接 inline 引用,无 backend -->
-<section th:fragment="placeholder" id="ai-diagnose-panel"
+<!-- placeholder · spinner · 由 family.html / account.html 通过 fragment 参数 aiDiagnoseUrl 传入 -->
+<section th:fragment="placeholder(aiDiagnoseUrl)" id="ai-diagnose-panel"
          class="paper-card p-6 mb-8 ai-diagnose"
-         th:hx-get="${aiDiagnoseUrl}"
+         th:attr="hx-get=${aiDiagnoseUrl}"
          hx-trigger="load"
          hx-swap="outerHTML">
   <div class="flex items-baseline justify-between mb-3">

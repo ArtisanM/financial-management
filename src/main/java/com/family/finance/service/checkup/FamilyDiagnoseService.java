@@ -3,11 +3,16 @@ package com.family.finance.service.checkup;
 import com.family.finance.domain.account.AccountClass;
 import com.family.finance.domain.account.AccountLiquidity;
 import com.family.finance.domain.category.ProductCategory;
+import com.family.finance.domain.family.Family;
+import com.family.finance.domain.period.Period;
 import com.family.finance.factview.AccountPeriodFact;
 import com.family.finance.factview.AllocationSlice;
+import com.family.finance.factview.FactFilter;
 import com.family.finance.factview.FactSlice;
 import com.family.finance.factview.FactViewService;
 import com.family.finance.factview.KpiSnapshot;
+import com.family.finance.repository.FamilyMapper;
+import com.family.finance.repository.PeriodMapper;
 import com.family.finance.service.ProductCategoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -31,9 +36,21 @@ public class FamilyDiagnoseService {
 
     private final FactViewService factViewService;
     private final ProductCategoryService productCategoryService;
+    private final FamilyMapper familyMapper;
+    private final PeriodMapper periodMapper;
 
     public FamilyDiagnose diagnose(long familyId) {
-        FactSlice slice = factViewService.loadDefault(familyId);
+        // v0.2 bug 修(2026-05-10): 旧实现 factViewService.loadDefault 用 LocalDate.now() 作 end,
+        // 当用户测试期间生成了未来期(>当前日期),那些期会被排除,与 /dashboard(用 latest period 作 anchor)不一致。
+        // 改为与 dashboard 同口径:取 latest period(无论 OPEN/CLOSED)作 end,前推 11 个月。
+        Family family = familyMapper.findById(familyId)
+                .orElseThrow(() -> new IllegalArgumentException("家庭不存在: " + familyId));
+        Period latest = periodMapper.findLatest(familyId, 1).stream().findFirst()
+                .orElseThrow(() -> new IllegalStateException("尚未创建周期"));
+        java.time.LocalDate end = latest.getPeriodStart();
+        java.time.LocalDate start = end.minusMonths(11);
+        FactSlice slice = factViewService.load(new FactFilter(
+                familyId, family.getPeriodType(), start, end, false, null, family.getBaseCurrency()));
         KpiSnapshot kpi = factViewService.kpis(slice);
         List<AllocationSlice> allocation = factViewService.allocationByType(slice, slice.lastPeriodId());
         BigDecimal familyXirr = factViewService.familyXirr(slice);

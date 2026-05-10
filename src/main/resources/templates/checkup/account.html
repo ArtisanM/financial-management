@@ -345,8 +345,7 @@
       </div>
       <span class="font-mono text-[10px] tracking-[0.18em] uppercase text-ink-subtle">本账户在全家配置中的位置 + 跨规则建议</span>
     </div>
-    <div th:with="aiDiagnoseUrl=@{/checkup/diagnose(account=${account.id})}"
-         th:replace="~{checkup/_ai-diagnose :: placeholder}"></div>
+    <div th:replace="~{checkup/_ai-diagnose :: placeholder(aiDiagnoseUrl=@{/checkup/diagnose(account=${account.id})})}"></div>
   </section>
 
   <script th:inline="javascript">

@@ -39,6 +39,7 @@ public class AccountDiagnoseService {
     private final ProductCategoryService productCategoryService;
     private final FactViewService factViewService;
     private final FamilyMapper familyMapper;
+    private final com.family.finance.repository.PeriodMapper periodMapper;
 
     public AccountDiagnose diagnose(long familyId, long accountId) {
         Account account = accountService.require(familyId, accountId);
@@ -49,8 +50,12 @@ public class AccountDiagnoseService {
         Family family = familyMapper.findById(familyId)
                 .orElseThrow(() -> new IllegalArgumentException("家庭不存在: " + familyId));
 
-        // 加载过去 12 个月,只过滤当前账户
-        LocalDate end = LocalDate.now().withDayOfMonth(1);
+        // v0.2 bug 修(2026-05-10): 与 dashboard / FamilyDiagnoseService 同口径,
+        // 用 latest period 作 end,而非 LocalDate.now() — 避免未来期数据被排除。
+        com.family.finance.domain.period.Period latest = periodMapper.findLatest(familyId, 1)
+                .stream().findFirst()
+                .orElseThrow(() -> new IllegalStateException("尚未创建周期"));
+        LocalDate end = latest.getPeriodStart();
         LocalDate start = end.minusMonths(11);
         FactSlice slice = factViewService.load(new FactFilter(
                 familyId, family.getPeriodType(), start, end,
