@@ -342,6 +342,55 @@ grep -qF '$' "$TMP" && grep -q "</html>" "$TMP" && log_ok "FR22-1 USD 显示 \$"
 $CURL -b $COOKIE "$BASE/dashboard?currency=HKD" -o "$TMP" -w ""
 grep -qF 'HK$' "$TMP" && log_ok "FR22-2 HKD 显示 HK\$" || log_bad "FR22-2 HKD" "missing HK$"
 
+# v0.2 BUG-FIX(2026-05-10):币种切换以前只换符号不换数字。
+# 这里强校验三套币种渲染出的「净资产」KPI 数字必须真的不同(假设家庭只有 CNY 账户 + 至少一行 fx_rate)。
+# 防止 FactMapper.xml fx CASE 倒挂 / controller 漏调 fxFallback 等回归。
+fx_seed_periodId=$(mysql -ufinance -pfinance finance -sN -e "SELECT id FROM period WHERE family_id=1 ORDER BY period_start DESC LIMIT 1" 2>/dev/null)
+mysql -ufinance -pfinance finance -e "
+INSERT INTO fx_rate (family_id, base_currency, quote_currency, period_id, rate, source) VALUES
+(1, 'CNY', 'USD', ${fx_seed_periodId}, 0.140000, 'qa-seed'),
+(1, 'CNY', 'HKD', ${fx_seed_periodId}, 1.090000, 'qa-seed')
+ON DUPLICATE KEY UPDATE rate=VALUES(rate), source=VALUES(source);" 2>/dev/null
+
+# 提取 currency=X 时净资产 KPI 数字(去千分位 + 符号)
+extract_nw() {
+  local cur="$1"
+  $CURL -b $COOKIE "$BASE/dashboard?currency=${cur}" -o "$TMP" -w ""
+  grep -A1 'kpi-eyebrow">净资产' "$TMP" | grep "kpi-value" | head -1 | sed -E 's/.*>([^<]+)<.*/\1/' | tr -d ',$¥' | sed 's/HK//'
+}
+nw_cny=$(extract_nw CNY)
+nw_usd=$(extract_nw USD)
+nw_hkd=$(extract_nw HKD)
+[[ "$nw_cny" != "$nw_usd" && "$nw_cny" != "$nw_hkd" && "$nw_usd" != "$nw_hkd" ]] \
+  && log_ok "v02-CCY-1 三套币种净资产数字真的不同 (CNY=${nw_cny} USD=${nw_usd} HKD=${nw_hkd})" \
+  || log_bad "v02-CCY-1 币种切换数字未联动" "CNY=${nw_cny} USD=${nw_usd} HKD=${nw_hkd}"
+
+# 数学校验:USD = CNY × 0.14(±2 元容差,处理舍入)
+if [[ -n "$nw_cny" && -n "$nw_usd" ]]; then
+  expected_usd=$(awk -v c="$nw_cny" 'BEGIN{printf "%d", c*0.14}')
+  diff=$(awk -v a="$nw_usd" -v e="$expected_usd" 'BEGIN{d=a-e; if(d<0)d=-d; print d}')
+  [[ ${diff%.*} -le 2 ]] \
+    && log_ok "v02-CCY-2 USD 数学正确 (CNY=${nw_cny} × 0.14 ≈ ${expected_usd} 实际=${nw_usd})" \
+    || log_bad "v02-CCY-2 USD 数学错" "expected≈${expected_usd} got=${nw_usd}"
+fi
+
+# fxFallback banner:删 fx_rate 后切 USD,banner 必须出现 + 数字回退到 ¥
+mysql -ufinance -pfinance finance -e "DELETE FROM fx_rate;" 2>/dev/null
+$CURL -b $COOKIE "$BASE/dashboard?currency=USD" -o "$TMP" -w ""
+grep -q "汇率缺失" "$TMP" \
+  && log_ok "v02-CCY-3 fx_rate 缺 → dashboard 显示「汇率缺失」banner" \
+  || log_bad "v02-CCY-3 fxFallback banner 缺" "no 汇率缺失"
+grep -A1 'kpi-eyebrow">净资产' "$TMP" | grep "kpi-value" | head -1 | grep -qF '¥' \
+  && log_ok "v02-CCY-4 fxFallback 时强制回退 ¥ 显示(不再误用 \$)" \
+  || log_bad "v02-CCY-4 fxFallback 未回退到 ¥" "still wrong symbol"
+
+# 复种回 fx_rate,后续 case 不受影响
+mysql -ufinance -pfinance finance -e "
+INSERT INTO fx_rate (family_id, base_currency, quote_currency, period_id, rate, source) VALUES
+(1, 'CNY', 'USD', ${fx_seed_periodId}, 0.140000, 'qa-seed'),
+(1, 'CNY', 'HKD', ${fx_seed_periodId}, 1.090000, 'qa-seed')
+ON DUPLICATE KEY UPDATE rate=VALUES(rate);" 2>/dev/null
+
 # ---------- 静态资源 ----------
 section "Static / vendor"
 for f in /vendor/tailwind.js /vendor/htmx.min.js /vendor/chart.umd.min.js /vendor/echarts.min.js /css/style.css; do
@@ -852,6 +901,16 @@ $CURL -b $COOKIE "$BASE/dashboard?range=1Y&currency=CNY" -o "$TMP" -w ""
 grep -q '按账户分布' "$TMP" \
   && log_ok "v02-UX-4 dashboard 含「按账户分布」标题" \
   || log_bad "v02-UX-4 按账户分布标题" "missing"
+
+# UX-5 entry 余额 / 备注 input 高度统一(都用 h-9)+ 备注独立 eyebrow,避免对齐错位
+$CURL -b $COOKIE "$BASE/entry?period=$OPEN_PID" -o "$TMP" -w ""
+# newBalance input 是多行属性,用 awk 把 input 多行折叠成一行后再 grep h-9
+nb_h9=$(awk 'BEGIN{RS=">"} /name="newBalance"/' "$TMP" | grep -c 'h-9')
+nt_h9=$(grep -oE 'name="note"[^>]*h-9' "$TMP" | wc -l)
+nt_eb=$(grep -c '>备注</span>' "$TMP")
+[[ $nb_h9 -ge 1 && $nt_h9 -ge 1 && $nt_eb -ge 1 ]] \
+  && log_ok "v02-UX-5 entry 余额 / 备注 input 高度统一(h-9 nb=$nb_h9 nt=$nt_h9)+ 备注独立 eyebrow ($nt_eb)" \
+  || log_bad "v02-UX-5 entry 输入框对齐" "newBalance.h-9=$nb_h9 note.h-9=$nt_h9 备注.eyebrow=$nt_eb"
 
 # ---------- v0.2 · FR-40e 报表风险等级分布(2026-05-10) ----------
 section "v0.2 · FR-40e · 报表风险等级分布"

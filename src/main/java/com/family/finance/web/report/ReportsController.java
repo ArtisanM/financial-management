@@ -94,6 +94,17 @@ public class ReportsController {
         Period anchor = anchorPeriod(me.getFamilyId());
         List<Long> accountIds = parseAccountIds(accountsCsv);
         String viewCurrency = parseCurrency(currency, family.getBaseCurrency());
+        // BUG-FIX(2026-05-10):同 dashboard,缺 fx_rate 时强制回退到 base,UI 给提示
+        String requestedCurrency = viewCurrency;
+        boolean fxFallback = false;
+        if (!viewCurrency.equalsIgnoreCase(family.getBaseCurrency())) {
+            boolean hasRate = fxMapper.findOne(me.getFamilyId(), family.getBaseCurrency(), viewCurrency, anchor.getId()).isPresent()
+                    || fxMapper.findLatest(me.getFamilyId(), family.getBaseCurrency(), viewCurrency).isPresent();
+            if (!hasRate) {
+                viewCurrency = family.getBaseCurrency();
+                fxFallback = true;
+            }
+        }
         FactSlice slice = factViewService.load(new FactFilter(
                 me.getFamilyId(),
                 family.getPeriodType(),
@@ -131,6 +142,8 @@ public class ReportsController {
         model.addAttribute("debtTrend", debtTrend);
         model.addAttribute("accountRows", accountRows);
         model.addAttribute("fxRates", fxRates);
+        model.addAttribute("fxFallback", fxFallback);
+        model.addAttribute("requestedCurrency", requestedCurrency);
         model.addAttribute("sankeyNodes", sankeyNodes(slice));
         model.addAttribute("sankeyLinks", sankeyLinks(slice));
 

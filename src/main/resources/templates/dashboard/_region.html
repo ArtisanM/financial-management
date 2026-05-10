@@ -35,6 +35,13 @@
       </div>
       <a th:href="@{/entry}" class="btn-paper text-[10px] no-underline">前往填报 →</a>
     </div>
+    <!-- v0.2 BUG-FIX(2026-05-10):请求 viewCurrency 但 fx_rate 缺失时,后端把展示币种回退到 base_currency,这里给 banner 提示用户 -->
+    <div th:if="${fxFallback}" class="border border-brass bg-brass/[0.06] px-5 py-3 mt-3 flex items-center justify-between gap-4 flex-wrap">
+      <div class="flex items-center gap-4">
+        <span class="pill pill-brass">汇率缺失</span>
+        <p class="text-sm">未在 <span class="font-mono" th:text="${requestedCurrency}">USD</span> 的汇率表里找到记录,已回退到 <span class="font-mono" th:text="${currency}">CNY</span> 显示。可去 <a th:href="@{/admin/fx}" class="text-brass-deep underline">汇率管理</a> 手填或拉取最新汇率。</p>
+      </div>
+    </div>
   </section>
 
   <section class="mb-8">

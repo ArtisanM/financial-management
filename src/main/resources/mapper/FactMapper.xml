@@ -49,10 +49,14 @@
         COALESCE(cf.expense_orig, 0) AS expense_orig,
         COALESCE(tin.transfer_in_orig, 0) AS transfer_in_orig,
         COALESCE(tout.transfer_out_orig, 0) AS transfer_out_orig,
+        <!-- BUG-FIX(2026-05-10):原 CASE 把两个分支的方向都倒了,导致 USD/HKD 视图全部按 1/rate 放大~7×。
+             约定:fx_rate.rate 表示「1 base_currency = rate × quote_currency」。
+             fx_inverse 命中行为 base=a.currency, quote=viewCurrency,直接乘即可(a → view)。
+             fx_direct  命中行为 base=viewCurrency, quote=a.currency,需要反向(view → a),所以 1/rate。 -->
         CASE
           WHEN a.currency = #{viewCurrency} THEN 1.000000
-          WHEN fx_direct.rate IS NOT NULL THEN fx_direct.rate
-          WHEN fx_inverse.rate IS NOT NULL THEN 1 / fx_inverse.rate
+          WHEN fx_inverse.rate IS NOT NULL THEN fx_inverse.rate
+          WHEN fx_direct.rate IS NOT NULL THEN 1 / fx_direct.rate
           ELSE 1.000000
         END AS fx_to_base
     FROM account a

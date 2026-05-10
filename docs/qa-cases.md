@@ -210,6 +210,12 @@
 |---|---|---|---|
 | FR22-1 | 切 USD 货币符号变 $ | GET /dashboard?currency=USD | 含 `$` |
 | FR22-2 | 切 HKD 货币符号变 HK$ | GET /dashboard?currency=HKD | 含 `HK$` |
+| v02-CCY-1 | 三套币种数字真换算(2026-05-10 BUG-FIX 回归保护)| 种 fx_rate 后 GET dashboard?currency={CNY,USD,HKD} | 三个净资产数字必须不同 |
+| v02-CCY-2 | USD 数学正确 | CNY × 0.14 ≈ USD KPI(±2 元容差) | 数学正确 |
+| v02-CCY-3 | fx_rate 缺时 banner 提示 | 删 fx_rate → GET dashboard?currency=USD | DOM 含「汇率缺失」banner |
+| v02-CCY-4 | fxFallback 强制回退 ¥ | 同上,检查净资产 KPI | 不带 `$`,以 `¥` 显示(不静默冠错符号)|
+
+> **回归历史**:`FactMapper.xml` 的 fx CASE 公式两个分支(`fx_direct` / `fx_inverse`)曾在 v0.1 → v0.2 期间两次倒挂,导致 USD/HKD 视图全表数字 ×7 错位。v02-CCY-1/2 数学校验 + v02-CCY-3/4 fallback 校验是防回归底线。
 
 ## 静态资源 / 安全
 
@@ -368,6 +374,25 @@ qa-run.sh:   PASS=164, FAIL=0, SKIP=3     ← 黑盒 endpoint + 模板渲染
 ─────────────────────────────────────────
 合计:        276 通过 / 0 失败             ← 封版基线
 ```
+
+### v0.2 · 币种切换 BUG-FIX(2026-05-10 第二轮)+ 输入框对齐
+
+```
+mvn test:    Tests run: 76,  Failures: 0
+qa-e2e.sh:   PASS=36, FAIL=0
+qa-run.sh:   PASS=173, FAIL=0, SKIP=3
+─────────────────────────────────────────
+合计:        285 通过 / 0 失败
+```
+
+新增 5 条 case(从 168 → 173):
+- **v02-CCY-1**:三套币种净资产 KPI 数字必须真的不同(防 SQL CASE 倒挂回归)
+- **v02-CCY-2**:CNY × 0.14 ≈ USD 数学校验(±2 元容差)
+- **v02-CCY-3**:`fx_rate` 表空时 dashboard 显示「汇率缺失」banner
+- **v02-CCY-4**:fxFallback 强制回退 `¥` 显示,不静默冠错符号
+- **v02-UX-5**:entry 余额 / 备注 input 高度统一 `h-9` + 备注独立 eyebrow
+
+**根因**:`FactMapper.xml` 的 fx CASE 两个分支公式倒挂 — `fx_inverse.rate`(已经是 `a.currency → viewCurrency` 的直乘比例)被错写成 `1/rate`,导致 USD/HKD 视图数字被 1/0.14 ≈ ×7 放大;而 `fx_rate` 表空时又落到 `ELSE 1.0` 兜底,只换符号不换数 → 用户感觉"币种切换无效"。两次回归都因同样的 CASE 倒挂。修复:`FactMapper.xml` CASE 改为 `fx_inverse → rate` / `fx_direct → 1/rate`;Dashboard / Reports controller 加 fxFallback 检测 + banner。
 
 **端到端真值校验 (qa-e2e.sh)** 覆盖完整业务场景:
 1. 清 DB + 开 2026-05

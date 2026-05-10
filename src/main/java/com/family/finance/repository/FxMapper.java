@@ -43,6 +43,20 @@ public interface FxMapper {
                              @Param("quoteCurrency") String quoteCurrency,
                              @Param("periodId") long periodId);
 
+    /** 找该家庭 base→quote 的最新一期汇率(用于 anchor 期没拿到 rate 时兜底) */
+    @Select("""
+            SELECT id, family_id, base_currency, quote_currency, period_id, rate, source, fetched_at
+              FROM fx_rate
+             WHERE family_id = #{familyId}
+               AND base_currency = #{baseCurrency}
+               AND quote_currency = #{quoteCurrency}
+             ORDER BY period_id DESC
+             LIMIT 1
+            """)
+    Optional<FxRate> findLatest(@Param("familyId") long familyId,
+                                @Param("baseCurrency") String baseCurrency,
+                                @Param("quoteCurrency") String quoteCurrency);
+
     /** UPSERT — 同 (familyId, base, quote, period) 触发 ON DUPLICATE KEY,覆盖 rate/source/fetched_at */
     @Insert("""
             INSERT INTO fx_rate (family_id, base_currency, quote_currency, period_id, rate, source)

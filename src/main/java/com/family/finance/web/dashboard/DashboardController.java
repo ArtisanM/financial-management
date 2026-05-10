@@ -14,6 +14,7 @@ import com.family.finance.factview.KpiSnapshot;
 import com.family.finance.factview.TrendPoint;
 import com.family.finance.factview.WaterfallSegment;
 import com.family.finance.repository.AccountMapper;
+import com.family.finance.repository.FxMapper;
 import com.family.finance.repository.PeriodMapper;
 import com.family.finance.service.EntryService;
 import com.family.finance.service.FamilyService;
@@ -44,6 +45,7 @@ public class DashboardController {
     private final AccountMapper accountMapper;
     private final EntryService entryService;
     private final NavService navService;
+    private final FxMapper fxMapper;
 
     @GetMapping("/dashboard")
     public String dashboard(@AuthenticationPrincipal MemberPrincipal me,
@@ -76,7 +78,26 @@ public class DashboardController {
                 accountIds,
                 viewCurrency
         );
-        FactSlice slice = factViewService.load(filter);
+        // BUG-FIX(2026-05-10):FactMapper.queryBase 用 viewCurrency 当 fx 索引把账户原币 → viewCurrency,
+        // 当 fx_rate 表缺该 (base,quote,period) 行时 SQL 落到 ELSE 1.0 兜底 → 数值不换算只换符号,
+        // 用户感觉"币种切换失效"。这里在加载前先校验汇率充足:任一非 base 货币的账户缺 fx_rate 时
+        // 强制回退到 base,并给前端 banner 提示。
+        String requestedCurrency = viewCurrency;
+        boolean fxFallback = false;
+        if (!viewCurrency.equalsIgnoreCase(family.getBaseCurrency())) {
+            boolean hasRate = fxMapper.findOne(me.getFamilyId(), family.getBaseCurrency(), viewCurrency, anchor.getId()).isPresent()
+                    || fxMapper.findLatest(me.getFamilyId(), family.getBaseCurrency(), viewCurrency).isPresent();
+            if (!hasRate) {
+                viewCurrency = family.getBaseCurrency();
+                fxFallback = true;
+            }
+        }
+        FactFilter effectiveFilter = filter.viewCurrency().equals(viewCurrency)
+                ? filter
+                : new FactFilter(filter.familyId(), filter.periodType(), filter.rangeStart(),
+                                 filter.rangeEnd(), filter.includeArchived(), filter.accountIds(), viewCurrency);
+
+        FactSlice slice = factViewService.load(effectiveFilter);
         KpiSnapshot kpis = factViewService.kpis(slice);
         List<TrendPoint> trend = factViewService.netWorthTrend(slice);
         List<WaterfallSegment> waterfall = factViewService.incomeExpenseWaterfall(slice);
@@ -114,6 +135,8 @@ public class DashboardController {
         model.addAttribute("allocation", allocation);
         model.addAttribute("waterfall", waterfall);
         model.addAttribute("accountRows", accountRows);
+        model.addAttribute("fxFallback", fxFallback);
+        model.addAttribute("requestedCurrency", requestedCurrency);
 
         model.addAttribute("trendLabels", trend.stream().map(TrendPoint::label).toList());
         model.addAttribute("trendValues", trend.stream().map(TrendPoint::value).toList());
@@ -123,6 +146,7 @@ public class DashboardController {
         model.addAttribute("allocationLabels", allocation.stream().map(AllocationSlice::label).toList());
         model.addAttribute("allocationValues", allocation.stream().map(AllocationSlice::value).toList());
     }
+
 
     /**
      * Dashboard 锚点 = 最新一期(无论 OPEN/CLOSED)。
