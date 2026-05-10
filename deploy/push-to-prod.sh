@@ -59,6 +59,7 @@ scp -q deploy/finance-backup.timer           "$REMOTE:~/${STAGING}/deploy/"
 scp -q deploy/backup.sh                      "$REMOTE:~/${STAGING}/deploy/"
 scp -q deploy/init-prod.sh                   "$REMOTE:~/${STAGING}/deploy/"
 scp -q deploy/deploy-prod.sh                 "$REMOTE:~/${STAGING}/deploy/"
+scp -q deploy/nginx-setup.sh                 "$REMOTE:~/${STAGING}/deploy/"
 # 资源(预设图标的源 PNG,以备对方需要重生成 — jar 内已含已缩放的 16 张)
 [[ -d icons ]] && scp -q icons/icon*.* "$REMOTE:~/${STAGING}/icons/" || true
 

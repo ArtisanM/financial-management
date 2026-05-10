@@ -249,13 +249,29 @@ done
 HEALTH=$(curl -s "http://127.0.0.1:${SERVER_PORT}/health")
 [[ "$HEALTH" == *'"status":"UP"'* ]] && ok "/health = $HEALTH" || die "/health 内容异常: $HEALTH"
 
+# ---------- 13. 可选:nginx :80 反代 ----------
+say "13/13 nginx 反代 :80 → :${SERVER_PORT}(可选,但 prod 强烈建议)"
+read -p "现在装 nginx 反代到 :80 吗? [Y/n] " yn
+if [[ "$yn" != "n" && "$yn" != "N" ]]; then
+  SN=$(ask "nginx server_name(域名,纯 IP 访问就回车用 _)" "_")
+  bash deploy/nginx-setup.sh "$SN"
+  NGINX_DONE=1
+else
+  NGINX_DONE=0
+  warn "已跳过 nginx;若需要后续再跑:sudo bash deploy/nginx-setup.sh"
+fi
+
 echo
 echo "${G}══════════════════════════════════════════════${X}"
 echo "${G}  首次部署完成 · 应用已在 :${SERVER_PORT} 监听  ${X}"
 echo "${G}══════════════════════════════════════════════${X}"
 echo
 echo "下一步:"
-echo "  1) 浏览器访问  http://<server-ip>:${SERVER_PORT}/login"
+if [[ "${NGINX_DONE:-0}" == "1" ]]; then
+  echo "  1) 浏览器访问  http://<server-ip>/login(nginx :80 反代)"
+else
+  echo "  1) 浏览器访问  http://<server-ip>:${SERVER_PORT}/login"
+fi
 echo "     默认账号:diwa / demo1234(由 V2__seed.sql 灌入)"
 echo "     首次登录后立刻去 /profile/password 改密码!!"
 echo

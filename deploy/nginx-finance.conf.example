@@ -12,13 +12,13 @@
 # =========================================================
 
 upstream finance_backend {
-    server 127.0.0.1:8080 fail_timeout=10s max_fails=3;
+    server 127.0.0.1:__PORT__ fail_timeout=10s max_fails=3;
     keepalive 16;
 }
 
 server {
     listen 80;
-    server_name finance.example.com;       # ← 改成你的域名
+    server_name __SERVER_NAME__;           # 由 nginx-setup.sh 替换为域名 / IP / "_"
 
     client_max_body_size 256k;             # 与 Spring multipart 对齐(logo 上限 200KB)
     access_log /var/log/nginx/finance.access.log;

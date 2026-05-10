@@ -73,11 +73,33 @@ sudo bash deploy/init-prod.sh
 
 ### A.3 浏览器收尾
 
-1. 访问 `http://<server-ip>:20000/login`,用 `diwa / demo1234` 登录
+1. 访问 `http://<server-ip>/login`(若装了 nginx 走 :80)或 `http://<server-ip>:20000/login`(没装 nginx),用 `diwa / demo1234` 登录
 2. **立刻**去 `/profile/password` 改密码
 3. (可选)`/admin/family` 上传自定义 logo 或选 4 张预设图标之一
 4. (可选)如果是干净 prod 库要清 demo 数据,跑 `init-prod.sh` 输出的 TRUNCATE SQL,然后到 `/admin/periods` 点"立即开下一周期"
-5. (可选)装 nginx 反代 + TLS,模板见 `deploy/nginx-finance.conf.example`
+
+### A.4 nginx 反代(`init-prod.sh` 步 13 自动跑;漏跑 / 后补也 OK)
+
+`init-prod.sh` 第 13 步会问 `现在装 nginx 反代到 :80 吗? [Y/n]`,默认 Y。
+回 N 跳过的话,后续随时可在 prod 机器上跑:
+
+```bash
+cd ~/finance-deploy
+sudo bash deploy/nginx-setup.sh                       # 默认 server_name=_(任意 Host)
+sudo bash deploy/nginx-setup.sh finance.example.com   # 指定域名
+```
+
+`nginx-setup.sh` 做 5 件事:
+1. 装 nginx(若没装)
+2. 渲染配置到 `/etc/nginx/sites-available/finance.conf`(自动从 `/etc/finance.env` 读 `SERVER_PORT`)
+3. enable + 移除默认 80 站点(避免端口冲突)
+4. **把 Spring 绑回 `127.0.0.1`**(往 `/etc/finance.env` 加 `SERVER_ADDRESS=127.0.0.1` + restart finance),关 :20000 公网入口
+5. `nginx -t` 校验 + `systemctl reload nginx` + 双向健康检查(`:20000/health` + `:80/health` 都 200)
+
+完成后:
+- 公网只能从 `:80` 进,`:20000` 只接受 nginx 走 loopback 的反代
+- **强烈建议**云控制台「安全组」删掉 :20000 的公网入站规则(或 `sudo ufw deny 20000/tcp`),双保险
+- 上 HTTPS:`sudo apt install certbot python3-certbot-nginx && sudo certbot --nginx -d your-domain.com`,certbot 自动改 finance.conf 加 `listen 443 ssl` + 续签 cron
 
 ### A.4 验收清单
 
