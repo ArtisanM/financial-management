@@ -144,6 +144,17 @@
     <div style="height:320px"><canvas id="incomeExpenseChart"></canvas></div>
   </section>
 
+  <!-- v0.2 (2026-05-10) · 按账户分布(横向 bar,0 轴居中,LOAN 向左)-->
+  <section class="paper-card p-6 mb-10">
+    <div class="flex items-baseline justify-between mb-1">
+      <div class="eyebrow">按账户分布</div>
+      <span class="font-mono text-[10px] text-ink-subtle">资产向右 · 负债向左 · 0 居中</span>
+    </div>
+    <div th:style="'height:' + (${#lists.size(accountRows)} * 28 + 60) + 'px; min-height:200px'">
+      <canvas id="accountDivergeChart"></canvas>
+    </div>
+  </section>
+
   <section class="mb-10">
     <div class="flex items-baseline justify-between mb-3">
       <h2 class="font-display text-2xl font-medium">账户列表</h2>
@@ -184,6 +195,7 @@
         savings: [[${savingsValues}]],
         allocationLabels: [[${allocationLabels}]],
         allocationValues: [[${allocationValues}]],
+        accountRows: [[${accountRows}]],
         currency: [[${currency}]]
       };
       const ccySym = data.currency === 'USD' ? '$' : (data.currency === 'HKD' ? 'HK$' : '¥');
@@ -280,6 +292,58 @@
                   return fmtMoney(v) + '\n' + pct.toFixed(0) + '%';
                 }
               }
+            }
+          },
+          plugins: [ChartDataLabels]
+        });
+      }
+
+      // v0.2(2026-05-10)· 按账户分布:横向 bar,资产 → 右,LOAN → 左,0 居中
+      const divCanvas = document.getElementById('accountDivergeChart');
+      const rows = (data.accountRows || []).filter(r => r.currentValue != null);
+      if (divCanvas && rows.length) {
+        // 按 abs(currentValue) DESC 排
+        rows.sort((a, b) => Math.abs(Number(b.currentValue || 0)) - Math.abs(Number(a.currentValue || 0)));
+        const colorMap = { CASH: '#a77b35', STOCK: '#2f5d50', WEALTH: '#6f7f98', PROPERTY: '#8f6048', OTHER: '#7a4f6b', LOAN: '#9f4a3a' };
+        const labels = rows.map(r => r.accountName);
+        const values = rows.map(r => Number(r.currentValue));
+        const colors = rows.map(r => colorMap[r.accountType] || '#444');
+        const maxAbs = values.reduce((m, v) => Math.max(m, Math.abs(v)), 1);
+
+        window.financeCharts.accountDiverge = new Chart(divCanvas, {
+          type: 'bar',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: '余额', data: values, backgroundColor: colors,
+              borderColor: colors, borderWidth: 1
+            }]
+          },
+          options: {
+            indexAxis: 'y',
+            maintainAspectRatio: false,
+            layout: { padding: { right: 80, left: 80 } },
+            plugins: {
+              legend: { display: false },
+              title: { display: true, text: '按账户分布 · ' + data.currency + '(资产 → 右 / 负债 → 左)', padding: { bottom: 12 }, font: { size: 13, weight: '500' }, color: '#3a302a' },
+              tooltip: { callbacks: { label: (ctx) => fmtMoney(ctx.parsed.x) } },
+              datalabels: {
+                anchor: (ctx) => ctx.dataset.data[ctx.dataIndex] < 0 ? 'start' : 'end',
+                align: (ctx) => ctx.dataset.data[ctx.dataIndex] < 0 ? 'start' : 'end',
+                offset: 6,
+                color: '#3a302a',
+                font: { size: 10, weight: '500' },
+                formatter: (v) => v == null || Number(v) === 0 ? '' : fmtMoney(v)
+              }
+            },
+            scales: {
+              x: {
+                min: -maxAbs * 1.1,
+                max:  maxAbs * 1.1,
+                grid: { color: (ctx) => ctx.tick.value === 0 ? '#3a302a' : 'rgba(58,48,42,.05)', lineWidth: (ctx) => ctx.tick.value === 0 ? 2 : 1 },
+                ticks: { callback: (v) => fmtMoney(v) }
+              },
+              y: { grid: { display: false }, ticks: { font: { size: 11 } } }
             }
           },
           plugins: [ChartDataLabels]

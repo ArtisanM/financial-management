@@ -831,6 +831,28 @@ ids=$(grep -oE 'id="(allocation|risk|liquidity|return)"' "$TMP" | sort -u | wc -
 [[ $ids -ge 4 ]] && log_ok "v02-FR38-3 /checkup family 含 4 个锚点 id (n=$ids)" \
   || log_bad "v02-FR38-3 锚点 id" "n=$ids"
 
+# ---------- v0.2 UX 小优化(2026-05-10)----------
+section "v0.2 · UX 小优化"
+
+# UX-1 entry 余额输入框含 onfocus=this.select() + ✕ 清空按钮
+OPEN_PID=$(mysql -ufinance -pfinance finance -sN -e "SELECT id FROM period WHERE family_id=1 AND status='OPEN' ORDER BY period_start DESC LIMIT 1" 2>/dev/null)
+$CURL -b $COOKIE "$BASE/entry?period=$OPEN_PID" -o "$TMP" -w ""
+n_focus=$(grep -oE 'onfocus="this.select\(\)"' "$TMP" | wc -l)
+[[ $n_focus -ge 1 ]] && log_ok "v02-UX-1 entry 余额 input 含 onfocus=select (n=$n_focus)" \
+  || log_bad "v02-UX-1 onfocus 缺失" "n=$n_focus"
+n_clear=$(grep -oE 'title="清空"' "$TMP" | wc -l)
+[[ $n_clear -ge 1 ]] && log_ok "v02-UX-2 entry 余额 input 含 ✕ 清空按钮 (n=$n_clear)" \
+  || log_bad "v02-UX-2 清空按钮缺失" "n=$n_clear"
+
+# UX-3 dashboard 含 accountDivergeChart canvas + accountRows 数据
+$CURL -b $COOKIE "$BASE/dashboard?range=1Y&currency=CNY" -o "$TMP" -w ""
+{ grep -q '<canvas id="accountDivergeChart"' "$TMP" && grep -q 'accountRows: \[' "$TMP"; } \
+  && log_ok "v02-UX-3 dashboard 含按账户分布 canvas + accountRows 数据" \
+  || log_bad "v02-UX-3 按账户分布图" "missing canvas or data"
+grep -q '按账户分布' "$TMP" \
+  && log_ok "v02-UX-4 dashboard 含「按账户分布」标题" \
+  || log_bad "v02-UX-4 按账户分布标题" "missing"
+
 # ---------- v0.2 · FR-40e 报表风险等级分布(2026-05-10) ----------
 section "v0.2 · FR-40e · 报表风险等级分布"
 
