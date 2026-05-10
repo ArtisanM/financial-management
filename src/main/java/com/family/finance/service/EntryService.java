@@ -164,6 +164,9 @@ public class EntryService {
         applyDeltaToBalance(period, account, memberId, delta,
                 (kind == CashFlowKind.INCOME ? "+收入 " : "-支出 ") + money(amount));
         insertCashFlow(period, account, memberId, new CashFlowLine(kind, categoryCode, amount, note));
+        // v0.2 bug 修(2026-05-10): cash_flow 路径必须把 todo 标 DONE,
+        // 否则 forceClose 会因 PENDING 把"上期末"覆盖回 snapshot,丢失真实数据
+        snapshotTodoMapper.markDone(periodId, accountId, memberId);
         auditLogService.record(familyId, memberId, AuditLogType.SYSTEM, "cash_flow", accountId,
                 "新增现金流 " + kind + " " + money(amount));
         return rowFor(familyId, memberId, periodId, accountId);
@@ -223,6 +226,10 @@ public class EntryService {
         applyDeltaToBalance(period, toAccount, memberId, amount,
                 "↳ 收到来自 " + fromAccount.getDisplayName() + " " + money(amount));
         insertTransfer(period, familyId, fromAccountId, toAccountId, amount, note, memberId, confirmDuplicate);
+        // v0.2 bug 修(2026-05-10): 转账路径双端都要把 todo 标 DONE,
+        // 否则 forceClose 会因 PENDING 把"上期末"覆盖回 snapshot,丢失真实数据
+        snapshotTodoMapper.markDone(periodId, fromAccountId, memberId);
+        snapshotTodoMapper.markDone(periodId, toAccountId, memberId);
         auditLogService.record(familyId, memberId, AuditLogType.TRANSFER_CREATE, "transfer", fromAccountId,
                 "新增转账 " + fromAccountId + " → " + toAccountId + " " + money(amount));
         return rowFor(familyId, memberId, periodId, fromAccountId);

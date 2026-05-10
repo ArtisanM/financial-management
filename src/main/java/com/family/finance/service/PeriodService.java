@@ -99,21 +99,27 @@ public class PeriodService {
         int filledFromPrev = 0;
         for (com.family.finance.domain.snapshot.SnapshotTodo todo : snapshotTodoMapper.findByPeriod(periodId)) {
             if (todo.getStatus() != com.family.finance.domain.snapshot.TodoStatus.PENDING) continue;
-            // 延续上期末作为本期末
-            java.math.BigDecimal prevBalance = snapshotMapperRef
-                    .findLatestBefore(todo.getAccountId(), period.getPeriodStart(), 1)
-                    .stream().findFirst()
-                    .map(com.family.finance.domain.snapshot.PeriodSnapshot::getEndBalance)
-                    .orElse(java.math.BigDecimal.ZERO);
-            snapshotMapperRef.upsert(com.family.finance.domain.snapshot.PeriodSnapshot.builder()
-                    .periodId(periodId)
-                    .accountId(todo.getAccountId())
-                    .endBalance(prevBalance)
-                    .submittedBy(actorMemberId)
-                    .note("强制关账:延续上期末余额 " + prevBalance)
-                    .build());
+            // v0.2 bug 修(2026-05-10): 防御深度 — 若 snapshot 已存在(可能由 cash_flow/transfer 路径
+            // 写入而 todo 因历史 bug 未标 DONE),不允许"延续上期末"覆盖真实余额,
+            // 仅把 todo 标 DONE 即可。
+            boolean snapshotExists = snapshotMapperRef
+                    .findByPeriodAndAccount(periodId, todo.getAccountId()).isPresent();
+            if (!snapshotExists) {
+                java.math.BigDecimal prevBalance = snapshotMapperRef
+                        .findLatestBefore(todo.getAccountId(), period.getPeriodStart(), 1)
+                        .stream().findFirst()
+                        .map(com.family.finance.domain.snapshot.PeriodSnapshot::getEndBalance)
+                        .orElse(java.math.BigDecimal.ZERO);
+                snapshotMapperRef.upsert(com.family.finance.domain.snapshot.PeriodSnapshot.builder()
+                        .periodId(periodId)
+                        .accountId(todo.getAccountId())
+                        .endBalance(prevBalance)
+                        .submittedBy(actorMemberId)
+                        .note("强制关账:延续上期末余额 " + prevBalance)
+                        .build());
+                filledFromPrev++;
+            }
             snapshotTodoMapper.markDone(periodId, todo.getAccountId(), actorMemberId);
-            filledFromPrev++;
         }
         // 全员代签 period_member_completion
         for (com.family.finance.domain.member.Member m : memberMapper.findActiveByFamily(period.getFamilyId())) {
