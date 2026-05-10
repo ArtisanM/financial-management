@@ -25,9 +25,13 @@
         <span class="pill"
               th:classappend="${detail.account.type.name() == 'LOAN' ? ' pill-rust' : (detail.account.type.name() == 'WEALTH' ? ' pill-forest' : (detail.account.type.name() == 'STOCK' ? ' pill-brass' : ''))}"
               th:text="${detail.account.type.label} + ' (' + ${detail.account.type.name()} + ')'">现金 (CASH)</span>
-        <span class="pill" th:if="${detail.category != null}"
-              style="background:rgba(122,90,57,.10);border-color:var(--brass-deep);color:var(--brass-deep)"
-              th:text="'📊 ' + ${detail.category.displayName}">📊 类目</span>
+        <span class="pill inline-flex items-center gap-1" th:if="${detail.category != null}"
+              style="background:rgba(122,90,57,.10);border-color:var(--brass-deep);color:var(--brass-deep)">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/>
+          </svg>
+          <span th:text="${detail.category.displayName}">类目</span>
+        </span>
       </div>
     </div>
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
