@@ -84,6 +84,7 @@
         <td class="num" th:classappend="${row.account.type.name() == 'LOAN' ? ' num-neg' : ''}" th:text="${row.balanceLabel}">¥73,200</td>
         <td class="text-right whitespace-nowrap">
           <button class="font-mono text-base text-ink-soft hover:text-brass-deep px-1 align-middle" title="从本账户发起一笔'账户间划转'">↔</button>
+          <a th:href="@{/accounts/{id}(id=${row.account.id})}" class="btn-ghost no-underline" title="跨期流水档案 · 月分组时间线">📋 流水档案</a>
           <a th:href="@{/checkup(account=${row.account.id})}" class="btn-ghost no-underline" title="进入资产体检">📊 体检</a>
           <a th:href="@{/accounts/{id}/ledger.csv(id=${row.account.id})}" class="btn-ghost no-underline" title="导出账本 CSV">⬇ 账本</a>
           <a th:href="@{/accounts/{id}/edit(id=${row.account.id})}" class="btn-ghost no-underline">编辑</a>
@@ -129,8 +130,10 @@
         <span class="text-xs text-ink-soft" th:text="${row.account.type.name() == 'LOAN' ? '本期欠款' : '本期末'}">本期末</span>
         <span class="font-mono text-base tnum" th:classappend="${row.account.type.name() == 'LOAN' ? ' num-neg' : ''}" th:text="${row.balanceLabel}">¥73,200</span>
       </div>
-      <div class="flex gap-2 mt-3">
-        <a th:href="@{/accounts/{id}/edit(id=${row.account.id})}" class="btn-paper text-[10px] flex-1 justify-center text-center no-underline">编辑</a>
+      <div class="flex gap-2 mt-3 flex-wrap">
+        <a th:href="@{/accounts/{id}(id=${row.account.id})}" class="btn-paper text-[10px] no-underline">📋 流水档案</a>
+        <a th:href="@{/checkup(account=${row.account.id})}" class="btn-paper text-[10px] no-underline">📊 体检</a>
+        <a th:href="@{/accounts/{id}/edit(id=${row.account.id})}" class="btn-paper text-[10px] no-underline">编辑</a>
         <button class="btn-ghost text-[10px]">↔</button>
         <form th:if="${!row.archived}" th:action="@{/accounts/{id}/archive(id=${row.account.id})}" method="post">
           <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">

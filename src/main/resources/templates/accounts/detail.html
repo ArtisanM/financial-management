@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/layout :: head('账户详情 · 家庭账房')}"></head>
+<!-- v0.2 FR-30 · 余额时序折线需要 Chart.js -->
+<script th:src="@{/vendor/chart.umd.min.js(v=${buildVersion})}"></script>
 <body class="min-h-screen relative">
 <div class="fixed top-0 left-0 right-0 h-1 bg-ink z-40"></div>
 <header th:replace="~{fragments/nav :: nav('accounts', ${me}, ${nav})}"></header>
