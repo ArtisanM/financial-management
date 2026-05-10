@@ -55,9 +55,10 @@ public class CsvExportService {
                     .orElseThrow(() -> new IllegalArgumentException("家庭不存在: " + familyId));
 
             writeEntry(zip, "families.csv", writer -> {
-                line(writer, "id", "name", "brand_text", "logo_path", "base_currency", "period_type", "created_at", "updated_at");
+                line(writer, "id", "name", "brand_text", "logo_path", "logo_preset", "base_currency", "period_type", "created_at", "updated_at");
                 line(writer,
                         s(family.getId()), e(family.getName()), e(family.getBrandText()), e(family.getLogoPath()),
+                        e(family.getLogoPreset()),
                         e(family.getBaseCurrency()), s(family.getPeriodType()),
                         ts(family.getCreatedAt()), ts(family.getUpdatedAt()));
             });

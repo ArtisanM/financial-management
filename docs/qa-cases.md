@@ -426,6 +426,38 @@ qa-run.sh:   PASS=174, FAIL=0, SKIP=3
 - **FR-40e 报表风险等级分布**:v02-FR40E-1/2/3(reports 含「风险等级分布」标题 + #riskDistChart canvas + 风险敞口明细 + 资产体检入口)
 - **v02-LLM-LIVE-1**:LLM 真实调用嗅探(vendor=qwen 综合诊断长文已返回 / 数据脱敏正常)
 
+### v0.2 · FR-1/FR-34 品牌图标预设(2026-05-10)
+
+```
+mvn test:    Tests run: 76,  Failures: 0
+qa-e2e.sh:   PASS=36, FAIL=0
+qa-run.sh:   PASS=183, FAIL=0, SKIP=4
+─────────────────────────────────────────
+合计:        295 通过 / 0 失败
+```
+
+新增功能:
+- 4 张预设图标(`/img/presets/icon{1..4}-{96,180,192,512}.png`,合计 16 张),默认 icon2
+- `/admin/family` 新增 4 缩略图 gallery,点击切换;DB 加 `family.logo_preset` 字段(V12 迁移)
+- web favicon / iOS apple-touch-icon / PWA manifest 三处全部跟随 `family.logoPreset` 动态变
+- **预设赢一切统一**:click 预设清空 logo_path,所有平台同步;原自定义 WebP 上传保留(只覆盖 web 头部,iOS / manifest 仍用预设)
+- `/manifest.webmanifest` 从静态文件改为 `ManifestController` 动态输出
+
+新增 10 条 case(qa-run 173 → 183):
+
+| ID | 校验目标 |
+|---|---|
+| v02-LOGO-1 | 16 张预设 PNG 全部公开可访问(无 cookie 200)|
+| v02-LOGO-2 | manifest.webmanifest Content-Type=`application/manifest+json` + 默认 icon2 |
+| v02-LOGO-3 | dashboard `<link rel="icon">` 默认 icon2-192.png |
+| v02-LOGO-4 | dashboard `<link rel="apple-touch-icon">` 默认 icon2-180.png |
+| v02-LOGO-5 | nav header logo `<img src>` 默认 icon2-192.png |
+| v02-LOGO-6 | admin/family 渲染 4 个 form `action=/admin/family/logo/preset` |
+| v02-LOGO-7 | POST 切到 icon3 → DB + dashboard favicon + iOS apple-touch + manifest 全跟随 |
+| v02-LOGO-8 | 自定义 webp 上传 + 预设并存 → web=webp / iOS=preset(双轨道)|
+| v02-LOGO-9 | 切预设按钮一并清空 logo_path(预设赢一切统一)|
+| v02-LOGO-10 | 非法 preset(icon99)→ 服务层校验拒写,DB 不变 |
+
 ### v0.2 · 单元测试(JUnit 5)— 决策 20 后
 
 ```

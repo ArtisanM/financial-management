@@ -448,9 +448,9 @@ section "v0.2 · FR-33 微信引导 + FR-34 PWA 添加到主屏"
 ct=$($CURL -o /tmp/finance-qa-manifest.json -w "%{content_type}" "$BASE/manifest.webmanifest")
 [[ "$ct" == *"manifest+json"* ]] && log_ok "FR34-1 manifest Content-Type=application/manifest+json" || log_bad "FR34-1 MIME 错" "got=$ct"
 
-# manifest 字段齐
-{ grep -q '"name"' /tmp/finance-qa-manifest.json && grep -q '/dashboard' /tmp/qa-manifest.json \
-  && grep -q '"display": "standalone"' /tmp/finance-qa-manifest.json && grep -q '"icons"' /tmp/qa-manifest.json; } \
+# manifest 字段齐(2026-05-10 改为动态 controller,JSON 紧凑无空格,grep 放宽)
+{ grep -q '"name"' /tmp/finance-qa-manifest.json && grep -q '/dashboard' /tmp/finance-qa-manifest.json \
+  && grep -qE '"display"\s*:\s*"standalone"' /tmp/finance-qa-manifest.json && grep -q '"icons"' /tmp/finance-qa-manifest.json; } \
   && log_ok "FR34-2 manifest 字段齐(name/start_url/display/icons)" \
   || log_bad "FR34-2 字段缺" "see /tmp/finance-qa-manifest.json"
 
@@ -466,9 +466,10 @@ $CURL "$BASE/login" -o "$TMP" -w ""
   && grep -q 'name="apple-mobile-web-app-status-bar-style"' "$TMP" \
   && grep -q 'name="apple-mobile-web-app-title"' "$TMP" \
   && grep -q 'rel="manifest"' "$TMP" \
-  && grep -q 'apple-touch-icon-180.png' "$TMP" \
+  && grep -q 'rel="apple-touch-icon"' "$TMP" \
+  && grep -qE 'apple-touch-icon-180\.png|/img/presets/icon[0-9]-180\.png' "$TMP" \
   && grep -q 'theme-color' "$TMP"; } \
-  && log_ok "FR34-4 layout head 含 PWA meta + apple-touch-icon-180" \
+  && log_ok "FR34-4 layout head 含 PWA meta + apple-touch-icon (180px)" \
   || log_bad "FR34-4 PWA meta 缺" "see $TMP"
 
 # /js/mobile-guide.js 未登录可达
@@ -937,6 +938,87 @@ grep -q 'riskDistChart' "$TMP" \
 { grep -q '风险敞口明细' "$TMP" && grep -q '进入资产体检' "$TMP"; } \
   && log_ok "v02-FR40E-3 reports 含风险敞口明细 + 资产体检入口" \
   || log_bad "v02-FR40E-3 table+entry" "missing"
+
+# ---------- v0.2 · FR-1/FR-34 品牌图标预设(2026-05-10)----------
+section "v0.2 · 品牌图标预设(默认 icon2)"
+
+# 预条件:重置 family 到默认状态(icon2 + 无自定义)
+mysql -ufinance -pfinance finance -e "UPDATE family SET logo_preset='icon2', logo_path=NULL WHERE id=1;" 2>/dev/null
+
+# v02-LOGO-1 16 张预设 PNG 全 200(无 cookie 公开访问)
+all_ok=1
+for icon in icon1 icon2 icon3 icon4; do
+  for size in 96 180 192 512; do
+    code=$($CURL -o /dev/null -w "%{http_code}" "$BASE/img/presets/${icon}-${size}.png")
+    [[ "$code" == "200" ]] || { all_ok=0; break 2; }
+  done
+done
+[[ $all_ok -eq 1 ]] && log_ok "v02-LOGO-1 16 张预设 PNG(icon{1..4}×{96,180,192,512})全 200" \
+  || log_bad "v02-LOGO-1 预设 PNG" "至少一张非 200"
+
+# v02-LOGO-2 GET /manifest.webmanifest 返回 application/manifest+json + 默认 icon2
+ct=$($CURL -b $COOKIE -o "$TMP" -w "%{content_type}" "$BASE/manifest.webmanifest")
+{ [[ "$ct" == *"application/manifest+json"* ]] && grep -q '/img/presets/icon2-192.png' "$TMP" && grep -q '/img/presets/icon2-512.png' "$TMP"; } \
+  && log_ok "v02-LOGO-2 manifest.webmanifest 动态 + 默认 icon2 (Content-Type=$ct)" \
+  || log_bad "v02-LOGO-2 manifest 默认" "ct=$ct  body 见 $TMP"
+
+# v02-LOGO-3 dashboard <link rel=icon> 默认指向 icon2-192.png
+$CURL -b $COOKIE "$BASE/dashboard" -o "$TMP" -w ""
+{ grep -A1 '<link rel="icon"' "$TMP" | grep -q '/img/presets/icon2-192.png'; } \
+  && log_ok "v02-LOGO-3 dashboard favicon 默认 icon2-192.png" \
+  || log_bad "v02-LOGO-3 favicon 默认" "link 不指 icon2-192"
+
+# v02-LOGO-4 dashboard <link rel=apple-touch-icon> 默认指向 icon2-180.png
+{ grep -A1 '<link rel="apple-touch-icon"' "$TMP" | grep -q '/img/presets/icon2-180.png'; } \
+  && log_ok "v02-LOGO-4 dashboard apple-touch-icon 默认 icon2-180.png" \
+  || log_bad "v02-LOGO-4 apple-touch 默认" "link 不指 icon2-180"
+
+# v02-LOGO-5 nav header logo 默认指向 icon2-192.png(没自定义上传时)
+grep -q 'src="/img/presets/icon2-192.png' "$TMP" \
+  && log_ok "v02-LOGO-5 nav header logo 默认 icon2-192.png" \
+  || log_bad "v02-LOGO-5 nav logo" "src 不指 icon2-192"
+
+# v02-LOGO-6 admin/family 渲染 4 缩略图 gallery(每个 form action=/admin/family/logo/preset)
+$CURL -b $COOKIE "$BASE/admin/family" -o "$TMP" -w ""
+gallery_count=$(grep -c 'action="/admin/family/logo/preset"' "$TMP")
+[[ $gallery_count -ge 4 ]] && log_ok "v02-LOGO-6 admin/family gallery 含 4 form (n=$gallery_count)" \
+  || log_bad "v02-LOGO-6 gallery" "n=$gallery_count"
+
+# v02-LOGO-7 切到 icon3 → DB 更新 + dashboard / manifest 全跟随
+XSRF=$(grep "XSRF-TOKEN" $COOKIE | awk '{print $7}')
+$CURL -b $COOKIE -c $COOKIE -X POST "$BASE/admin/family/logo/preset" -H "X-XSRF-TOKEN: $XSRF" --data-urlencode "preset=icon3" -o /dev/null -w "" || true
+db_after=$(mysql -ufinance -pfinance finance -sN -e "SELECT logo_preset FROM family WHERE id=1;" 2>/dev/null)
+$CURL -b $COOKIE "$BASE/dashboard" -o "$TMP" -w ""
+mf=$($CURL -b $COOKIE "$BASE/manifest.webmanifest")
+{ [[ "$db_after" == "icon3" ]] \
+   && grep -A1 '<link rel="apple-touch-icon"' "$TMP" | grep -q 'icon3-180' \
+   && echo "$mf" | grep -q 'icon3-192'; } \
+  && log_ok "v02-LOGO-7 切 icon3 → DB+web favicon+iOS apple-touch+manifest 全跟随" \
+  || log_bad "v02-LOGO-7 切预设全链路" "db=$db_after"
+
+# v02-LOGO-8 上传自定义 webp 后,web 用 webp,但 iOS apple-touch 仍用 preset(icon3)
+mysql -ufinance -pfinance finance -e "UPDATE family SET logo_path='family-1/logo.webp' WHERE id=1;" 2>/dev/null
+$CURL -b $COOKIE "$BASE/dashboard" -o "$TMP" -w ""
+{ grep -A1 '<link rel="icon"' "$TMP" | grep -q '/uploads/family-1/logo.webp' \
+   && grep -A1 '<link rel="apple-touch-icon"' "$TMP" | grep -q 'icon3-180'; } \
+  && log_ok "v02-LOGO-8 自定义 webp 上传 → web favicon=webp / iOS=preset 不联动" \
+  || log_bad "v02-LOGO-8 自定义+预设并存" "see $TMP"
+
+# v02-LOGO-9 切预设按钮 = 一并清空 logo_path(预设赢一切统一)
+XSRF=$(grep "XSRF-TOKEN" $COOKIE | awk '{print $7}')
+$CURL -b $COOKIE -c $COOKIE -X POST "$BASE/admin/family/logo/preset" -H "X-XSRF-TOKEN: $XSRF" --data-urlencode "preset=icon4" -o /dev/null -w "" || true
+both=$(mysql -ufinance -pfinance finance -sN -e "SELECT logo_preset, IFNULL(logo_path,'NULL') FROM family WHERE id=1;" 2>/dev/null)
+[[ "$both" == "icon4	NULL" ]] && log_ok "v02-LOGO-9 切预设清空 logo_path(预设赢一切统一)" \
+  || log_bad "v02-LOGO-9 logo_path 未清空" "DB=$both"
+
+# v02-LOGO-10 非法 preset(icon99)→ 服务层校验拒写,DB 保持 icon4
+$CURL -b $COOKIE -c $COOKIE -X POST "$BASE/admin/family/logo/preset" -H "X-XSRF-TOKEN: $XSRF" --data-urlencode "preset=icon99" -o /dev/null -w "" || true
+preset_after=$(mysql -ufinance -pfinance finance -sN -e "SELECT logo_preset FROM family WHERE id=1;" 2>/dev/null)
+[[ "$preset_after" == "icon4" ]] && log_ok "v02-LOGO-10 非法 preset 拒写,DB 保持 icon4" \
+  || log_bad "v02-LOGO-10 非法 preset 校验" "DB=$preset_after"
+
+# 复跑后置:重置默认 icon2 + 无自定义,不污染后续
+mysql -ufinance -pfinance finance -e "UPDATE family SET logo_preset='icon2', logo_path=NULL WHERE id=1;" 2>/dev/null
 
 echo
 echo "═══════════════════════════════════════"

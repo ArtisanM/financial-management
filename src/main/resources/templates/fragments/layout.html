@@ -10,13 +10,14 @@
   <meta name="_csrf" th:content="${_csrf.token}"/>
   <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
   <title th:text="${title} ?: '家庭账房'">家庭账房</title>
-  <!-- favicon:用户上传过 logo 走 uploads,否则走默认 SVG -->
-  <link rel="icon" type="image/svg+xml"
-        th:href="${nav != null and nav.family != null and nav.family.logoPath != null} ? @{|/uploads/${nav.family.logoPath}|} : @{/img/default-logo.svg(v=${buildVersion})}">
-  <link rel="alternate icon" type="image/svg+xml" th:href="@{/img/default-logo.svg(v=${buildVersion})}">
-  <!-- v0.2 FR-34 · iOS 主屏图标必须用 PNG(iOS 不支持 SVG 作 apple-touch-icon)+ PWA manifest -->
-  <link rel="apple-touch-icon" sizes="180x180"
-        th:href="@{/img/apple-touch-icon-180.png(v=${buildVersion})}">
+  <!-- v0.2 FR-1/FR-34 · favicon 优先用户自定义 WebP,否则用预设(默认 icon2);apple-touch-icon 永远跟 family.logoPreset(WebP 不适合 iOS) -->
+  <th:block th:with="preset=${nav != null and nav.family != null and nav.family.logoPreset != null ? nav.family.logoPreset : 'icon2'}">
+    <link rel="icon"
+          th:href="${nav != null and nav.family != null and nav.family.logoPath != null} ? @{|/uploads/${nav.family.logoPath}|} : @{/img/presets/{p}-192.png(p=${preset},v=${buildVersion})}">
+    <link rel="alternate icon" type="image/svg+xml" th:href="@{/img/default-logo.svg(v=${buildVersion})}">
+    <link rel="apple-touch-icon" sizes="180x180"
+          th:href="@{/img/presets/{p}-180.png(p=${preset},v=${buildVersion})}">
+  </th:block>
   <link rel="manifest" th:href="@{/manifest.webmanifest(v=${buildVersion})}">
   <meta name="theme-color" content="#1a1714">
   <meta name="apple-mobile-web-app-capable" content="yes">

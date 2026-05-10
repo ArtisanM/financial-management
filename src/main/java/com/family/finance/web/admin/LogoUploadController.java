@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -92,6 +93,27 @@ public class LogoUploadController {
                 java.util.Map.of("path", relativePath, "size", size));
 
         return ResponseEntity.ok("ok");
+    }
+
+    /**
+     * v0.2 FR-1/FR-34:切换品牌预设图标 — 一并清空自定义 logo_path,
+     * 让 web favicon / iOS apple-touch / PWA manifest 三处全部跟随同一张预设。
+     */
+    @PostMapping("/preset")
+    public String selectPreset(@RequestParam("preset") String preset,
+                               @AuthenticationPrincipal MemberPrincipal me,
+                               RedirectAttributes ra) {
+        try {
+            familyService.updateLogoPreset(me.getFamilyId(), preset);
+            auditLogService.write(me.getFamilyId(), me.getMemberId(), AuditLogType.LOGO_UPLOAD,
+                    "family", me.getFamilyId(),
+                    "切换品牌预设图标 → " + preset,
+                    java.util.Map.of("preset", preset));
+            ra.addFlashAttribute("flash", "已切换为预设 " + preset);
+        } catch (IllegalArgumentException e) {
+            ra.addFlashAttribute("flash", "✗ " + e.getMessage());
+        }
+        return "redirect:/admin/family";
     }
 
     @PostMapping("/remove")

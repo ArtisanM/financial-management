@@ -80,6 +80,8 @@ public class AdminController {
     @GetMapping("/family")
     public String family(@AuthenticationPrincipal MemberPrincipal me, Model model) {
         model.addAttribute("family", familyService.require(me.getFamilyId()));
+        // v0.2 FR-1/FR-34 · 预设图标白名单(顺序固定供 gallery 渲染)
+        model.addAttribute("logoPresets", java.util.List.of("icon1", "icon2", "icon3", "icon4"));
         return "admin/family";
     }
 
