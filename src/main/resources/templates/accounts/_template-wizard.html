@@ -28,7 +28,7 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
         <div>
           <label class="field-label">模板</label>
-          <select name="templateId" class="field-input bg-transparent">
+          <select name="templateId" data-searchable class="field-input bg-transparent">
             <option value="">自定义账户</option>
             <option th:each="tpl : ${templates}" th:value="${tpl.id}" th:text="${tpl.displayName}">招商银行</option>
           </select>
@@ -39,7 +39,7 @@
         </div>
         <div>
           <label class="field-label">类型</label>
-          <select name="type" class="field-input bg-transparent">
+          <select name="type" data-searchable class="field-input bg-transparent">
             <option th:each="t : ${types}" th:value="${t}" th:text="${t.label} + ' (' + ${t.name()} + ')'">现金 (CASH)</option>
           </select>
         </div>
@@ -64,7 +64,7 @@
         <!-- v0.2 FR-40d · 产品类目(留空则按 type 默认)-->
         <div>
           <label class="field-label">产品类目 <span class="text-ink-subtle font-mono text-[10px]">v0.2</span></label>
-          <select name="productCategoryCode" class="field-input bg-transparent">
+          <select name="productCategoryCode" data-searchable class="field-input bg-transparent">
             <option value="">按账户类型默认</option>
             <option th:each="c : ${allCategories}" th:value="${c.code}"
                     th:text="${c.displayName} + (c.benchmarkPct != null ? ' (基准 ' + c.benchmarkPct + '%)' : '')">A 股 / A 股基金 (基准 8.0%)</option>
@@ -72,7 +72,7 @@
         </div>
         <div class="md:col-span-2">
           <label class="field-label">LOAN 默认还款来源</label>
-          <select name="defaultPaymentSourceAccountId" class="field-input bg-transparent">
+          <select name="defaultPaymentSourceAccountId" data-searchable class="field-input bg-transparent">
             <option value="">不设置</option>
             <option th:each="row : ${rows}" th:if="${row.account.type.name() != 'LOAN'}"
                     th:value="${row.account.id}" th:text="${row.account.displayName}">招行储蓄卡-工资</option>

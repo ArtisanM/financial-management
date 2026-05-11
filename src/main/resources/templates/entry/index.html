@@ -20,7 +20,7 @@
       </div>
       <div class="flex items-center gap-3">
         <a th:href="@{/entry(mine=${mineOnly})}" class="btn-paper no-underline">本期</a>
-        <select class="font-mono text-[11px] tracking-[0.14em] uppercase border border-rule px-4 py-2 bg-card"
+        <select data-searchable class="font-mono text-[11px] tracking-[0.14em] uppercase border border-rule px-4 py-2 bg-card"
                 onchange="location.href='/entry?period=' + this.value">
           <option th:each="p : ${periods}" th:value="${p.id}" th:selected="${p.id == period.id}"
                   th:text="${#temporals.format(p.periodStart, 'yyyy · MM')} + ' · ' + ${p.status}">2026 · 05 · OPEN</option>
