@@ -23,6 +23,7 @@ G=$'\033[32m'; R=$'\033[31m'; Y=$'\033[33m'; B=$'\033[1;36m'; X=$'\033[0m'
 say()  { echo; echo "${B}═══ $* ═══${X}"; }
 ok()   { echo "${G}✓${X} $*"; }
 warn() { echo "${Y}⚠${X} $*"; }
+err()  { echo "${R}✗${X} $*" >&2; }
 die()  { echo "${R}✗${X} $*" >&2; exit 1; }
 ask()  { local q="$1" def="${2:-}"; local ans; read -p "$q${def:+ [$def]}: " ans; echo "${ans:-$def}"; }
 ask_pw() { local q="$1"; local ans; read -s -p "$q: " ans; echo >&2; echo "$ans"; }
@@ -42,7 +43,24 @@ NEEDS_FINANCE_RESTART=0
 REINIT_MODE=0
 if systemctl is-active --quiet finance 2>/dev/null && [[ -f /etc/finance.env && -f /opt/finance/app.jar ]]; then
   REINIT_MODE=1
-  warn "检测到 finance 已在运行,本次为「重跑模式」:仅补做缺失步骤,无变化时不重启"
+  warn "═══════════════════════════════════════════════════════"
+  warn "检测到 prod 已上线(finance 在跑 + /etc/finance.env 在 + jar 在)"
+  warn "本次为「重跑模式」:仅补缺失步骤,无变化不重启服务"
+  warn ""
+  warn "  ⚠ 若你只是想发版迭代,应该用 deploy-prod.sh,不是这个脚本!"
+  warn "  → 退出本脚本,在本地跑:bash deploy/deploy-prod.sh user@host"
+  warn ""
+  warn "init-prod.sh 现在的用途仅限于:"
+  warn "  1) 首次部署一台干净机器"
+  warn "  2) 给已部署机器补缺(如新加了 backup timer / sudoers 条目)"
+  warn "  3) 重装系统后恢复"
+  warn "═══════════════════════════════════════════════════════"
+  if [[ -t 0 ]]; then
+    read -p "继续重跑 init-prod.sh? [y/N] " yn
+    [[ "$yn" == "y" || "$yn" == "Y" ]] || { ok "已退出 — 改用 deploy-prod.sh 发版"; exit 0; }
+  else
+    warn "非交互式 · 直接继续(若不该跑,用 Ctrl-C 退出)"
+  fi
 fi
 
 # 检测 OS
@@ -201,16 +219,42 @@ if [[ "${PLACEHOLDER_COUNT:-0}" -gt 0 ]]; then
   ok "种子用户密码已设置为 bcrypt(临时),登入后强制改"
 fi
 
-# ---------- 8. 清 dev 演示数据(prod 必清,sentinel 防重跑)----------
-say "8/12 清 dev 演示数据 — 正式环境只保留 catalog + 用户,其余 11 张交易表清空"
+# ---------- 8. 清 dev 演示数据(双重保险:sentinel + 真实数据探测)----------
+say "8/12 清 dev 演示数据 — 双重保险:sentinel + 真实数据探测"
 SENTINEL=/opt/finance/.prod-cleaned
 if [[ -f "$SENTINEL" ]]; then
-  ok "$SENTINEL 已存在 — 已清过,跳过(强制再清:删 sentinel 重跑此脚本)"
+  ok "$SENTINEL 已存在 — 已清过,跳过"
 else
+  # 真实使用迹象探测:audit_log 操作数 + 额外成员(超过 V2 seed 的 2 个)+ 自定义品牌名
+  AUDIT_COUNT=$(mysql -h127.0.0.1 -u"$DB_USER" -p"$DB_PASS" "$DB_NAME" -sN \
+    -e "SELECT COUNT(*) FROM audit_log WHERE actor_member_id IS NOT NULL AND actor_member_id > 0" 2>/dev/null || echo 0)
+  EXTRA_MEMBERS=$(mysql -h127.0.0.1 -u"$DB_USER" -p"$DB_PASS" "$DB_NAME" -sN \
+    -e "SELECT COUNT(*) FROM member WHERE id > 2" 2>/dev/null || echo 0)
+  CUSTOM_BRAND=$(mysql -h127.0.0.1 -u"$DB_USER" -p"$DB_PASS" "$DB_NAME" -sN \
+    -e "SELECT COUNT(*) FROM family WHERE logo_path IS NOT NULL OR brand_text NOT IN ('账房', '我们家')" 2>/dev/null || echo 0)
+  CUSTOM_LOGIN=$(mysql -h127.0.0.1 -u"$DB_USER" -p"$DB_PASS" "$DB_NAME" -sN \
+    -e "SELECT COUNT(*) FROM member WHERE last_login_at IS NOT NULL AND must_change_pw = 0" 2>/dev/null || echo 0)
+
+  if [[ "${AUDIT_COUNT:-0}" -gt 50 || "${EXTRA_MEMBERS:-0}" -gt 0 \
+     || "${CUSTOM_BRAND:-0}" -gt 0 || "${CUSTOM_LOGIN:-0}" -gt 0 ]]; then
+    err "═══ 危险动作拦截 ═══"
+    err "检测到真实用户数据迹象:"
+    err "  · audit_log 操作数 = ${AUDIT_COUNT}(> 50 视为真实使用)"
+    err "  · 额外成员数 = ${EXTRA_MEMBERS}(> 0 视为加过成员)"
+    err "  · 自定义品牌 / logo = ${CUSTOM_BRAND}"
+    err "  · 已改过密码的用户 = ${CUSTOM_LOGIN}"
+    err "拒绝 TRUNCATE 11 张表 — sentinel 文件丢了但 DB 不像是 fresh demo 状态"
+    err ""
+    err "若你确实想清:"
+    err "  1) mysqldump 备份 → 2) 手动 TRUNCATE → 3) touch $SENTINEL"
+    err "若 sentinel 只是被误删,且 prod 状态正常:"
+    err "  sudo touch $SENTINEL && sudo chown finance:finance $SENTINEL  # 然后重跑此脚本"
+    die "中止部署,prod 数据完好"
+  fi
+
+  # 真的是 fresh demo 状态(没有真实用户活动) → 清空
+  warn "未检测到真实用户活动,清空 V3/V4/V5 灌的 11 张交易表"
   mysql -h127.0.0.1 -u"$DB_USER" -p"$DB_PASS" "$DB_NAME" <<'SQL'
--- 11 张交易性表清空。保留:family / member / account_template / cash_flow_category /
--- product_category / persistent_logins / schema_history(catalog + 用户身份)。
--- TRUNCATE 比 DELETE 快且自动重置 AUTO_INCREMENT;关 FK 检查避免依赖顺序。
 SET FOREIGN_KEY_CHECKS = 0;
 TRUNCATE TABLE cash_flow;
 TRUNCATE TABLE transfer;

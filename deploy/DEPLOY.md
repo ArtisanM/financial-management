@@ -15,11 +15,13 @@
 
 ## 1. 命令速查表
 
-| 场景 | 本地命令 | 目标机命令 | 耗时 |
-|---|---|---|---|
-| **A. 首次部署** | `bash deploy/push-to-prod.sh user@host` | `cd ~/finance-deploy && sudo bash deploy/init-prod.sh` | ~5 分钟 |
-| **B. 后续迭代** | `bash deploy/push-to-prod.sh user@host` | `cd ~/finance-deploy && bash deploy/deploy-prod.sh user@host`<br/>(或本地直接 `bash deploy/deploy-prod.sh user@host`) | ~30 秒 |
-| **C. 单独装/换 nginx** | `bash deploy/push-to-prod.sh user@host` | `cd ~/finance-deploy && sudo bash deploy/nginx-setup.sh [域名]` | ~30 秒 |
+| 场景 | 命令 | 耗时 |
+|---|---|---|
+| **A. 首次部署**(零基础)| ① 本地 `bash deploy/push-to-prod.sh user@host`<br/>② SSH 进去 `sudo bash ~/finance-deploy/deploy/init-prod.sh` | ~5 分钟 |
+| **B. 后续迭代发版** ⭐ | 本地一行:`bash deploy/deploy-prod.sh user@host` | ~30 秒 |
+| **C. 单独装/换 nginx** | ① `bash deploy/push-to-prod.sh user@host`<br/>② `ssh user@host 'cd ~/finance-deploy && sudo bash deploy/nginx-setup.sh [域名]'` | ~30 秒 |
+
+> **⚠ prod 已上线后,日常发版只用 B(`deploy-prod.sh`)**。`init-prod.sh` 留作首装 / 恢复;**它的步 8 有"真实数据检测"防护,即使你误删 sentinel 也不会清生产数据**,但既然不用,就别折腾它。`init-prod.sh` 检测到 finance 在跑会先 ask 确认是否继续,避免误触。
 
 > **所有脚本都幂等可重跑**:`init-prod.sh` / `nginx-setup.sh` / `deploy-prod.sh` / `push-to-prod.sh` 都用 `cmp -s` 对比文件内容、检测 systemd 状态、检测 DB 表结构,**只在内容真变了的时候才动作 + 触发 restart**。
 >
@@ -136,36 +138,38 @@ git push origin master    # 强烈建议先推 git remote,异地备份
 bash deploy/deploy-prod.sh user@prod.host
 ```
 
-这一行做 7 步,任意一步失败立即停 + 打印明确的回滚步骤:
+这一行做 7 步,任意一步失败有差异化处理:
 
-| 步 | 做什么 | 失败的代价 |
+| 步 | 做什么 | 失败处理 |
 |---|---|---|
-| 0 | 预飞:本地 git clean / ssh / `/etc/finance.env` 就位 | 没动远程 |
-| 1 | 本地 `mvn package` | 没动远程 |
-| 2 | 远程 `mysqldump | gzip` 到 `/var/backup/finance/pre-deploy-{ts}.sql.gz` | 不动 prod 数据 |
-| 3 | scp 新 jar 到 `app.jar.new`(不动旧 jar)+ 同步迁移 SQL | 旧 jar 仍跑 |
-| 4 | 远程 `db/apply.sh`,走 `schema_history` 幂等 | 旧 jar 还在跑(若新增了列,旧 jar 不读它,无副作用) |
-| 5 | 备份旧 jar 到 `app.jar.prev` + 切新 jar + restart | jar 已切但还没起 |
-| 6 | 轮询 `/health`(每 2s 一次,24s 上限) | 起不来 → 立即按下方回滚 |
-| 7 | 烟测:登录 + `/dashboard` 渲染完整 | 路由破了 → 立即按下方回滚 |
+| 0 | 预飞:git clean / ssh / `/etc/finance.env` | 直接退,未动任何东西 |
+| 1 | 本地 `mvn package` | 直接退 |
+| 2 | 远程 mysqldump + `gunzip -t` 完整性校验 | 直接退,DB 未被改 |
+| 3 | scp `app.jar` → `app.jar.new`(不动旧 jar)+ 同步迁移 SQL | 直接退,旧 jar 仍跑 |
+| **4** | **★ 列出待 apply 的 V*.sql + read 确认**(`SKIP_MIGRATION_CONFIRM=1` 跳)| 用户 N 即退,未动 DB |
+| 5 | 远程 `db/apply.sh`,`schema_history` 表幂等 | 直接退,旧 jar 还在跑 |
+| 6 | `cp app.jar.prev` 备份 + 切新 jar + `systemctl restart` | **自动回滚 jar 到 .prev** |
+| 7 | 健康检查 + 烟测(`/health` UP + `/login` 含 `_csrf` + `/dashboard` 302/200) | **自动回滚 jar 到 .prev**,打 30 行 journalctl 帮排错 |
 
-成功后输出 DB 备份位置 + 旧 jar 位置,24h 后可清。
+**烟测改进**(v0.2.1):不再依赖 `diwa/demo1234`(prod 用户改密后会假阳性失败),改为查 `/login` 页含 `_csrf` 字段 + `/dashboard` 给 302 重定向到登录页。
 
-### B.3 回滚(deploy-prod.sh 失败时已自动打印,这里再贴一份)
+**自动 jar 回滚**:6 / 7 步失败时,deploy-prod.sh 自动 ssh 远程执行 `sudo cp app.jar.prev app.jar && systemctl start finance`,你不用再手敲 SSH 命令。DB 备份保留但**不自动还原**(因为迁移多数是 backward-compat,老 jar 兼容新 schema,人工评估再决定还不还原 DB)。
+
+### B.3 手工回滚(极端情况:自动回滚也失败)
 
 ```bash
-# 1. 还原 jar
+# 1. jar 回滚(若 auto-rollback 没成)
 ssh user@host "sudo /bin/systemctl stop finance \
             && sudo /bin/cp /opt/finance/app.jar.prev /opt/finance/app.jar \
             && sudo /bin/systemctl start finance"
 
-# 2. 若新迁移已 apply 且想回退 schema:
+# 2. DB 回滚(只有迁移真的破坏数据时才动)
 ssh user@host "gunzip < /var/backup/finance/pre-deploy-YYYYMMDD-HHMMSS.sql.gz \
             | mysql -ufinance -p\$PASS finance"
 
-# 3. 若只是想"假装从没 apply 过 V12",让下次 deploy 重跑:
+# 3. 让某条迁移"假装没 apply",下次 deploy 重跑:
 ssh user@host "mysql -ufinance -p\$PASS finance \
-            -e \"DELETE FROM schema_history WHERE filename='V12__family_logo_preset.sql';\""
+            -e \"DELETE FROM schema_history WHERE filename='V14__xxx.sql';\""
 ```
 
 ---
