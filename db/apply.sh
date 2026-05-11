@@ -10,11 +10,16 @@
 # =========================================================
 set -euo pipefail
 
+# 若 DB_* 没在 env 里,自动 source /etc/finance.env(prod 标准路径)
+if [[ -z "${DB_USER:-}" && -r /etc/finance.env ]]; then
+  set -a; . /etc/finance.env; set +a
+fi
+
 DB_HOST="${DB_HOST:-127.0.0.1}"
 DB_PORT="${DB_PORT:-3306}"
-DB_USER="${DB_USER:?DB_USER 环境变量未设置}"
-DB_PASS="${DB_PASS:?DB_PASS 环境变量未设置}"
-DB_NAME="${DB_NAME:?DB_NAME 环境变量未设置}"
+DB_USER="${DB_USER:?DB_USER 环境变量未设置(可在 /etc/finance.env 配置)}"
+DB_PASS="${DB_PASS:?DB_PASS 环境变量未设置(可在 /etc/finance.env 配置)}"
+DB_NAME="${DB_NAME:?DB_NAME 环境变量未设置(可在 /etc/finance.env 配置)}"
 
 MYSQL=( mysql -h"$DB_HOST" -P"$DB_PORT" -u"$DB_USER" -p"$DB_PASS" "$DB_NAME" )
 
