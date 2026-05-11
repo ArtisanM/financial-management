@@ -332,10 +332,18 @@ auto_rollback_jar() {
   if [[ -f /opt/finance/app.jar.prev ]]; then
     cp /opt/finance/app.jar.prev /opt/finance/app.jar
     systemctl restart finance
-    sleep 5
-    curl -sf "http://127.0.0.1:${SERVER_PORT}/health" >/dev/null 2>&1 && ok "旧 jar 还原后服务正常" || err "回滚后服务仍不正常,看 journalctl -u finance -n 50"
+    # 跟主健康检查同款 15×2s = 30s 上限,不要只 sleep 5(Spring Boot 3 启动通常 8-15s)
+    local ok_flag=0
+    for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15; do
+      sleep 2
+      curl -sf "http://127.0.0.1:${SERVER_PORT}/health" >/dev/null 2>&1 && { ok "旧 jar 还原后 /health 200($((i*2))s)"; ok_flag=1; break; }
+    done
+    [[ $ok_flag -ne 1 ]] && {
+      err "回滚后服务 30s 仍不正常,journalctl 末 30 行:"
+      journalctl -u finance --no-pager -n 30 >&2
+    }
   else
-    err "没有 app.jar.prev,无法 jar 回滚 → 手动检查 journalctl"
+    err "没有 app.jar.prev,无法 jar 回滚 → 手动检查 journalctl -u finance -n 80"
   fi
   [[ -n "$BACKUP_FILE" ]] && err "DB 备份保留 $BACKUP_FILE(评估后手动 gunzip + mysql 还原)"
 }
@@ -359,13 +367,25 @@ if [[ "$NEEDS_FINANCE_RESTART" == "1" ]]; then
   fi
 fi
 
-# 烟测:/login 含 _csrf input
-if ! curl -sf "http://127.0.0.1:${SERVER_PORT}/login" | grep -q '_csrf'; then
-  err "/login 烟测失败(无 _csrf input)"
+# 烟测:GET /login 返回 200 + 含 form 表单(_csrf 或 <form 之一即可)
+# 给 Thymeleaf 多 2s 暖机(prod cache=true 时第一次渲染会编译模板)
+sleep 2
+SMOKE_TMP=$(mktemp)
+SMOKE_CODE=$(curl -s -o "$SMOKE_TMP" -w "%{http_code}" "http://127.0.0.1:${SERVER_PORT}/login")
+SMOKE_SIZE=$(stat -c%s "$SMOKE_TMP" 2>/dev/null || echo 0)
+if [[ "$SMOKE_CODE" != "200" ]] \
+   || ! grep -qE '_csrf|<form|name="username"' "$SMOKE_TMP"; then
+  err "/login 烟测失败 · HTTP=$SMOKE_CODE size=${SMOKE_SIZE}B"
+  echo "--- /login 响应前 30 行 ---" >&2
+  head -30 "$SMOKE_TMP" >&2
+  echo "--- journalctl 末 20 行 ---" >&2
+  journalctl -u finance --no-pager -n 20 >&2
+  rm -f "$SMOKE_TMP"
   [[ "$IS_ITERATION" == "1" ]] && auto_rollback_jar
   exit 1
 fi
-ok "/health + /login 烟测通过"
+rm -f "$SMOKE_TMP"
+ok "/health + /login 烟测通过(HTTP 200 · size=${SMOKE_SIZE}B)"
 
 # 15. nginx 反代(首装时 prompt,迭代不动)
 say "15/15 nginx :80 反代"
