@@ -74,14 +74,14 @@ sudo bash deploy/init-prod.sh
 
 完成时打印:
 - 服务监听 URL
-- 默认账号 `diwa / demo1234`(V2 seed 灌入,**首次登录立刻去 `/profile/password` 改**)
+- 默认账号 `diwa` / `lijing`,临时密码是 `init-prod.sh` 步 7b 让你设的那个(回车默认 `demo1234`);`must_change_pw=1` 强制首次登录改密
 - 如果有 demo 数据,给清理 SQL
 - 后续迭代部署的命令
 
 ### A.3 浏览器收尾
 
-1. 访问 `http://<server-ip>/login`(若装了 nginx 走 :80)或 `http://<server-ip>:20000/login`(没装 nginx),用 `diwa / demo1234` 登录
-2. **立刻**去 `/profile/password` 改密码
+1. 访问 `http://<server-ip>/login`(若装了 nginx 走 :80)或 `http://<server-ip>:20000/login`(没装 nginx),用 `diwa` + 你在 init-prod 步 7b 设的临时密码(回车则是 `demo1234`)登录
+2. `must_change_pw=1` 会**强制**跳到 `/profile/password`,立刻改成你的强密码
 3. (可选)`/admin/family` 上传自定义 logo 或选 4 张预设图标之一
 4. (可选)如果是干净 prod 库要清 demo 数据,跑 `init-prod.sh` 输出的 TRUNCATE SQL,然后到 `/admin/periods` 点"立即开下一周期"
 
@@ -217,7 +217,7 @@ db/
 
 ## E. 安全 / 加固(可选)
 
-- **改默认密码**:`diwa / demo1234`(seed 出厂)登入后立即在 `/profile/password` 改
+- **改默认密码**:init-prod 步 7b 设的临时密码登入后立即在 `/profile/password` 改;**生产 prod 上 `DevSeedRunner` 不跑**(`@Profile("dev")`),V2 seed 的 password_hash 是 PLACEHOLDER,必须由 init-prod 步 7b(或手工 bcrypt + SQL UPDATE)注入真 hash
 - **限制访问**:nginx 上加 `allow <家庭固定 IP>; deny all;` 或上 OAuth 反代
 - **TLS**:Let's Encrypt + nginx;`deploy/nginx-finance.conf.example` 是 80 端口模板,自己加 `listen 443 ssl` + `ssl_certificate`
 - **定时备份**:`init-prod.sh` 已 enable `finance-backup.timer`(每日 03:30 跑 `backup.sh` → `/var/backup/finance/finance-{date}.sql.gz`,保留 56 天)。**异地备份**自己加(rclone 到对象存储 / scp 到第二台机)

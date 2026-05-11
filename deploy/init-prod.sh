@@ -177,6 +177,30 @@ set -a; . /etc/finance.env; set +a
 sudo -u finance -E bash /opt/finance/db/apply.sh
 ok "迁移完毕(已 apply 过的 V* 自动跳过)"
 
+# ---------- 7b. 修复 seed 用户密码(prod profile DevSeedRunner 不跑,
+#                  V2 seed 留的是 PLACEHOLDER,登录会全挂)----------
+PLACEHOLDER_COUNT=$(mysql -h127.0.0.1 -u"$DB_USER" -p"$DB_PASS" "$DB_NAME" -sN \
+  -e "SELECT COUNT(*) FROM member WHERE password_hash LIKE 'PLACEHOLDER%'" 2>/dev/null || echo 0)
+if [[ "${PLACEHOLDER_COUNT:-0}" -gt 0 ]]; then
+  warn "${PLACEHOLDER_COUNT} 个种子用户密码为 PLACEHOLDER(prod profile DevSeedRunner 不跑)"
+  # 装 apache2-utils 拿 htpasswd 算 bcrypt(若没装)
+  if ! command -v htpasswd >/dev/null 2>&1; then
+    if [[ "$OS" == "debian" ]]; then
+      DEBIAN_FRONTEND=noninteractive apt-get install -y -qq apache2-utils
+    else
+      dnf install -y httpd-tools
+    fi
+  fi
+  ADMIN_PW=$(ask_pw "给所有种子用户设一个**临时**密码(回车 = demo1234,登入后会强制改)")
+  ADMIN_PW="${ADMIN_PW:-demo1234}"
+  HASH=$(htpasswd -bnBC 10 "" "$ADMIN_PW" | tr -d ':\n')
+  mysql -h127.0.0.1 -u"$DB_USER" -p"$DB_PASS" "$DB_NAME" -e "
+    UPDATE member SET password_hash = '$HASH', must_change_pw = 1
+     WHERE password_hash LIKE 'PLACEHOLDER%';
+  "
+  ok "种子用户密码已设置为 bcrypt(临时),登入后强制改"
+fi
+
 # ---------- 8. 提示 dev seed 风险 ----------
 say "8/12 dev seed 数据风险提示"
 ACCT_COUNT=$(mysql -h127.0.0.1 -u"$DB_USER" -p"$DB_PASS" "$DB_NAME" -sN -e "SELECT COUNT(*) FROM account" 2>/dev/null || echo 0)
