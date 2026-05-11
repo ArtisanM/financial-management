@@ -75,7 +75,7 @@ sudo bash deploy/init-prod.sh
 完成时打印:
 - 服务监听 URL
 - 默认账号 `diwa` / `lijing`,临时密码是 `init-prod.sh` 步 7b 让你设的那个(回车默认 `demo1234`);`must_change_pw=1` 强制首次登录改密
-- 如果有 demo 数据,给清理 SQL
+- demo 数据自动清空(步 8 sentinel 防重跑)
 - 后续迭代部署的命令
 
 ### A.3 浏览器收尾
@@ -83,7 +83,7 @@ sudo bash deploy/init-prod.sh
 1. 访问 `http://<server-ip>/login`(若装了 nginx 走 :80)或 `http://<server-ip>:20000/login`(没装 nginx),用 `diwa` + 你在 init-prod 步 7b 设的临时密码(回车则是 `demo1234`)登录
 2. `must_change_pw=1` 会**强制**跳到 `/profile/password`,立刻改成你的强密码
 3. (可选)`/admin/family` 上传自定义 logo 或选 4 张预设图标之一
-4. (可选)如果是干净 prod 库要清 demo 数据,跑 `init-prod.sh` 输出的 TRUNCATE SQL,然后到 `/admin/periods` 点"立即开下一周期"
+4. 到 `/admin/periods` 点 **"立即开下一周期"** 起一个干净 OPEN 周期(init-prod 步 8 已清掉 V3/V4/V5 灌的所有 demo 账户 + 周期 + 流水,只剩家庭 + 2 用户 + 账户模板 + 现金流类目;sentinel `/opt/finance/.prod-cleaned` 防重跑,删 sentinel 可重清)
 
 ### A.4 nginx 反代(`init-prod.sh` 步 13 自动跑;漏跑 / 后补也 OK)
 

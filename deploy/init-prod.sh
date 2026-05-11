@@ -201,19 +201,35 @@ if [[ "${PLACEHOLDER_COUNT:-0}" -gt 0 ]]; then
   ok "种子用户密码已设置为 bcrypt(临时),登入后强制改"
 fi
 
-# ---------- 8. 提示 dev seed 风险 ----------
-say "8/12 dev seed 数据风险提示"
-ACCT_COUNT=$(mysql -h127.0.0.1 -u"$DB_USER" -p"$DB_PASS" "$DB_NAME" -sN -e "SELECT COUNT(*) FROM account" 2>/dev/null || echo 0)
-if [[ "${ACCT_COUNT:-0}" -gt 5 ]]; then
-  warn "DB 含 ${ACCT_COUNT} 个账户,V3/V4/V5 灌入了 11 个 demo 账户 + 12 个历史周期(2025-05~2026-04)"
-  warn "首次 prod 上线建议:登入后到 /admin/accounts 把 demo 账户归档,或手工 TRUNCATE:"
-  echo "    mysql -u${DB_USER} -p ${DB_NAME} <<EOF"
-  echo "    DELETE FROM cash_flow; DELETE FROM transfer; DELETE FROM period_snapshot;"
-  echo "    DELETE FROM snapshot_todo; DELETE FROM period_member_completion;"
-  echo "    DELETE FROM fx_rate; DELETE FROM metrics_recompute_log;"
-  echo "    DELETE FROM period; DELETE FROM account WHERE id > 0;"
-  echo "    EOF"
-  echo "    然后访问 /admin/periods 点 '立即开下一周期' 起一个干净的 OPEN 周期"
+# ---------- 8. 清 dev 演示数据(prod 必清,sentinel 防重跑)----------
+say "8/12 清 dev 演示数据 — 正式环境只保留 catalog + 用户,其余 11 张交易表清空"
+SENTINEL=/opt/finance/.prod-cleaned
+if [[ -f "$SENTINEL" ]]; then
+  ok "$SENTINEL 已存在 — 已清过,跳过(强制再清:删 sentinel 重跑此脚本)"
+else
+  mysql -h127.0.0.1 -u"$DB_USER" -p"$DB_PASS" "$DB_NAME" <<'SQL'
+-- 11 张交易性表清空。保留:family / member / account_template / cash_flow_category /
+-- product_category / persistent_logins / schema_history(catalog + 用户身份)。
+-- TRUNCATE 比 DELETE 快且自动重置 AUTO_INCREMENT;关 FK 检查避免依赖顺序。
+SET FOREIGN_KEY_CHECKS = 0;
+TRUNCATE TABLE cash_flow;
+TRUNCATE TABLE transfer;
+TRUNCATE TABLE period_snapshot;
+TRUNCATE TABLE snapshot_todo;
+TRUNCATE TABLE period_member_completion;
+TRUNCATE TABLE fx_rate;
+TRUNCATE TABLE audit_log;
+TRUNCATE TABLE backup_log;
+TRUNCATE TABLE metrics_recompute_log;
+TRUNCATE TABLE period_reopen_log;
+TRUNCATE TABLE period;
+TRUNCATE TABLE account;
+SET FOREIGN_KEY_CHECKS = 1;
+SQL
+  touch "$SENTINEL"
+  chown finance:finance "$SENTINEL"
+  ok "11 张交易表已清空,sentinel 写入 $SENTINEL"
+  warn "登录后第一件事:/admin/periods 点「立即开下一周期」起一个干净 OPEN 周期"
 fi
 
 # ---------- 9. 把 jar 放到 /opt/finance/ ----------
