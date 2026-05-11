@@ -78,10 +78,12 @@ public class DashboardController {
                 accountIds,
                 viewCurrency
         );
-        // BUG-FIX(2026-05-10):FactMapper.queryBase 用 viewCurrency 当 fx 索引把账户原币 → viewCurrency,
-        // 当 fx_rate 表缺该 (base,quote,period) 行时 SQL 落到 ELSE 1.0 兜底 → 数值不换算只换符号,
-        // 用户感觉"币种切换失效"。这里在加载前先确保汇率充足 — DB 查不到就调 frankfurter API 即时拉,
-        // 拉成功后正常进入 USD/HKD 视图;真拉不下来才回退 base + banner 提示。
+        // BUG-FIX(2026-05-11 · critical):FactMapper.queryBase SQL 算 fx_to_base 时,
+        // 任一非 base 账户币种 + 当期没 fx_rate 行 → 落 ELSE 1.0 兜底 → USD 余额被当 CNY 直接累加。
+        // 这里强制保证每个非 base 账户币种都有当期汇率(没有就 copy 最近 / 调 frankfurter)。
+        fxService.ensureForAccountCurrencies(me.getFamilyId(), family.getBaseCurrency(), anchor.getId());
+
+        // BUG-FIX(2026-05-10):viewCurrency 切换 → fx_rate 缺则即时拉 / 兜底 toast
         String requestedCurrency = viewCurrency;
         boolean fxFallback = false;
         if (!viewCurrency.equalsIgnoreCase(family.getBaseCurrency())) {

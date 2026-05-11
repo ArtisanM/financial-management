@@ -398,6 +398,39 @@ grep -q '汇率未配置' src/main/resources/templates/dashboard/_region.html \
   && log_ok "v02-CCY-5 dashboard / reports 均含 fxFallback toast 脚本块(防回归)" \
   || log_bad "v02-CCY-5 fxFallback toast 模板缺失" "missing in dashboard/reports _region.html"
 
+# v02-CCY-6 critical 回归保护:非 base 账户在 dashboard 触发后,fx_rate 表必有当期行
+# (防 ensureForAccountCurrencies 漏调,SQL JOIN miss 落 1.0 → USD 当 CNY 累加)
+# 数学正确性的端到端校验在 qa-e2e.sh,这里只验"机制触发"
+PID=$(mysql -ufinance -pfinance finance -sN -e "SELECT id FROM period WHERE family_id=1 AND status='OPEN' ORDER BY id DESC LIMIT 1" 2>/dev/null)
+ANCHOR=$(mysql -ufinance -pfinance finance -sN -e "SELECT id FROM period WHERE family_id=1 ORDER BY period_start DESC LIMIT 1" 2>/dev/null)
+# 看是否存在非 base 账户(demo 有 USD 富途证券 id=4)
+nonbase_count=$(mysql -ufinance -pfinance finance -sN -e "SELECT COUNT(*) FROM account WHERE family_id=1 AND currency != 'CNY' AND archived_at IS NULL" 2>/dev/null)
+if [[ "${nonbase_count:-0}" -ge 1 ]]; then
+  # 清当期 anchor 的 fx_rate 行(只清当期 USD/HKD,其它行保留)
+  mysql -ufinance -pfinance finance -e "DELETE FROM fx_rate WHERE period_id=$ANCHOR" 2>/dev/null
+  $CURL --max-time 30 -b $COOKIE "$BASE/dashboard" -o "$TMP" -w ""
+  # 触发后:anchor 周期下应有该 USD/HKD 的 fx_rate 行(frankfurter 拉或 copy)
+  fx_after=$(mysql -ufinance -pfinance finance -sN -e "SELECT COUNT(*) FROM fx_rate WHERE period_id=$ANCHOR" 2>/dev/null)
+  [[ "${fx_after:-0}" -ge 1 ]] \
+    && log_ok "v02-CCY-6 非 base 账户 → dashboard 触发 ensureForAccountCurrencies 写入 fx_rate (anchor=${ANCHOR} count=${fx_after})" \
+    || log_bad "v02-CCY-6 ensureForAccountCurrencies 未触发" "anchor=${ANCHOR} fx_count=${fx_after}"
+
+  # v02-CCY-7 当期缺 fx_rate 但他期有 → copy 到当期(防 SQL JOIN miss)
+  mysql -ufinance -pfinance finance 2>/dev/null <<SQL
+DELETE FROM fx_rate WHERE period_id=$ANCHOR;
+INSERT INTO fx_rate (family_id, base_currency, quote_currency, period_id, rate, source)
+VALUES (1, 'CNY', 'USD', 1, 0.150000, 'qa-other-period')
+ON DUPLICATE KEY UPDATE rate=VALUES(rate);
+SQL
+  $CURL -b $COOKIE "$BASE/dashboard" -o "$TMP" -w ""
+  copied=$(mysql -ufinance -pfinance finance -sN -e "SELECT COUNT(*) FROM fx_rate WHERE period_id=$ANCHOR AND source LIKE 'copied-from%'" 2>/dev/null)
+  [[ "${copied:-0}" -ge 1 ]] \
+    && log_ok "v02-CCY-7 当期缺 fx_rate → 从他期 copy(防 SQL JOIN miss · 不调 frankfurter)" \
+    || log_bad "v02-CCY-7 copy 未触发" "copied=$copied"
+else
+  log_skip "v02-CCY-6/7 跳过 — 当前 DB 无非 base 账户" "test 需要 USD/HKD 账户存在"
+fi
+
 # ---------- 静态资源 ----------
 section "Static / vendor"
 for f in /vendor/tailwind.js /vendor/htmx.min.js /vendor/chart.umd.min.js /vendor/echarts.min.js /css/style.css; do

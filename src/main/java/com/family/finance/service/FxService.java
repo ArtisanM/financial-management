@@ -5,6 +5,7 @@ import com.family.finance.domain.audit.AuditLogType;
 import com.family.finance.domain.family.Family;
 import com.family.finance.domain.fx.FxRate;
 import com.family.finance.domain.period.Period;
+import com.family.finance.repository.AccountMapper;
 import com.family.finance.repository.FxMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +27,7 @@ public class FxService {
     private static final Set<String> SUPPORTED_QUOTES = Set.of("USD", "HKD");
 
     private final FxMapper fxMapper;
+    private final AccountMapper accountMapper;
     private final FamilyService familyService;
     private final PeriodService periodService;
     private final AuditLogService auditLogService;
@@ -98,6 +100,29 @@ public class FxService {
     }
 
     /**
+     * v0.2.1 BUG-FIX(2026-05-11):critical · 确保 fx_rate 表里
+     * 对每个非 base 账户币种 + 指定周期都有一行,FactMapper.queryBase
+     * 的 SQL JOIN 才能命中,否则 fx_to_base 走 ELSE 1.0 兜底,USD 余额
+     * 会被当 CNY 直接累加到总资产。
+     *
+     * 调用方:Dashboard / Reports / Checkup load slice 前一次。
+     */
+    public void ensureForAccountCurrencies(long familyId, String baseCurrency, long periodId) {
+        java.util.Set<String> nonBase = accountMapper.findActiveByFamily(familyId).stream()
+                .map(com.family.finance.domain.account.Account::getCurrency)
+                .filter(c -> c != null && !c.equalsIgnoreCase(baseCurrency))
+                .map(String::toUpperCase)
+                .collect(java.util.stream.Collectors.toSet());
+        for (String quote : nonBase) {
+            Optional<FxRate> rate = getOrFetchRate(familyId, baseCurrency, quote, periodId);
+            if (rate.isEmpty()) {
+                log.warn("[Fx] ensureForAccountCurrencies: 拉不到 {} → {} period#{} · "
+                        + "总资产计算可能偏差(USD/HKD 余额被当 CNY 加)", baseCurrency, quote, periodId);
+            }
+        }
+    }
+
+    /**
      * v0.2 BUG-FIX(2026-05-10):用户切 viewCurrency 时按需获取汇率。
      * 顺序:DB 查 (familyId, base, quote, periodId) → DB 查最近一期 → 实时拉 frankfurter 写入并返回。
      * 全部失败返回空,调用方应回退到 base + 显示 banner。
@@ -106,10 +131,23 @@ public class FxService {
         if (baseCurrency.equalsIgnoreCase(quoteCurrency)) {
             return Optional.empty();
         }
+        // 1. 当期 exact 命中 → 返回(SQL JOIN 也能命中)
         Optional<FxRate> exact = fxMapper.findOne(familyId, baseCurrency, quoteCurrency, periodId);
         if (exact.isPresent()) return exact;
+
+        // 2. 别的周期有行 → BUG-FIX(2026-05-11):copy 到当期 period_id,SQL JOIN 才能命中。
+        //    用 source='copied-from-period-N' 标记,以便后续审计能区分原始 vs 衍生。
         Optional<FxRate> latest = fxMapper.findLatest(familyId, baseCurrency, quoteCurrency);
-        if (latest.isPresent()) return latest;
+        if (latest.isPresent()) {
+            FxRate src = latest.get();
+            fxMapper.upsert(familyId, baseCurrency, quoteCurrency, periodId, src.getRate(),
+                    "copied-from-period-" + src.getPeriodId());
+            log.info("[Fx] copied {} {}->{} from period#{} to period#{}: rate={}",
+                    familyId, baseCurrency, quoteCurrency, src.getPeriodId(), periodId, src.getRate());
+            return fxMapper.findOne(familyId, baseCurrency, quoteCurrency, periodId);
+        }
+
+        // 3. DB 完全没行 → 调 frankfurter
         try {
             int wrote = fetchAndStore(familyId, periodId);
             if (wrote > 0) {

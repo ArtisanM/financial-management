@@ -215,6 +215,10 @@
 | v02-CCY-3 | fx_rate 缺时按需即时拉汇率 | 删 fx_rate → GET dashboard?currency=USD | fx_rate 表新增 frankfurter.dev 来源行 |
 | v02-CCY-4 | 拉成功后正常显示 $ | 同上 | 净资产 KPI 含 `$`(无 toast 兜底)|
 | v02-CCY-5 | 拉失败 fallback toast 防回归 | 模板源码扫描 | dashboard / reports `_region.html` 均含「汇率未配置」toast 脚本块 |
+| v02-CCY-6 | 非 base 账户 → ensureForAccountCurrencies 写入 fx_rate(2026-05-11 critical bug 回归保护)| 删当期 fx_rate → GET dashboard | anchor 周期的 fx_rate 必有 USD/HKD 行(被即时拉或 copy)|
+| v02-CCY-7 | 当期缺 fx_rate 但他期有 → 自动 copy 当期(不调 frankfurter) | 仅他期 fx_rate 行 → GET dashboard | 当期 fx_rate 新增 source='copied-from-period-N' 行 |
+
+> **2026-05-11 critical bug 回归保护**:用户在 prod 创建 USD 账户填了余额,dashboard 净资产把 USD 当 CNY 直接累加(没换算)。根因:`FactMapper.queryBase` SQL 算 `fx_to_base` 时,fx_rate 表缺当期 + 账户币种行 → 落 `ELSE 1.0` 兜底。修法:Dashboard / Reports / Checkup load slice 前调 `FxService.ensureForAccountCurrencies`,扫所有非 base 账户币种,逐个 getOrFetchRate(DB 当期 → DB 他期 copy → frankfurter API)。CCY-6/7 防回归。
 
 > **回归历史**:`FactMapper.xml` 的 fx CASE 公式两个分支(`fx_direct` / `fx_inverse`)曾在 v0.1 → v0.2 期间两次倒挂,导致 USD/HKD 视图全表数字 ×7 错位。v02-CCY-1/2 数学校验 + v02-CCY-3/4 即时拉取 + v02-CCY-5 toast 兜底是防回归底线。
 

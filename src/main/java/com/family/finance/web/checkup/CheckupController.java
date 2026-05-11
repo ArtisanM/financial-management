@@ -47,6 +47,9 @@ public class CheckupController {
     private final FamilyDiagnoseService familyDiagnoseService;
     private final AdviceEngine adviceEngine;
     private final FactViewService factViewService;
+    private final com.family.finance.service.FamilyService familyService;
+    private final com.family.finance.service.FxService fxService;
+    private final com.family.finance.repository.PeriodMapper periodMapper;
 
     @GetMapping("/checkup")
     public String checkup(@AuthenticationPrincipal MemberPrincipal me,
@@ -55,6 +58,11 @@ public class CheckupController {
         model.addAttribute("me", me);
         model.addAttribute("nav", navService.load(me));
         model.addAttribute("active", "checkup");
+
+        // BUG-FIX(2026-05-11 · critical):checkup 也走 FactView 算总资产,同样需要非 base 币种当期 fx_rate 存在
+        var familyEntity = familyService.require(me.getFamilyId());
+        periodMapper.findLatest(me.getFamilyId(), 1).stream().findFirst()
+                .ifPresent(p -> fxService.ensureForAccountCurrencies(me.getFamilyId(), familyEntity.getBaseCurrency(), p.getId()));
 
         BigDecimal avgMonthlyExpense = computeAvgMonthlyExpense(me.getFamilyId());
 
