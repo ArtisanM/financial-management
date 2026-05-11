@@ -31,6 +31,11 @@ ask_pw() { local q="$1"; local ans; read -s -p "$q: " ans; echo >&2; echo "$ans"
 REPO_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_DIR"
 
+# 用 MYSQL_PWD env var 而不是 -p 参数,避免每条 mysql 调用都打 password warning
+mysql_run()      { MYSQL_PWD="$DB_PASS" mysql -h127.0.0.1 -u"$DB_USER" "$DB_NAME" "$@"; }
+mysqldump_run()  { MYSQL_PWD="$DB_PASS" mysqldump --no-tablespaces --single-transaction --quick \
+                    -h"${DB_HOST:-127.0.0.1}" -P"${DB_PORT:-3306}" -u"$DB_USER" "$DB_NAME" "$@"; }
+
 # ---------- 0. 预飞 ----------
 say "0/15 预飞"
 [[ $EUID -eq 0 ]] || die "必须 sudo 跑(需要装包 / 改 systemd / 写 sudoers)"
@@ -127,7 +132,7 @@ FLUSH PRIVILEGES;
 SQL
   ok "DB + 用户创建"
 fi
-mysql -h127.0.0.1 -u"$DB_USER" -p"$DB_PASS" "$DB_NAME" -e "SELECT 1" >/dev/null 2>&1 || die "${DB_USER} 登 mysql 失败"
+MYSQL_PWD="$DB_PASS" mysql -h127.0.0.1 -u"$DB_USER" "$DB_NAME" -e "SELECT 1" >/dev/null 2>&1 || die "${DB_USER} 登 mysql 失败"
 ok "${DB_USER}@localhost 登录验证通过"
 
 say "8/15 /etc/finance.env"
@@ -171,7 +176,9 @@ if [[ "$IS_ITERATION" == "1" ]]; then
   TS=$(date +%Y%m%d-%H%M%S)
   BACKUP_FILE=/var/backup/finance/pre-deploy-${TS}.sql.gz
   set -a; . /etc/finance.env; set +a
-  sudo -u finance bash -c "mysqldump --single-transaction --quick -h\"${DB_HOST:-127.0.0.1}\" -P\"${DB_PORT:-3306}\" -u'$DB_USER' -p'$DB_PASS' '$DB_NAME' | gzip > $BACKUP_FILE" || die "mysqldump 失败"
+  # 以 script 调用者身份(root via sudo)dump,写到 finance 拥有的备份目录,后续 chown
+  mysqldump_run | gzip > "$BACKUP_FILE" || die "mysqldump 失败"
+  chown finance:finance "$BACKUP_FILE"
   [[ $(stat -c%s "$BACKUP_FILE") -gt 1024 ]] || die "DB 备份产物 < 1KB"
   gunzip -t "$BACKUP_FILE" || die "DB 备份 gzip 完整性校验失败"
   ok "DB 备份 → $BACKUP_FILE($(du -h "$BACKUP_FILE" | cut -f1))"
@@ -179,7 +186,7 @@ if [[ "$IS_ITERATION" == "1" ]]; then
   PENDING=""
   for f in db/migration/V*__*.sql; do
     name=$(basename "$f")
-    in_h=$(mysql -h127.0.0.1 -u"$DB_USER" -p"$DB_PASS" "$DB_NAME" -sN -e "SELECT 1 FROM schema_history WHERE filename='$name'" 2>/dev/null)
+    in_h=$(mysql_run -sN -e "SELECT 1 FROM schema_history WHERE filename='$name'" 2>/dev/null)
     [[ -z "$in_h" ]] && PENDING="$PENDING  → $name\n"
   done
   if [[ -n "$PENDING" ]]; then
@@ -192,18 +199,18 @@ if [[ "$IS_ITERATION" == "1" ]]; then
 fi
 
 set -a; . /etc/finance.env; set +a
-sudo -u finance -E bash /opt/finance/db/apply.sh
+# apply.sh 以 root(脚本调用者)身份跑,MYSQL_PWD 让它不打 -p warning
+MYSQL_PWD="$DB_PASS" bash /opt/finance/db/apply.sh
 ok "迁移完毕"
 
 # 9b. 修复 seed 用户 PLACEHOLDER 密码(仅首装会有)
-PLACEHOLDER_COUNT=$(mysql -h127.0.0.1 -u"$DB_USER" -p"$DB_PASS" "$DB_NAME" -sN \
-  -e "SELECT COUNT(*) FROM member WHERE password_hash LIKE 'PLACEHOLDER%'" 2>/dev/null || echo 0)
+PLACEHOLDER_COUNT=$(mysql_run -sN -e "SELECT COUNT(*) FROM member WHERE password_hash LIKE 'PLACEHOLDER%'" 2>/dev/null || echo 0)
 if [[ "${PLACEHOLDER_COUNT:-0}" -gt 0 ]]; then
   warn "$PLACEHOLDER_COUNT 个种子用户密码为 PLACEHOLDER(prod DevSeedRunner 不跑)"
   ADMIN_PW=$(ask_pw "种子用户临时密码(回车 = demo1234,登入后强制改)")
   ADMIN_PW="${ADMIN_PW:-demo1234}"
   HASH=$(htpasswd -bnBC 10 "" "$ADMIN_PW" | tr -d ':\n')
-  mysql -h127.0.0.1 -u"$DB_USER" -p"$DB_PASS" "$DB_NAME" -e "UPDATE member SET password_hash = '$HASH', must_change_pw = 1 WHERE password_hash LIKE 'PLACEHOLDER%';"
+  mysql_run -e "UPDATE member SET password_hash = '$HASH', must_change_pw = 1 WHERE password_hash LIKE 'PLACEHOLDER%';"
   ok "种子用户密码 → bcrypt(临时)"
 fi
 
@@ -213,15 +220,15 @@ SENTINEL=/opt/finance/.prod-cleaned
 if [[ -f "$SENTINEL" ]]; then
   ok "已清过($SENTINEL 存在)"
 else
-  AUDIT_COUNT=$(mysql -h127.0.0.1 -u"$DB_USER" -p"$DB_PASS" "$DB_NAME" -sN -e "SELECT COUNT(*) FROM audit_log WHERE actor_member_id IS NOT NULL" 2>/dev/null || echo 0)
-  EXTRA_MEMBERS=$(mysql -h127.0.0.1 -u"$DB_USER" -p"$DB_PASS" "$DB_NAME" -sN -e "SELECT COUNT(*) FROM member WHERE id > 2" 2>/dev/null || echo 0)
+  AUDIT_COUNT=$(mysql_run -sN -e "SELECT COUNT(*) FROM audit_log WHERE actor_member_id IS NOT NULL" 2>/dev/null || echo 0)
+  EXTRA_MEMBERS=$(mysql_run -sN -e "SELECT COUNT(*) FROM member WHERE id > 2" 2>/dev/null || echo 0)
   if [[ "${AUDIT_COUNT:-0}" -gt 50 || "${EXTRA_MEMBERS:-0}" -gt 0 ]]; then
     err "═══ 真实数据拦截 ═══"
     err "audit_log=${AUDIT_COUNT} / 额外成员=${EXTRA_MEMBERS} → 拒绝 TRUNCATE"
     err "若确实想清:手动 mysqldump → TRUNCATE → touch $SENTINEL → 重跑"
     die "中止"
   fi
-  mysql -h127.0.0.1 -u"$DB_USER" -p"$DB_PASS" "$DB_NAME" <<'SQL'
+  mysql_run <<'SQL'
 SET FOREIGN_KEY_CHECKS=0;
 TRUNCATE TABLE cash_flow; TRUNCATE TABLE transfer; TRUNCATE TABLE period_snapshot;
 TRUNCATE TABLE snapshot_todo; TRUNCATE TABLE period_member_completion;
@@ -239,8 +246,12 @@ fi
 # ============================================================
 
 say "11/15 mvn package"
-sudo -u finance bash -c "cd $REPO_DIR && mvn -B -q -DskipTests package" || die "mvn package 失败"
+# 以脚本调用者身份(通常 sudo 后是 root)跑 mvn — 不要切到 finance 用户,
+# 因为 REPO_DIR 可能在 /root/... 或 /home/<other>/... finance 用户读不到。
+# 构建产物 chown 给 finance,后续 install -o finance 覆盖时也安全。
+(cd "$REPO_DIR" && mvn -B -q -DskipTests package) || die "mvn package 失败"
 [[ -f "$REPO_DIR/target/app.jar" ]] || die "target/app.jar 缺失"
+chown finance:finance "$REPO_DIR/target/app.jar" 2>/dev/null || true
 ok "jar $(du -h $REPO_DIR/target/app.jar | cut -f1)"
 
 say "12/15 部署 jar(无变化则 skip)"

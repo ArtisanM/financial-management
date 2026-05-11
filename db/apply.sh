@@ -21,7 +21,9 @@ DB_USER="${DB_USER:?DB_USER 环境变量未设置(可在 /etc/finance.env 配置
 DB_PASS="${DB_PASS:?DB_PASS 环境变量未设置(可在 /etc/finance.env 配置)}"
 DB_NAME="${DB_NAME:?DB_NAME 环境变量未设置(可在 /etc/finance.env 配置)}"
 
-MYSQL=( mysql -h"$DB_HOST" -P"$DB_PORT" -u"$DB_USER" -p"$DB_PASS" "$DB_NAME" )
+# 用 MYSQL_PWD env var 而不是 -p 参数,避免每次调用都打 "Using a password" warning
+export MYSQL_PWD="$DB_PASS"
+MYSQL=( mysql -h"$DB_HOST" -P"$DB_PORT" -u"$DB_USER" "$DB_NAME" )
 
 # 1) 确保 history 表存在(幂等)
 "${MYSQL[@]}" <<'SQL'
