@@ -248,11 +248,41 @@ fi
 say "11/15 mvn package"
 # 以脚本调用者身份(通常 sudo 后是 root)跑 mvn — 不要切到 finance 用户,
 # 因为 REPO_DIR 可能在 /root/... 或 /home/<other>/... finance 用户读不到。
-# 构建产物 chown 给 finance,后续 install -o finance 覆盖时也安全。
-(cd "$REPO_DIR" && mvn -B -q -DskipTests package) || die "mvn package 失败"
+
+# 国内 maven central 直连极慢(首次 200MB 拉 20 分钟+);装阿里云 mirror 10x 加速
+HOME_DIR="${SUDO_USER:+/home/$SUDO_USER}"
+[[ -z "${SUDO_USER:-}" ]] && HOME_DIR="$HOME"
+[[ ! -d "$HOME_DIR" ]] && HOME_DIR="$HOME"
+M2_SETTINGS="$HOME_DIR/.m2/settings.xml"
+if [[ ! -f "$M2_SETTINGS" ]] || ! grep -q 'aliyun' "$M2_SETTINGS"; then
+  mkdir -p "$(dirname "$M2_SETTINGS")"
+  cat > "$M2_SETTINGS" <<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0">
+  <mirrors>
+    <mirror>
+      <id>aliyun-public</id>
+      <mirrorOf>*,!jitpack.io</mirrorOf>
+      <name>Aliyun Maven</name>
+      <url>https://maven.aliyun.com/repository/public</url>
+    </mirror>
+  </mirrors>
+</settings>
+XML
+  ok "$M2_SETTINGS 写入阿里云 mirror"
+fi
+
+# 不加 -q 让用户看见 [INFO] 阶段进度,过滤掉下载行 spam(每个依赖 N 行 Downloading)
+echo "  (首次构建国内下载 ~200MB 依赖,5-15 分钟;后续秒级)"
+set +e
+(cd "$REPO_DIR" && mvn -B -DskipTests package 2>&1 \
+  | grep -vE '^\[INFO\] (Downloading|Downloaded from|Progress )')
+MVN_RC=${PIPESTATUS[0]}
+set -e
+[[ $MVN_RC -eq 0 ]] || die "mvn package 失败(exit=$MVN_RC)"
 [[ -f "$REPO_DIR/target/app.jar" ]] || die "target/app.jar 缺失"
 chown finance:finance "$REPO_DIR/target/app.jar" 2>/dev/null || true
-ok "jar $(du -h $REPO_DIR/target/app.jar | cut -f1)"
+ok "jar $(du -h "$REPO_DIR/target/app.jar" | cut -f1)"
 
 say "12/15 部署 jar(无变化则 skip)"
 if [[ -f /opt/finance/app.jar ]] && cmp -s "$REPO_DIR/target/app.jar" /opt/finance/app.jar; then
