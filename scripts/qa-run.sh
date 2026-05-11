@@ -58,7 +58,7 @@ $CURL -b $COOKIE "$BASE/admin/family" -o "$TMP" -w ""
 { grep -q "家庭" "$TMP" && grep -q "周期类型" "$TMP" && grep -q "</html>" "$TMP"; } && log_ok "FR1-1 /admin/family 200+完整" || log_bad "FR1-1 /admin/family 缺" "missing"
 
 $CURL -b $COOKIE "$BASE/admin/members" -o "$TMP" -w ""
-{ grep -q "diwa" "$TMP" && grep -q "lijing" "$TMP" && grep -q "</html>" "$TMP"; } && log_ok "FR1-2 /admin/members 列出 2 人" || log_bad "FR1-2 /admin/members" "missing names"
+{ grep -q "diwa" "$TMP" && grep -q "wangergou" "$TMP" && grep -q "</html>" "$TMP"; } && log_ok "FR1-2 /admin/members 列出 2 人" || log_bad "FR1-2 /admin/members" "missing names"
 
 # FR1-7 添加成员入口存在
 grep -q "+ 添加成员" "$TMP" && log_ok "FR1-7 /admin/members 含'添加成员'入口" || log_bad "FR1-7 添加成员入口" "missing"

@@ -10,11 +10,14 @@
   <meta name="_csrf" th:content="${_csrf.token}"/>
   <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
   <title th:text="${title} ?: '家庭账房'">家庭账房</title>
-  <!-- v0.2 FR-1/FR-34 · favicon 优先用户自定义 WebP,否则用预设(默认 icon2);apple-touch-icon 永远跟 family.logoPreset(WebP 不适合 iOS) -->
+  <!-- v0.2 FR-1/FR-34 · favicon 优先用户自定义 WebP,否则用预设(默认 icon2);apple-touch-icon 永远跟 family.logoPreset(WebP 不适合 iOS)
+       BUG-FIX(2026-05-11):删 alternate icon SVG —— Chrome 见 SVG 备选会优先选 SVG(矢量任意 DPI 都清晰),
+       把我们的 PNG 预设跳过去。只保留 PNG + 显式 sizes,Chrome 会按 DPI 选最大那张 (192/512)。 -->
   <th:block th:with="preset=${nav != null and nav.family != null and nav.family.logoPreset != null ? nav.family.logoPreset : 'icon2'}">
-    <link rel="icon"
+    <link rel="icon" sizes="192x192"
           th:href="${nav != null and nav.family != null and nav.family.logoPath != null} ? @{|/uploads/${nav.family.logoPath}|} : @{/img/presets/{p}-192.png(p=${preset},v=${buildVersion})}">
-    <link rel="alternate icon" type="image/svg+xml" th:href="@{/img/default-logo.svg(v=${buildVersion})}">
+    <link rel="icon" sizes="512x512"
+          th:href="${nav != null and nav.family != null and nav.family.logoPath != null} ? @{|/uploads/${nav.family.logoPath}|} : @{/img/presets/{p}-512.png(p=${preset},v=${buildVersion})}">
     <link rel="apple-touch-icon" sizes="180x180"
           th:href="@{/img/presets/{p}-180.png(p=${preset},v=${buildVersion})}">
   </th:block>

@@ -24,6 +24,9 @@ import com.family.finance.service.ProductCategoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -128,6 +131,15 @@ public class AdminController {
                                RedirectAttributes ra) {
         adminService.updateMemberProfile(me.getFamilyId(), memberId,
                 displayName, blankToNull(roleLabel), me.getMemberId());
+        // BUG-FIX(2026-05-11):若改的是自己,刷新 SecurityContext 的 MemberPrincipal,
+        // 让顶栏 me.displayName 立刻看到新名(否则要等会话过期重登才生效)
+        if (memberId == me.getMemberId()) {
+            Member fresh = memberMapper.findById(memberId).orElseThrow();
+            MemberPrincipal refreshed = new MemberPrincipal(fresh);
+            Authentication old = SecurityContextHolder.getContext().getAuthentication();
+            SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(refreshed, old.getCredentials(), refreshed.getAuthorities()));
+        }
         ra.addFlashAttribute("flash", "已保存:" + displayName);
         return "redirect:/admin/members";
     }
