@@ -249,27 +249,22 @@ say "11/15 mvn package"
 # 以脚本调用者身份(通常 sudo 后是 root)跑 mvn — 不要切到 finance 用户,
 # 因为 REPO_DIR 可能在 /root/... 或 /home/<other>/... finance 用户读不到。
 
-# 国内 maven central 直连极慢(首次 200MB 拉 20 分钟+);装阿里云 mirror 10x 加速
+# 国内 maven central 直连极慢(首次 200MB 拉 20 分钟+)→ 装阿里云 mirror,10x 加速
+# settings.xml 内容在 deploy/maven-settings.xml,这里只 cp + 装到目标 home/.m2/
 HOME_DIR="${SUDO_USER:+/home/$SUDO_USER}"
 [[ -z "${SUDO_USER:-}" ]] && HOME_DIR="$HOME"
 [[ ! -d "$HOME_DIR" ]] && HOME_DIR="$HOME"
 M2_SETTINGS="$HOME_DIR/.m2/settings.xml"
-if [[ ! -f "$M2_SETTINGS" ]] || ! grep -q 'aliyun' "$M2_SETTINGS"; then
+MAVEN_SRC="$REPO_DIR/deploy/maven-settings.xml"
+if [[ ! -f "$MAVEN_SRC" ]]; then
+  warn "deploy/maven-settings.xml 缺失,跳过 mirror 配置(走 maven central,国内慢)"
+elif [[ ! -f "$M2_SETTINGS" ]] || ! grep -q 'aliyun' "$M2_SETTINGS"; then
   mkdir -p "$(dirname "$M2_SETTINGS")"
-  cat > "$M2_SETTINGS" <<'XML'
-<?xml version="1.0" encoding="UTF-8"?>
-<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0">
-  <mirrors>
-    <mirror>
-      <id>aliyun-public</id>
-      <mirrorOf>*,!jitpack.io</mirrorOf>
-      <name>Aliyun Maven</name>
-      <url>https://maven.aliyun.com/repository/public</url>
-    </mirror>
-  </mirrors>
-</settings>
-XML
-  ok "$M2_SETTINGS 写入阿里云 mirror"
+  cp "$MAVEN_SRC" "$M2_SETTINGS"
+  [[ -n "${SUDO_USER:-}" ]] && chown -R "$SUDO_USER:$SUDO_USER" "$(dirname "$M2_SETTINGS")" 2>/dev/null || true
+  ok "$M2_SETTINGS ← deploy/maven-settings.xml(阿里云 mirror)"
+else
+  ok "$M2_SETTINGS 已含 aliyun mirror,跳过"
 fi
 
 # 不加 -q 让用户看见 [INFO] 阶段进度,过滤掉下载行 spam(每个依赖 N 行 Downloading)
